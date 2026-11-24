@@ -1,0 +1,16 @@
+{
+  "name": "folio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Source-grounded research notebooks and interactive Studio for Hermes Desktop.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild desktop-src/plugin.jsx --bundle --format=esm --platform=browser --target=es2022 --jsx=automatic --loader:.js=jsx --external:@hermes/plugin-sdk --external:react --external:react/jsx-runtime --legal-comments=none --outfile=desktop/plugin.js",
+    "lint": "node tests/lint_desktop.mjs",
+    "check": "npm run build && npm run lint"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  }
+}

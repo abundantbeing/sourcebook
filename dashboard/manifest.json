@@ -2,5 +2,7 @@
   "name": "folio",
   "label": "Folio",
   "description": "Source-grounded research notebooks, Claim Ledger, Coverage Map, and interactive 7-format Studio.",
-  "api_prefix": "/api/plugins/folio"
+  "icon": "BookOpen",
+  "version": "0.1.0",
+  "api": "plugin_api.py"
 }

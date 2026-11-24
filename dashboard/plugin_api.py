@@ -1,6 +1,6 @@
-"""Folio REST API routes mounted at /api/plugins/folio/*.
+"""SourceBook REST API routes mounted at /api/plugins/sourcebook/*.
 
-Hermes's web server imports this file via import_user_code(path, "hermes_dashboard_plugin_folio")
+Hermes's web server imports this file via import_user_code(path, "hermes_dashboard_plugin_sourcebook")
 without putting the plugin root on sys.path. We therefore load the sibling plugin package
 deterministically from Path(__file__).resolve().parents[1] so it works identically in-process,
 under plugins.isolation: host, and in standalone pytest.
@@ -17,9 +17,9 @@ from pydantic import BaseModel, Field
 
 
 def _load_plugin_pkg():
-    """Load the sibling Folio package cleanly regardless of how Hermes imported plugin_api.py."""
+    """Load the sibling SourceBook package cleanly regardless of how Hermes imported plugin_api.py."""
     plugin_root = Path(__file__).resolve().parents[1]
-    for mod_name in ("hermes_plugins.folio", "_folio_plugin_pkg"):
+    for mod_name in ("hermes_plugins.sourcebook", "_sourcebook_plugin_pkg"):
         existing = sys.modules.get(mod_name)
         if existing is not None and getattr(existing, "__file__", None):
             try:
@@ -27,13 +27,13 @@ def _load_plugin_pkg():
                     return existing
             except OSError:
                 pass
-    pkg_name = "_folio_plugin_pkg"
+    pkg_name = "_sourcebook_plugin_pkg"
     init_file = plugin_root / "__init__.py"
     spec = importlib.util.spec_from_file_location(
         pkg_name, init_file, submodule_search_locations=[str(plugin_root)]
     )
     if spec is None or spec.loader is None:
-        raise ImportError(f"Unable to load Folio package from {init_file}")
+        raise ImportError(f"Unable to load SourceBook package from {init_file}")
     mod = importlib.util.module_from_spec(spec)
     mod.__package__ = pkg_name
     mod.__path__ = [str(plugin_root)]  # type: ignore[attr-defined]
@@ -42,14 +42,14 @@ def _load_plugin_pkg():
     return mod
 
 
-folio = _load_plugin_pkg()
-store = folio.store
-ingest = folio.ingest
-studio = folio.studio
-runtime = folio.runtime
+sourcebook = _load_plugin_pkg()
+store = sourcebook.store
+ingest = sourcebook.ingest
+studio = sourcebook.studio
+runtime = sourcebook.runtime
 
 _jobs_spec = importlib.util.spec_from_file_location(
-    f"{folio.__name__}.core.jobs", Path(__file__).resolve().parents[1] / "core" / "jobs.py"
+    f"{sourcebook.__name__}.core.jobs", Path(__file__).resolve().parents[1] / "core" / "jobs.py"
 )
 assert _jobs_spec and _jobs_spec.loader
 jobs = importlib.util.module_from_spec(_jobs_spec)
@@ -69,7 +69,7 @@ def _http_err(exc: Exception) -> HTTPException:
 
 @router.get("/ping")
 async def ping() -> dict[str, Any]:
-    return {"ok": True, "plugin": "folio", "version": "0.1.0", "llm": runtime.llm_available()}
+    return {"ok": True, "plugin": "sourcebook", "version": "0.1.0", "llm": runtime.llm_available()}
 
 
 @router.get("/capabilities")
@@ -383,7 +383,7 @@ async def ask_notebook(nb: str, body: AskBody) -> dict[str, Any]:
     except Exception as exc:
         raise _http_err(exc)
     return jobs.spawn(
-        lambda progress: folio.ask(
+        lambda progress: sourcebook.ask(
             nb,
             body.text,
             history=body.history,
@@ -405,7 +405,7 @@ async def guide_notebook(nb: str) -> dict[str, Any]:
         store.get_notebook(nb)
     except Exception as exc:
         raise _http_err(exc)
-    return jobs.spawn(lambda progress: folio.build_guide(nb, progress=progress), nb=nb, kind="guide")
+    return jobs.spawn(lambda progress: sourcebook.build_guide(nb, progress=progress), nb=nb, kind="guide")
 
 
 @router.get("/notebooks/{nb}/artifacts")
@@ -484,7 +484,7 @@ async def run_studio(nb: str, body: StudioRunBody) -> dict[str, Any]:
     except Exception as exc:
         raise _http_err(exc)
     return jobs.spawn(
-        lambda progress: folio.make(
+        lambda progress: sourcebook.make(
             nb,
             body.kind,
             body.params,

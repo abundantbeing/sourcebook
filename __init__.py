@@ -1,12 +1,12 @@
-"""Folio: Hermes Agent plugin half (register(ctx)).
+"""SourceBook: Hermes Agent plugin half (register(ctx)).
 
 Registers:
-  - Auxiliary LLM task slots: folio_chat, folio_studio, folio_ingest
-  - Tools declared in plugin.yaml: folio_search, folio_list_notebooks, folio_save_note, folio_studio
+  - Auxiliary LLM task slots: sourcebook_chat, sourcebook_studio, sourcebook_ingest
+  - Tools declared in plugin.yaml: sourcebook_search, sourcebook_list_notebooks, sourcebook_save_note, sourcebook_studio
   - Hook declared in plugin.yaml: pre_llm_call (active only on user-bound sessions)
-  - Slash command /folio (works across Desktop, CLI, TUI, Telegram, Discord, Slack)
+  - Slash command /sourcebook (works across Desktop, CLI, TUI, Telegram, Discord, Slack)
   - Gateway RPC methods chat.ask and studio.run (bounded concurrency and profile-safe threads)
-  - Agent skill folio:research-notebook
+  - Agent skill sourcebook:research-notebook
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from typing import Any, Optional
 
 from .core import ground, ingest, runtime, store, studio
 
-logger = logging.getLogger("folio")
+logger = logging.getLogger("sourcebook")
 
 _RPC_SLOTS = threading.BoundedSemaphore(4)
 
@@ -85,9 +85,9 @@ def ask(
         if progress:
             progress("Drafting grounded answer...", 55)
         llm = runtime.get_llm(ctx)
-        call_kwargs: dict[str, Any] = {"messages": msgs, "purpose": "folio.chat", "temperature": 0.15 if eff_strict else 0.25}
+        call_kwargs: dict[str, Any] = {"messages": msgs, "purpose": "sourcebook.chat", "temperature": 0.15 if eff_strict else 0.25}
         if runtime.get_live_context() is not None:
-            call_kwargs["task"] = "folio_chat"
+            call_kwargs["task"] = "sourcebook_chat"
         try:
             res = llm.complete(**call_kwargs)
             answer, cites, grounding_info = ground.validate(res.text, allowed)
@@ -176,8 +176,8 @@ def build_guide(nb: str, *, ctx: Any = None, progress: Any = None) -> dict[str, 
             ),
             input=[{"type": "text", "text": packed}],
             json_schema=schema,
-            schema_name="folio.guide",
-            purpose="folio.guide",
+            schema_name="sourcebook.guide",
+            purpose="sourcebook.guide",
             temperature=0.2,
         )
         guide = res.parsed if isinstance(res.parsed, dict) else _extractive_guide(chunks, titles)
@@ -229,39 +229,39 @@ def register(ctx: Any) -> None:
 
     if hasattr(ctx, "register_auxiliary_task"):
         ctx.register_auxiliary_task(
-            "folio_chat",
-            display_name="Folio Chat",
-            description="Grounded Q&A against Folio notebook sources.",
+            "sourcebook_chat",
+            display_name="SourceBook Chat",
+            description="Grounded Q&A against SourceBook notebook sources.",
         )
         ctx.register_auxiliary_task(
-            "folio_studio",
-            display_name="Folio Studio",
+            "sourcebook_studio",
+            display_name="SourceBook Studio",
             description="Structured generation for Reports, Mind Maps, Flashcards, Quizzes, Tables, Infographics, and Slide Decks.",
         )
         ctx.register_auxiliary_task(
-            "folio_ingest",
-            display_name="Folio Ingest",
+            "sourcebook_ingest",
+            display_name="SourceBook Ingest",
             description="Fast source summaries, topic tags, and claim extraction.",
             inherit_from="compression",
         )
 
     ctx.register_tool(
-        name="folio_list_notebooks",
-        toolset="folio",
+        name="sourcebook_list_notebooks",
+        toolset="sourcebook",
         schema={
-            "name": "folio_list_notebooks",
-            "description": "List all Folio research notebooks with their IDs, titles, and source counts.",
+            "name": "sourcebook_list_notebooks",
+            "description": "List all SourceBook research notebooks with their IDs, titles, and source counts.",
             "parameters": {"type": "object", "properties": {}},
         },
         handler=lambda args, **kw: json.dumps(store.list_notebooks(), ensure_ascii=False),
     )
 
     ctx.register_tool(
-        name="folio_search",
-        toolset="folio",
+        name="sourcebook_search",
+        toolset="sourcebook",
         schema={
-            "name": "folio_search",
-            "description": "Search a Folio notebook's enabled sources. Returns ranked chunks with IDs to cite using ::cite{nb=\"...\" chunk=\"...\"}.",
+            "name": "sourcebook_search",
+            "description": "Search a SourceBook notebook's enabled sources. Returns ranked chunks with IDs to cite using ::cite{nb=\"...\" chunk=\"...\"}.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -279,11 +279,11 @@ def register(ctx: Any) -> None:
     )
 
     ctx.register_tool(
-        name="folio_save_note",
-        toolset="folio",
+        name="sourcebook_save_note",
+        toolset="sourcebook",
         schema={
-            "name": "folio_save_note",
-            "description": "Save a Markdown research note inside a Folio notebook.",
+            "name": "sourcebook_save_note",
+            "description": "Save a Markdown research note inside a SourceBook notebook.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -308,11 +308,11 @@ def register(ctx: Any) -> None:
     )
 
     ctx.register_tool(
-        name="folio_studio",
-        toolset="folio",
+        name="sourcebook_studio",
+        toolset="sourcebook",
         schema={
-            "name": "folio_studio",
-            "description": "Generate a Studio artifact (report, mindmap, flashcards, quiz, table, infographic, slides) from a Folio notebook.",
+            "name": "sourcebook_studio",
+            "description": "Generate a Studio artifact (report, mindmap, flashcards, quiz, table, infographic, slides) from a SourceBook notebook.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -345,7 +345,7 @@ def register(ctx: Any) -> None:
             return None
         nb_id = binding["nb_id"]
         query = _extract_user_text(user_message).strip()
-        if not query or query.startswith("/folio"):
+        if not query or query.startswith("/sourcebook"):
             return None
         srcs = {s["id"]: s for s in store.list_sources(nb_id) if s.get("enabled")}
         if not srcs:
@@ -357,7 +357,7 @@ def register(ctx: Any) -> None:
         packed, _ = ground.pack(chunks, titles, budget_chars=7500)
         return {
             "context": (
-                f"[Folio Notebook Bound: {nb_id}]\n"
+                f"[SourceBook Notebook Bound: {nb_id}]\n"
                 "Ground your answer in the retrieved excerpts below. "
                 "When citing a passage in Hermes Desktop, add a standalone citation directive paragraph at the end "
                 f'like ::cite{{nb="{nb_id}" chunk="<chunk_id>"}}.\n\n'
@@ -372,33 +372,33 @@ def register(ctx: Any) -> None:
         parts = raw_args.strip().split(maxsplit=2)
         if not parts:
             return (
-                "Folio commands:\n"
-                "  /folio list\n"
-                "  /folio use <nb_id>        bind this chat to a notebook\n"
-                "  /folio unuse              unbind this chat\n"
-                "  /folio status             show active binding\n"
-                "  /folio add <nb_id> <url|text>\n"
-                "  /folio ask <nb_id> <question>\n"
-                "  /folio make <nb_id> <kind> [focus]"
+                "SourceBook commands:\n"
+                "  /sourcebook list\n"
+                "  /sourcebook use <nb_id>        bind this chat to a notebook\n"
+                "  /sourcebook unuse              unbind this chat\n"
+                "  /sourcebook status             show active binding\n"
+                "  /sourcebook add <nb_id> <url|text>\n"
+                "  /sourcebook ask <nb_id> <question>\n"
+                "  /sourcebook make <nb_id> <kind> [focus]"
             )
         sub = parts[0].lower()
         if sub == "list":
             nbs = store.list_notebooks()
             if not nbs:
-                return "No Folio notebooks yet. Open Folio in Hermes Desktop to create one."
+                return "No SourceBook notebooks yet. Open SourceBook in Hermes Desktop to create one."
             return "\n".join(f"- `{n['id']}` **{n['title']}** ({n['source_count']} sources)" for n in nbs)
         if sub == "status":
             b = store.get_session_binding(session_id)
             if not b:
-                return "This session is not bound to any Folio notebook. Use `/folio use <nb_id>`."
+                return "This session is not bound to any SourceBook notebook. Use `/sourcebook use <nb_id>`."
             meta = store.get_notebook(b["nb_id"])
             return f"Bound to `{meta['id']}` **{meta['title']}**."
         if sub == "unuse":
-            return "Unbound Folio notebook from this session." if store.unbind_session(session_id) else "No active binding."
+            return "Unbound SourceBook notebook from this session." if store.unbind_session(session_id) else "No active binding."
         if sub == "use" and len(parts) >= 2:
             nb_id = parts[1].strip()
             if not session_id:
-                return f"Cannot bind without a session id. Use `/folio ask {nb_id} <question>` directly."
+                return f"Cannot bind without a session id. Use `/sourcebook ask {nb_id} <question>` directly."
             store.bind_session(session_id, nb_id)
             meta = store.get_notebook(nb_id)
             return f"Bound this session to `{meta['id']}` **{meta['title']}**."
@@ -417,13 +417,13 @@ def register(ctx: Any) -> None:
             kind = rest[0].lower()
             focus = rest[1] if len(rest) > 1 else ""
             art = make(parts[1].strip(), kind, {"focus": focus} if focus else {}, ctx=ctx)
-            return f"Created {kind} artifact `{art['id']}` ({art['title']}). Open Folio to view."
-        return "Invalid usage. Run `/folio` with no arguments for help."
+            return f"Created {kind} artifact `{art['id']}` ({art['title']}). Open SourceBook to view."
+        return "Invalid usage. Run `/sourcebook` with no arguments for help."
 
     ctx.register_command(
-        "folio",
+        "sourcebook",
         handle_command,
-        description="Query, bind, or generate Studio artifacts from a Folio research notebook",
+        description="Query, bind, or generate Studio artifacts from a SourceBook research notebook",
         args_hint="list | use <nb> | ask <nb> <question> | make <nb> <kind>",
     )
 
@@ -431,7 +431,7 @@ def register(ctx: Any) -> None:
         def _register_async_rpc(method_name: str, done_event: str, worker_fn: Any) -> None:
             def rpc_handler(params: dict[str, Any], *, session_id: Optional[str] = None, **kwargs: Any) -> dict[str, Any]:
                 if not _RPC_SLOTS.acquire(blocking=False):
-                    raise RuntimeError(f"folio.{method_name} is busy: wait for an in-flight job to complete")
+                    raise RuntimeError(f"sourcebook.{method_name} is busy: wait for an in-flight job to complete")
                 job_id = uuid.uuid4().hex[:12]
 
                 def run_bg() -> None:

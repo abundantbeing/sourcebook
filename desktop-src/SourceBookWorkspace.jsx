@@ -7,7 +7,7 @@ import { SourceInspector } from './components/SourceInspector.jsx'
 import { ChatPanel } from './components/ChatPanel.jsx'
 import { StudioPanel } from './components/StudioPanel.jsx'
 
-export function FolioWorkspace({ ctx, externalState }) {
+export function SourceBookWorkspace({ ctx, externalState }) {
   const profile = typeof sdk.useValue === 'function' && sdk.host?.state?.profile
     ? sdk.useValue(sdk.host.state.profile)
     : 'default'
@@ -107,7 +107,7 @@ export function FolioWorkspace({ ctx, externalState }) {
       }
       setError('')
     } catch (err) {
-      setError(err.message || 'Could not reach Folio backend API.')
+      setError(err.message || 'Could not reach SourceBook backend API.')
     } finally {
       setLoading(false)
     }
@@ -123,7 +123,7 @@ export function FolioWorkspace({ ctx, externalState }) {
   // Listen to backend notebook.changed events
   useEffect(() => {
     if (!ctx?.onEvent) return undefined
-    return ctx.onEvent('plugin.folio.notebook.changed', ev => {
+    return ctx.onEvent('plugin.sourcebook.notebook.changed', ev => {
       const target = ev?.payload?.nb || ev?.nb
       if (!target || target === nbId) {
         loadNotebookData(nbId)
@@ -232,7 +232,7 @@ export function FolioWorkspace({ ctx, externalState }) {
           citations: [chunk.id]
         }
       })
-      sdk.host?.notify?.({ kind: 'success', title: 'Folio', message: 'Saved passage to Notes.' })
+      sdk.host?.notify?.({ kind: 'success', title: 'SourceBook', message: 'Saved passage to Notes.' })
       await loadNotebookData(nbId)
     } catch (err) {
       setError(err.message || 'Could not save passage.')
@@ -243,21 +243,21 @@ export function FolioWorkspace({ ctx, externalState }) {
   const hasActiveSources = sources.some(s => s.enabled)
 
   return (
-    <div className="fl-root" style={{ position: 'relative' }}>
+    <div className="sb-root" style={{ position: 'relative' }}>
       <Styles />
 
-      <header className="fl-topbar">
-        <div className="fl-topbar-left">
-          <div className="fl-brand">
-            <span className="fl-brand-mark">
+      <header className="sb-topbar">
+        <div className="sb-topbar-left">
+          <div className="sb-brand">
+            <span className="sb-brand-mark">
               <Icon name="BookOpen" size={13} />
             </span>
-            <span>Folio</span>
+            <span>SourceBook</span>
           </div>
 
           <button
             type="button"
-            className="fl-btn fl-btn-ghost fl-btn-icon"
+            className="sb-btn sb-btn-ghost sb-btn-icon"
             title={leftCollapsed ? 'Show Sources rail' : 'Hide Sources rail'}
             onClick={() => setLeftCollapsed(v => !v)}
           >
@@ -267,11 +267,11 @@ export function FolioWorkspace({ ctx, externalState }) {
           <div style={{ position: 'relative' }}>
             <button
               type="button"
-              className="fl-nb-select"
+              className="sb-nb-select"
               onClick={() => setNbMenuOpen(v => !v)}
               aria-expanded={nbMenuOpen}
             >
-              <span className="fl-nb-select-label">{notebook?.title || (loading ? 'Loading...' : 'Select notebook')}</span>
+              <span className="sb-nb-select-label">{notebook?.title || (loading ? 'Loading...' : 'Select notebook')}</span>
               <Icon name="ChevronDown" size={13} />
             </button>
             {nbMenuOpen ? (
@@ -302,20 +302,20 @@ export function FolioWorkspace({ ctx, externalState }) {
                       padding: '6px 8px',
                       borderRadius: 7,
                       cursor: 'pointer',
-                      background: nb.id === nbId ? 'var(--fl-accent-soft)' : 'transparent'
+                      background: nb.id === nbId ? 'var(--sb-accent-soft)' : 'transparent'
                     }}
                     onClick={() => selectNotebook(nb.id)}
                   >
                     <div style={{ minWidth: 0 }}>
-                      <div className="fl-src-title">{nb.title}</div>
+                      <div className="sb-src-title">{nb.title}</div>
                       <div style={{ fontSize: 11, color: 'var(--ui-text-tertiary)' }}>
-                        <span className="fl-num">{nb.source_count || 0}</span> sources | <span className="fl-num">{nb.artifact_count || 0}</span> artifacts
+                        <span className="sb-num">{nb.source_count || 0}</span> sources | <span className="sb-num">{nb.artifact_count || 0}</span> artifacts
                       </div>
                     </div>
                     {notebooks.length > 1 ? (
                       <button
                         type="button"
-                        className="fl-btn fl-btn-ghost fl-btn-icon fl-btn-danger"
+                        className="sb-btn sb-btn-ghost sb-btn-icon sb-btn-danger"
                         title="Delete notebook"
                         onClick={e => {
                           e.stopPropagation()
@@ -330,7 +330,7 @@ export function FolioWorkspace({ ctx, externalState }) {
                 <div style={{ borderTop: '1px solid var(--ui-stroke-tertiary)', marginTop: 4, paddingTop: 4 }}>
                   <button
                     type="button"
-                    className="fl-btn"
+                    className="sb-btn"
                     style={{ width: '100%', justifyContent: 'flex-start' }}
                     onClick={() => {
                       setNbMenuOpen(false)
@@ -344,30 +344,30 @@ export function FolioWorkspace({ ctx, externalState }) {
             ) : null}
           </div>
 
-          <button type="button" className="fl-btn" onClick={() => setCreateOpen(true)}>
+          <button type="button" className="sb-btn" onClick={() => setCreateOpen(true)}>
             <Icon name="Plus" size={13} /> New
           </button>
         </div>
 
-        <div className="fl-topbar-right">
+        <div className="sb-topbar-right">
           {notebook ? (
             <>
               <button
                 type="button"
-                className="fl-cov-meter"
+                className="sb-cov-meter"
                 title="Open Coverage Map"
                 onClick={() => setCenterTab('coverage')}
               >
                 <span>Coverage</span>
-                <span className="fl-cov-track">
-                  <span className="fl-cov-fill" style={{ width: `${covPct}%` }} />
+                <span className="sb-cov-track">
+                  <span className="sb-cov-fill" style={{ width: `${covPct}%` }} />
                 </span>
-                <span className="fl-mono" style={{ fontWeight: 600 }}>{covPct}%</span>
+                <span className="sb-mono" style={{ fontWeight: 600 }}>{covPct}%</span>
               </button>
 
               <button
                 type="button"
-                className="fl-btn"
+                className="sb-btn"
                 data-active={Boolean(notebook.strict)}
                 onClick={toggleStrict}
                 title="Strict grounding refuses any claim unsupported by active sources"
@@ -379,7 +379,7 @@ export function FolioWorkspace({ ctx, externalState }) {
 
           <button
             type="button"
-            className="fl-btn"
+            className="sb-btn"
             onClick={() => {
               setSearchQuery('')
               setSearchHits([])
@@ -393,16 +393,16 @@ export function FolioWorkspace({ ctx, externalState }) {
       </header>
 
       {error ? (
-        <div className="fl-error-bar" role="alert">
+        <div className="sb-error-bar" role="alert">
           <span>{error}</span>
-          <button type="button" className="fl-btn fl-btn-ghost fl-btn-icon" onClick={() => setError('')}>
+          <button type="button" className="sb-btn sb-btn-ghost sb-btn-icon" onClick={() => setError('')}>
             <Icon name="X" size={13} />
           </button>
         </div>
       ) : null}
 
       {!loading && !nbId ? (
-        <div className="fl-empty" style={{ flex: 1, justifyContent: 'center' }}>
+        <div className="sb-empty" style={{ flex: 1, justifyContent: 'center' }}>
           <Icon name="BookOpen" size={32} style={{ color: 'var(--ui-accent)' }} />
           <div style={{ fontSize: 16, fontWeight: 650, color: 'var(--ui-text-primary)' }}>
             Create your first research notebook
@@ -410,13 +410,13 @@ export function FolioWorkspace({ ctx, externalState }) {
           <div style={{ maxWidth: 420, fontSize: 13 }}>
             Collect PDFs, DOCX files, Markdown, CSV tables, and URLs in one workspace. Every answer cites exact passages and turns sources into interactive Studio artifacts.
           </div>
-          <button type="button" className="fl-btn fl-btn-primary" onClick={() => setCreateOpen(true)}>
+          <button type="button" className="sb-btn sb-btn-primary" onClick={() => setCreateOpen(true)}>
             <Icon name="Plus" size={13} /> New notebook
           </button>
         </div>
       ) : (
         <div
-          className="fl-workbench"
+          className="sb-workbench"
           data-left-collapsed={leftCollapsed}
           data-studio-expanded={studioExpanded}
         >
@@ -470,19 +470,19 @@ export function FolioWorkspace({ ctx, externalState }) {
       />
 
       {createOpen ? (
-        <div className="fl-modal-backdrop" onClick={() => setCreateOpen(false)}>
-          <form className="fl-modal" onClick={e => e.stopPropagation()} onSubmit={handleCreateNotebook}>
-            <div className="fl-modal-head">
+        <div className="sb-modal-backdrop" onClick={() => setCreateOpen(false)}>
+          <form className="sb-modal" onClick={e => e.stopPropagation()} onSubmit={handleCreateNotebook}>
+            <div className="sb-modal-head">
               <span>New research notebook</span>
-              <button type="button" className="fl-btn fl-btn-ghost fl-btn-icon" onClick={() => setCreateOpen(false)}>
+              <button type="button" className="sb-btn sb-btn-ghost sb-btn-icon" onClick={() => setCreateOpen(false)}>
                 <Icon name="X" size={14} />
               </button>
             </div>
-            <div className="fl-modal-body">
-              <label className="fl-field">
-                <span className="fl-label">Notebook title</span>
+            <div className="sb-modal-body">
+              <label className="sb-field">
+                <span className="sb-label">Notebook title</span>
                 <input
-                  className="fl-input"
+                  className="sb-input"
                   value={newTitle}
                   onChange={e => setNewTitle(e.target.value)}
                   placeholder="Distributed Systems Review, Q4 Market Research..."
@@ -491,38 +491,38 @@ export function FolioWorkspace({ ctx, externalState }) {
                 />
               </label>
             </div>
-            <div className="fl-modal-foot">
-              <button type="button" className="fl-btn" onClick={() => setCreateOpen(false)}>Cancel</button>
-              <button type="submit" className="fl-btn fl-btn-primary" disabled={!newTitle.trim()}>Create</button>
+            <div className="sb-modal-foot">
+              <button type="button" className="sb-btn" onClick={() => setCreateOpen(false)}>Cancel</button>
+              <button type="submit" className="sb-btn sb-btn-primary" disabled={!newTitle.trim()}>Create</button>
             </div>
           </form>
         </div>
       ) : null}
 
       {searchOpen ? (
-        <div className="fl-modal-backdrop" onClick={() => setSearchOpen(false)}>
-          <div className="fl-modal" onClick={e => e.stopPropagation()}>
-            <div className="fl-modal-head">
+        <div className="sb-modal-backdrop" onClick={() => setSearchOpen(false)}>
+          <div className="sb-modal" onClick={e => e.stopPropagation()}>
+            <div className="sb-modal-head">
               <span>Search across all notebooks</span>
-              <button type="button" className="fl-btn fl-btn-ghost fl-btn-icon" onClick={() => setSearchOpen(false)}>
+              <button type="button" className="sb-btn sb-btn-ghost sb-btn-icon" onClick={() => setSearchOpen(false)}>
                 <Icon name="X" size={14} />
               </button>
             </div>
-            <div className="fl-modal-body">
+            <div className="sb-modal-body">
               <input
-                className="fl-input"
+                className="sb-input"
                 value={searchQuery}
                 onChange={e => runCrossSearch(e.target.value)}
                 placeholder="Search passages across every notebook..."
                 autoFocus
               />
               {searchHits.length === 0 && searchQuery.trim() ? (
-                <div className="fl-empty">No matching passages found.</div>
+                <div className="sb-empty">No matching passages found.</div>
               ) : null}
               {searchHits.map(hit => (
                 <div
                   key={`${hit.notebook_id}-${hit.chunk_id}`}
-                  className="fl-ledger-row"
+                  className="sb-ledger-row"
                   style={{ cursor: 'pointer' }}
                   onClick={async () => {
                     setSearchOpen(false)
@@ -532,7 +532,7 @@ export function FolioWorkspace({ ctx, externalState }) {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5 }}>
                     <strong>{hit.notebook_title} / {hit.source_title}</strong>
-                    <span className="fl-mono" style={{ color: 'var(--ui-accent)' }}>{hit.chunk_id}</span>
+                    <span className="sb-mono" style={{ color: 'var(--ui-accent)' }}>{hit.chunk_id}</span>
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--ui-text-secondary)' }}>{hit.snippet}</div>
                 </div>

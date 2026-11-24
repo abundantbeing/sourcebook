@@ -31,7 +31,7 @@ export function DataTableView({ artifact, onOpenChunk }) {
   }, [rows, query, sort])
 
   if (!cols.length) {
-    return <div className="fl-empty">No table columns available.</div>
+    return <div className="sb-empty">No table columns available.</div>
   }
 
   function toggleSort(key) {
@@ -58,7 +58,7 @@ export function DataTableView({ artifact, onOpenChunk }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
         <input
-          className="fl-input"
+          className="sb-input"
           style={{ flex: 1, minWidth: 150 }}
           value={query}
           onChange={e => setQuery(e.target.value)}
@@ -66,21 +66,21 @@ export function DataTableView({ artifact, onOpenChunk }) {
         />
         <button
           type="button"
-          className="fl-btn"
+          className="sb-btn"
           onClick={async () => {
             await copyText(toMarkdown())
-            sdk.host?.notify?.({ kind: 'success', title: 'Folio', message: 'Copied Markdown table.' })
+            sdk.host?.notify?.({ kind: 'success', title: 'SourceBook', message: 'Copied Markdown table.' })
           }}
         >
           <Icon name="Copy" size={12} /> Markdown
         </button>
-        <button type="button" className="fl-btn" onClick={exportCsv}>
+        <button type="button" className="sb-btn" onClick={exportCsv}>
           <Icon name="Download" size={12} /> CSV
         </button>
       </div>
 
-      <div className="fl-table-wrap fl-scroll" style={{ maxHeight: 420 }}>
-        <table className="fl-table">
+      <div className="sb-table-wrap sb-scroll" style={{ maxHeight: 420 }}>
+        <table className="sb-table">
           <thead>
             <tr>
               {cols.map(c => (
@@ -96,13 +96,13 @@ export function DataTableView({ artifact, onOpenChunk }) {
             {filtered.map((r, rIdx) => (
               <tr key={r.id || rIdx}>
                 {cols.map(c => (
-                  <td key={c.key} className={c.type === 'number' ? 'fl-num' : undefined}>
+                  <td key={c.key} className={c.type === 'number' ? 'sb-num' : undefined}>
                     {String(r.cells?.[c.key] ?? '')}
                   </td>
                 ))}
                 <td style={{ whiteSpace: 'nowrap' }}>
                   {(r.cites || []).map((cid, idx) => (
-                    <button key={cid} type="button" className="fl-cite" onClick={() => onOpenChunk?.(cid)} title={`Inspect ${cid}`}>
+                    <button key={cid} type="button" className="sb-cite" onClick={() => onOpenChunk?.(cid)} title={`Inspect ${cid}`}>
                       {idx + 1}
                     </button>
                   ))}

@@ -164,7 +164,7 @@ export function SidebarSources({
     setBusy(true)
     try {
       await api(`/notebooks/${encodeURIComponent(nbId)}/notes/${encodeURIComponent(note.id)}/promote`, { method: 'POST' })
-      sdk.host?.notify?.({ kind: 'success', title: 'Folio', message: `Promoted "${note.title}" to sources.` })
+      sdk.host?.notify?.({ kind: 'success', title: 'SourceBook', message: `Promoted "${note.title}" to sources.` })
       setTab('sources')
       await onRefresh()
     } catch (err) {
@@ -195,39 +195,39 @@ export function SidebarSources({
   }
 
   return (
-    <aside className="fl-pane fl-pane-left" aria-label="Sources and Notes">
-      <div className="fl-pane-head">
-        <div className="fl-seg" role="tablist">
+    <aside className="sb-pane sb-pane-left" aria-label="Sources and Notes">
+      <div className="sb-pane-head">
+        <div className="sb-seg" role="tablist">
           <button
             type="button"
             role="tab"
             aria-selected={tab === 'sources'}
-            className="fl-seg-btn"
+            className="sb-seg-btn"
             data-active={tab === 'sources'}
             onClick={() => setTab('sources')}
           >
-            Sources <span className="fl-num" style={{ opacity: 0.7 }}>{sources.length}</span>
+            Sources <span className="sb-num" style={{ opacity: 0.7 }}>{sources.length}</span>
           </button>
           <button
             type="button"
             role="tab"
             aria-selected={tab === 'notes'}
-            className="fl-seg-btn"
+            className="sb-seg-btn"
             data-active={tab === 'notes'}
             onClick={() => setTab('notes')}
           >
-            Notes <span className="fl-num" style={{ opacity: 0.7 }}>{notes.length}</span>
+            Notes <span className="sb-num" style={{ opacity: 0.7 }}>{notes.length}</span>
           </button>
         </div>
         {tab === 'sources' && sources.length > 0 ? (
-          <button type="button" className="fl-btn fl-btn-ghost" onClick={toggleAll} title="Toggle all sources">
-            <span className="fl-num">{enabledCount}/{sources.length}</span>
+          <button type="button" className="sb-btn sb-btn-ghost" onClick={toggleAll} title="Toggle all sources">
+            <span className="sb-num">{enabledCount}/{sources.length}</span>
           </button>
         ) : null}
         {tab === 'notes' ? (
           <button
             type="button"
-            className="fl-btn fl-btn-ghost"
+            className="sb-btn sb-btn-ghost"
             onClick={() => {
               setTitle('')
               setBody('')
@@ -242,7 +242,7 @@ export function SidebarSources({
       {tab === 'sources' ? (
         <>
           <div
-            className="fl-dropzone"
+            className="sb-dropzone"
             data-over={dragOver}
             onDragOver={e => {
               e.preventDefault()
@@ -263,10 +263,10 @@ export function SidebarSources({
               style={{ display: 'none' }}
               onChange={e => handleFiles(e.target.files)}
             />
-            <div className="fl-dropzone-actions">
+            <div className="sb-dropzone-actions">
               <button
                 type="button"
-                className="fl-btn"
+                className="sb-btn"
                 disabled={!nbId || busy}
                 onClick={() => fileRef.current?.click()}
               >
@@ -274,7 +274,7 @@ export function SidebarSources({
               </button>
               <button
                 type="button"
-                className="fl-btn"
+                className="sb-btn"
                 disabled={!nbId || busy}
                 onClick={() => {
                   setTitle('')
@@ -286,7 +286,7 @@ export function SidebarSources({
               </button>
               <button
                 type="button"
-                className="fl-btn"
+                className="sb-btn"
                 disabled={!nbId || busy}
                 onClick={() => {
                   setTitle('')
@@ -302,9 +302,9 @@ export function SidebarSources({
             </div>
           </div>
 
-          <div className="fl-src-list fl-scroll">
+          <div className="sb-src-list sb-scroll">
             {sources.length === 0 ? (
-              <div className="fl-empty">
+              <div className="sb-empty">
                 <Icon name="BookOpen" size={22} />
                 <div style={{ fontWeight: 600, color: 'var(--ui-text-secondary)' }}>No sources yet</div>
                 <div style={{ fontSize: 11.5 }}>
@@ -318,7 +318,7 @@ export function SidebarSources({
                 return (
                   <div
                     key={src.id}
-                    className="fl-src-row"
+                    className="sb-src-row"
                     data-selected={selectedSourceId === src.id}
                     data-disabled={!src.enabled}
                     onClick={() => onSelectSource?.({ sourceId: src.id, chunkId: null })}
@@ -333,29 +333,29 @@ export function SidebarSources({
                   >
                     <input
                       type="checkbox"
-                      className="fl-checkbox"
+                      className="sb-checkbox"
                       checked={Boolean(src.enabled)}
                       onClick={e => e.stopPropagation()}
                       onChange={e => toggleSource(e, src)}
                       aria-label={`Include ${src.title}`}
                     />
                     <div style={{ minWidth: 0 }}>
-                      <div className="fl-src-title" title={src.title}>
+                      <div className="sb-src-title" title={src.title}>
                         {src.title}
                       </div>
-                      <div className="fl-src-meta">
+                      <div className="sb-src-meta">
                         <Icon name={KIND_ICONS[src.kind] || 'FileText'} size={11} />
-                        <span className="fl-kind-tag">{src.kind}</span>
-                        <span className="fl-num">{fmtWords(src.word_count ?? Math.round((src.chars || 0) / 5))} w</span>
-                        <span className="fl-num">{src.chunk_count} ch</span>
+                        <span className="sb-kind-tag">{src.kind}</span>
+                        <span className="sb-num">{fmtWords(src.word_count ?? Math.round((src.chars || 0) / 5))} w</span>
+                        <span className="sb-num">{src.chunk_count} ch</span>
                       </div>
-                      <div className="fl-src-bar" title={`Coverage: ${pct}%`}>
-                        <div className="fl-src-bar-fill" style={{ width: `${pct}%` }} />
+                      <div className="sb-src-bar" title={`Coverage: ${pct}%`}>
+                        <div className="sb-src-bar-fill" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
                     <button
                       type="button"
-                      className="fl-btn fl-btn-ghost fl-btn-icon fl-btn-danger"
+                      className="sb-btn sb-btn-ghost sb-btn-icon sb-btn-danger"
                       title="Remove source"
                       aria-label={`Remove ${src.title}`}
                       onClick={e => deleteSource(e, src)}
@@ -369,9 +369,9 @@ export function SidebarSources({
           </div>
         </>
       ) : (
-        <div className="fl-src-list fl-scroll">
+        <div className="sb-src-list sb-scroll">
           {notes.length === 0 ? (
-            <div className="fl-empty">
+            <div className="sb-empty">
               <Icon name="StickyNote" size={22} />
               <div style={{ fontWeight: 600, color: 'var(--ui-text-secondary)' }}>No notes saved</div>
               <div style={{ fontSize: 11.5 }}>
@@ -379,7 +379,7 @@ export function SidebarSources({
               </div>
               <button
                 type="button"
-                className="fl-btn"
+                className="sb-btn"
                 onClick={() => {
                   setTitle('')
                   setBody('')
@@ -393,7 +393,7 @@ export function SidebarSources({
             notes.map(note => (
               <div
                 key={note.id}
-                className="fl-ledger-row"
+                className="sb-ledger-row"
                 style={{ cursor: 'pointer' }}
                 onClick={() => {
                   setTitle(note.title || '')
@@ -402,13 +402,13 @@ export function SidebarSources({
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
-                  <div className="fl-src-title" style={{ flex: 1 }} title={note.title}>
+                  <div className="sb-src-title" style={{ flex: 1 }} title={note.title}>
                     {note.title}
                   </div>
                   <div style={{ display: 'flex', gap: 2 }} onClick={e => e.stopPropagation()}>
                     <button
                       type="button"
-                      className="fl-btn fl-btn-ghost fl-btn-icon"
+                      className="sb-btn sb-btn-ghost sb-btn-icon"
                       title="Promote note to active source"
                       onClick={() => promoteNote(note)}
                     >
@@ -416,7 +416,7 @@ export function SidebarSources({
                     </button>
                     <button
                       type="button"
-                      className="fl-btn fl-btn-ghost fl-btn-icon fl-btn-danger"
+                      className="sb-btn sb-btn-ghost sb-btn-icon sb-btn-danger"
                       title="Delete note"
                       onClick={() => deleteNote(note)}
                     >
@@ -443,29 +443,29 @@ export function SidebarSources({
       )}
 
       {modal === 'paste' ? (
-        <div className="fl-modal-backdrop" onClick={() => setModal(null)}>
-          <form className="fl-modal" onClick={e => e.stopPropagation()} onSubmit={submitPaste}>
-            <div className="fl-modal-head">
+        <div className="sb-modal-backdrop" onClick={() => setModal(null)}>
+          <form className="sb-modal" onClick={e => e.stopPropagation()} onSubmit={submitPaste}>
+            <div className="sb-modal-head">
               <span>Paste text or Markdown</span>
-              <button type="button" className="fl-btn fl-btn-ghost fl-btn-icon" onClick={() => setModal(null)}>
+              <button type="button" className="sb-btn sb-btn-ghost sb-btn-icon" onClick={() => setModal(null)}>
                 <Icon name="X" size={14} />
               </button>
             </div>
-            <div className="fl-modal-body">
-              <label className="fl-field">
-                <span className="fl-label">Title</span>
+            <div className="sb-modal-body">
+              <label className="sb-field">
+                <span className="sb-label">Title</span>
                 <input
-                  className="fl-input"
+                  className="sb-input"
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   placeholder="Architecture notes, benchmark table, transcript..."
                   autoFocus
                 />
               </label>
-              <label className="fl-field">
-                <span className="fl-label">Content</span>
+              <label className="sb-field">
+                <span className="sb-label">Content</span>
                 <textarea
-                  className="fl-input"
+                  className="sb-input"
                   style={{ height: 200, padding: '8px 10px', resize: 'vertical' }}
                   value={body}
                   onChange={e => setBody(e.target.value)}
@@ -474,9 +474,9 @@ export function SidebarSources({
                 />
               </label>
             </div>
-            <div className="fl-modal-foot">
-              <button type="button" className="fl-btn" onClick={() => setModal(null)}>Cancel</button>
-              <button type="submit" className="fl-btn fl-btn-primary" disabled={busy || !body.trim()}>
+            <div className="sb-modal-foot">
+              <button type="button" className="sb-btn" onClick={() => setModal(null)}>Cancel</button>
+              <button type="submit" className="sb-btn sb-btn-primary" disabled={busy || !body.trim()}>
                 {busy ? 'Indexing...' : 'Add source'}
               </button>
             </div>
@@ -485,19 +485,19 @@ export function SidebarSources({
       ) : null}
 
       {modal === 'url' ? (
-        <div className="fl-modal-backdrop" onClick={() => setModal(null)}>
-          <form className="fl-modal" onClick={e => e.stopPropagation()} onSubmit={submitUrl}>
-            <div className="fl-modal-head">
+        <div className="sb-modal-backdrop" onClick={() => setModal(null)}>
+          <form className="sb-modal" onClick={e => e.stopPropagation()} onSubmit={submitUrl}>
+            <div className="sb-modal-head">
               <span>Add web page or article</span>
-              <button type="button" className="fl-btn fl-btn-ghost fl-btn-icon" onClick={() => setModal(null)}>
+              <button type="button" className="sb-btn sb-btn-ghost sb-btn-icon" onClick={() => setModal(null)}>
                 <Icon name="X" size={14} />
               </button>
             </div>
-            <div className="fl-modal-body">
-              <label className="fl-field">
-                <span className="fl-label">URL</span>
+            <div className="sb-modal-body">
+              <label className="sb-field">
+                <span className="sb-label">URL</span>
                 <input
-                  className="fl-input"
+                  className="sb-input"
                   type="url"
                   value={urlInput}
                   onChange={e => setUrlInput(e.target.value)}
@@ -506,19 +506,19 @@ export function SidebarSources({
                   autoFocus
                 />
               </label>
-              <label className="fl-field">
-                <span className="fl-label">Optional custom title</span>
+              <label className="sb-field">
+                <span className="sb-label">Optional custom title</span>
                 <input
-                  className="fl-input"
+                  className="sb-input"
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   placeholder="Leave blank to use page title"
                 />
               </label>
             </div>
-            <div className="fl-modal-foot">
-              <button type="button" className="fl-btn" onClick={() => setModal(null)}>Cancel</button>
-              <button type="submit" className="fl-btn fl-btn-primary" disabled={busy || !urlInput.trim()}>
+            <div className="sb-modal-foot">
+              <button type="button" className="sb-btn" onClick={() => setModal(null)}>Cancel</button>
+              <button type="submit" className="sb-btn sb-btn-primary" disabled={busy || !urlInput.trim()}>
                 {busy ? 'Fetching...' : 'Ingest URL'}
               </button>
             </div>
@@ -527,29 +527,29 @@ export function SidebarSources({
       ) : null}
 
       {modal === 'note' || (modal && typeof modal === 'object') ? (
-        <div className="fl-modal-backdrop" onClick={() => setModal(null)}>
-          <form className="fl-modal" onClick={e => e.stopPropagation()} onSubmit={submitNote}>
-            <div className="fl-modal-head">
+        <div className="sb-modal-backdrop" onClick={() => setModal(null)}>
+          <form className="sb-modal" onClick={e => e.stopPropagation()} onSubmit={submitNote}>
+            <div className="sb-modal-head">
               <span>{typeof modal === 'object' ? 'Edit note' : 'New research note'}</span>
-              <button type="button" className="fl-btn fl-btn-ghost fl-btn-icon" onClick={() => setModal(null)}>
+              <button type="button" className="sb-btn sb-btn-ghost sb-btn-icon" onClick={() => setModal(null)}>
                 <Icon name="X" size={14} />
               </button>
             </div>
-            <div className="fl-modal-body">
-              <label className="fl-field">
-                <span className="fl-label">Title</span>
+            <div className="sb-modal-body">
+              <label className="sb-field">
+                <span className="sb-label">Title</span>
                 <input
-                  className="fl-input"
+                  className="sb-input"
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   placeholder="Working hypothesis, synthesis..."
                   autoFocus
                 />
               </label>
-              <label className="fl-field">
-                <span className="fl-label">Markdown</span>
+              <label className="sb-field">
+                <span className="sb-label">Markdown</span>
                 <textarea
-                  className="fl-input"
+                  className="sb-input"
                   style={{ height: 220, padding: '8px 10px', resize: 'vertical' }}
                   value={body}
                   onChange={e => setBody(e.target.value)}
@@ -557,9 +557,9 @@ export function SidebarSources({
                 />
               </label>
             </div>
-            <div className="fl-modal-foot">
-              <button type="button" className="fl-btn" onClick={() => setModal(null)}>Cancel</button>
-              <button type="submit" className="fl-btn fl-btn-primary" disabled={busy}>
+            <div className="sb-modal-foot">
+              <button type="button" className="sb-btn" onClick={() => setModal(null)}>Cancel</button>
+              <button type="submit" className="sb-btn sb-btn-primary" disabled={busy}>
                 {busy ? 'Saving...' : 'Save note'}
               </button>
             </div>

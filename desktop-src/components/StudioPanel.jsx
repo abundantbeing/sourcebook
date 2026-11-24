@@ -120,7 +120,7 @@ export function StudioPanel({
   }
 
   function renderViewer() {
-    if (loadingArt) return <div className="fl-empty">Loading artifact...</div>
+    if (loadingArt) return <div className="sb-empty">Loading artifact...</div>
     if (!activeArt) return null
     switch (activeArt.kind) {
       case 'report':
@@ -138,19 +138,19 @@ export function StudioPanel({
       case 'slides':
         return <SlideDeckView artifact={activeArt} onOpenChunk={onOpenChunk} />
       default:
-        return <pre className="fl-mono" style={{ fontSize: 11 }}>{JSON.stringify(activeArt.spec, null, 2)}</pre>
+        return <pre className="sb-mono" style={{ fontSize: 11 }}>{JSON.stringify(activeArt.spec, null, 2)}</pre>
     }
   }
 
   return (
-    <aside className="fl-pane fl-pane-right" aria-label="Studio">
+    <aside className="sb-pane sb-pane-right" aria-label="Studio">
       {selectedArtifactId && activeArt ? (
-        <div className="fl-viewer">
-          <div className="fl-viewer-head">
+        <div className="sb-viewer">
+          <div className="sb-viewer-head">
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
               <button
                 type="button"
-                className="fl-btn fl-btn-ghost fl-btn-icon"
+                className="sb-btn sb-btn-ghost sb-btn-icon"
                 title="Back to Studio"
                 onClick={() => {
                   onSelectArtifact?.(null)
@@ -160,7 +160,7 @@ export function StudioPanel({
                 <Icon name="ArrowLeft" size={14} />
               </button>
               <div style={{ minWidth: 0 }}>
-                <div className="fl-src-title" title={activeArt.title}>{activeArt.title}</div>
+                <div className="sb-src-title" title={activeArt.title}>{activeArt.title}</div>
                 <div style={{ fontSize: 11, color: 'var(--ui-text-tertiary)' }}>
                   {KIND_META[activeArt.kind]?.label || activeArt.kind}
                   {activeArt.grounding?.mode === 'extractive' ? ' | Local extractive' : ''}
@@ -170,7 +170,7 @@ export function StudioPanel({
             <div style={{ display: 'flex', gap: 4 }}>
               <button
                 type="button"
-                className="fl-btn fl-btn-icon"
+                className="sb-btn sb-btn-icon"
                 title={expanded ? 'Dock Studio rail' : 'Expand Studio canvas'}
                 onClick={onToggleExpand}
               >
@@ -178,20 +178,20 @@ export function StudioPanel({
               </button>
             </div>
           </div>
-          <div className="fl-viewer-body fl-scroll">{renderViewer()}</div>
+          <div className="sb-viewer-body sb-scroll">{renderViewer()}</div>
         </div>
       ) : (
         <>
-          <div className="fl-pane-head">
-            <span className="fl-pane-title">Studio</span>
-            <span className="fl-num" style={{ fontSize: 11, color: 'var(--ui-text-tertiary)' }}>
+          <div className="sb-pane-head">
+            <span className="sb-pane-title">Studio</span>
+            <span className="sb-num" style={{ fontSize: 11, color: 'var(--ui-text-tertiary)' }}>
               {artifacts.length} saved
             </span>
           </div>
 
           <div style={{ padding: '10px 12px 0' }}>
             <input
-              className="fl-input"
+              className="sb-input"
               value={focusPrompt}
               onChange={e => setFocusPrompt(e.target.value)}
               placeholder="Optional focus topic for next artifact..."
@@ -199,12 +199,12 @@ export function StudioPanel({
             />
           </div>
 
-          <div className="fl-studio-grid">
+          <div className="sb-studio-grid">
             {STUDIO_FORMATS.map(fmt => (
               <button
                 key={fmt.kind}
                 type="button"
-                className={`fl-studio-tile${fmt.wide ? ' fl-studio-tile-wide' : ''}`}
+                className={`sb-studio-tile${fmt.wide ? ' sb-studio-tile-wide' : ''}`}
                 disabled={!hasActiveSources || Boolean(runningKind)}
                 onClick={() => runGenerator(fmt.kind)}
               >
@@ -220,13 +220,13 @@ export function StudioPanel({
             </div>
           ) : null}
 
-          <div className="fl-pane-head" style={{ borderTop: '1px solid var(--ui-stroke-tertiary)' }}>
-            <span className="fl-pane-title">Artifacts</span>
+          <div className="sb-pane-head" style={{ borderTop: '1px solid var(--ui-stroke-tertiary)' }}>
+            <span className="sb-pane-title">Artifacts</span>
           </div>
 
-          <div className="fl-art-list fl-scroll">
+          <div className="sb-art-list sb-scroll">
             {artifacts.length === 0 ? (
-              <div className="fl-empty">
+              <div className="sb-empty">
                 <Icon name="Layers" size={22} />
                 <div style={{ fontWeight: 600, color: 'var(--ui-text-secondary)' }}>No artifacts yet</div>
                 <div style={{ fontSize: 11.5 }}>
@@ -239,7 +239,7 @@ export function StudioPanel({
                 return (
                   <div
                     key={art.id}
-                    className="fl-art-item"
+                    className="sb-art-item"
                     data-active={selectedArtifactId === art.id}
                     role="button"
                     tabIndex={0}
@@ -254,13 +254,13 @@ export function StudioPanel({
                     <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
                       <Icon name={meta.icon} size={14} style={{ color: 'var(--ui-accent)', flexShrink: 0 }} />
                       <div style={{ minWidth: 0 }}>
-                        <div className="fl-src-title" title={art.title}>{art.title}</div>
+                        <div className="sb-src-title" title={art.title}>{art.title}</div>
                         <div style={{ fontSize: 11, color: 'var(--ui-text-tertiary)' }}>{meta.label}</div>
                       </div>
                     </div>
                     <button
                       type="button"
-                      className="fl-btn fl-btn-ghost fl-btn-icon fl-btn-danger"
+                      className="sb-btn sb-btn-ghost sb-btn-icon sb-btn-danger"
                       title="Delete artifact"
                       onClick={e => deleteArtifact(e, art.id)}
                     >

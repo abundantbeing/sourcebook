@@ -40,7 +40,7 @@ export function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated 
   }, [artifact?.id])
 
   if (!cards.length) {
-    return <div className="fl-empty">No flashcards in this deck.</div>
+    return <div className="sb-empty">No flashcards in this deck.</div>
   }
 
   const card = cards[order[cursor] ?? 0] || cards[0]
@@ -93,26 +93,26 @@ export function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated 
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: 12, fontSize: 12, color: 'var(--ui-text-secondary)' }}>
-          <span>Card <strong className="fl-num">{cursor + 1}/{cards.length}</strong></span>
-          <span>Due <strong className="fl-num">{due}</strong></span>
-          <span>Mastered <strong className="fl-num">{mastered}</strong></span>
+          <span>Card <strong className="sb-num">{cursor + 1}/{cards.length}</strong></span>
+          <span>Due <strong className="sb-num">{due}</strong></span>
+          <span>Mastered <strong className="sb-num">{mastered}</strong></span>
         </div>
         <div style={{ display: 'flex', gap: 5 }}>
-          <button type="button" className="fl-btn" onClick={shuffle}>
+          <button type="button" className="sb-btn" onClick={shuffle}>
             <Icon name="Shuffle" size={12} /> Shuffle
           </button>
-          <button type="button" className="fl-btn" onClick={exportCsv}>
+          <button type="button" className="sb-btn" onClick={exportCsv}>
             <Icon name="Download" size={12} /> CSV
           </button>
         </div>
       </div>
 
-      <div className="fl-src-bar" style={{ height: 4 }}>
-        <div className="fl-src-bar-fill" style={{ width: `${Math.round(((cursor + 1) / cards.length) * 100)}%` }} />
+      <div className="sb-src-bar" style={{ height: 4 }}>
+        <div className="sb-src-bar-fill" style={{ width: `${Math.round(((cursor + 1) / cards.length) * 100)}%` }} />
       </div>
 
       <div
-        className="fl-fc-card"
+        className="sb-fc-card"
         role="button"
         tabIndex={0}
         onClick={() => setFlipped(f => !f)}
@@ -132,7 +132,7 @@ export function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated 
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span className="fl-kind-tag">{flipped ? 'Answer' : 'Prompt'}</span>
+          <span className="sb-kind-tag">{flipped ? 'Answer' : 'Prompt'}</span>
           <span style={{ fontSize: 11, color: 'var(--ui-text-tertiary)' }}>Click or Space to flip</span>
         </div>
 
@@ -143,7 +143,7 @@ export function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
             {(card.cites || []).map((cid, idx) => (
-              <button key={cid} type="button" className="fl-cite" onClick={() => onOpenChunk?.(cid)} title={`Inspect ${cid}`}>
+              <button key={cid} type="button" className="sb-cite" onClick={() => onOpenChunk?.(cid)} title={`Inspect ${cid}`}>
                 {idx + 1}
               </button>
             ))}
@@ -151,7 +151,7 @@ export function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated 
           {!flipped && card.hint ? (
             <button
               type="button"
-              className="fl-btn fl-btn-ghost"
+              className="sb-btn sb-btn-ghost"
               onClick={e => {
                 e.stopPropagation()
                 setShowHint(h => !h)
@@ -164,17 +164,17 @@ export function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated 
       </div>
 
       {flipped ? (
-        <div className="fl-fc-grade-row">
-          <button type="button" className="fl-btn" onClick={() => grade(1)}>Again (1d)</button>
-          <button type="button" className="fl-btn" onClick={() => grade(3)}>Hard</button>
-          <button type="button" className="fl-btn fl-btn-primary" onClick={() => grade(4)}>Good</button>
-          <button type="button" className="fl-btn" onClick={() => grade(5)}>Easy</button>
+        <div className="sb-fc-grade-row">
+          <button type="button" className="sb-btn" onClick={() => grade(1)}>Again (1d)</button>
+          <button type="button" className="sb-btn" onClick={() => grade(3)}>Hard</button>
+          <button type="button" className="sb-btn sb-btn-primary" onClick={() => grade(4)}>Good</button>
+          <button type="button" className="sb-btn" onClick={() => grade(5)}>Easy</button>
         </div>
       ) : (
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
           <button
             type="button"
-            className="fl-btn"
+            className="sb-btn"
             onClick={() => {
               setFlipped(false)
               setShowHint(false)
@@ -183,12 +183,12 @@ export function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated 
           >
             <Icon name="ChevronLeft" size={13} /> Prev
           </button>
-          <button type="button" className="fl-btn fl-btn-primary" onClick={() => setFlipped(true)}>
+          <button type="button" className="sb-btn sb-btn-primary" onClick={() => setFlipped(true)}>
             Reveal answer
           </button>
           <button
             type="button"
-            className="fl-btn"
+            className="sb-btn"
             onClick={() => {
               setFlipped(false)
               setShowHint(false)

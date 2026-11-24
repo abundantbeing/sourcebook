@@ -22,7 +22,7 @@ export function StudyGuideView({ artifact, onOpenChunk }) {
       if (m) {
         const cid = m[1]
         return (
-          <button key={idx} type="button" className="fl-cite" onClick={() => onOpenChunk?.(cid)} title={`Inspect ${cid}`}>
+          <button key={idx} type="button" className="sb-cite" onClick={() => onOpenChunk?.(cid)} title={`Inspect ${cid}`}>
             {citeMap.get(cid)}
           </button>
         )
@@ -41,18 +41,18 @@ export function StudyGuideView({ artifact, onOpenChunk }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-        <button type="button" className="fl-btn" onClick={() => copyText(md)}>
+        <button type="button" className="sb-btn" onClick={() => copyText(md)}>
           <Icon name="Copy" size={12} /> Copy Markdown
         </button>
         <button
           type="button"
-          className="fl-btn"
+          className="sb-btn"
           onClick={() => downloadTextFile(`${artifact.id || 'study-guide'}.md`, md, 'text/markdown;charset=utf-8')}
         >
           <Icon name="Download" size={12} /> Download .md
         </button>
       </div>
-      <div className="fl-msg-body" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div className="sb-msg-body" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {blocks.map((block, bIdx) => {
           const t = block.trim()
           if (t.startsWith('# ')) return <h2 key={bIdx} style={{ fontSize: 16, margin: '4px 0' }}>{renderLine(t.slice(2))}</h2>

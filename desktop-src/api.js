@@ -1,5 +1,5 @@
 // Namespace-scoped REST client, profile/connection/epoch scoping, and SVG CSS color baker.
-// All backend calls go strictly through ctx.rest('/...') -> /api/plugins/folio/*.
+// All backend calls go strictly through ctx.rest('/...') -> /api/plugins/sourcebook/*.
 import { sdk } from './sdk.js'
 
 let activeCtx = null
@@ -25,14 +25,14 @@ export function currentEpoch() {
 
 export async function api(path, opts = {}) {
   if (!activeCtx || typeof activeCtx.rest !== 'function') {
-    throw new Error('Folio backend connection is not ready yet.')
+    throw new Error('SourceBook backend connection is not ready yet.')
   }
   return activeCtx.rest(path, opts)
 }
 
 export async function uploadFile(nbId, file) {
   if (!activeCtx || typeof activeCtx.rest !== 'function') {
-    throw new Error('Folio backend connection is not ready yet.')
+    throw new Error('SourceBook backend connection is not ready yet.')
   }
   const bytes = await file.arrayBuffer()
   return activeCtx.rest(`/notebooks/${encodeURIComponent(nbId)}/sources/upload`, {
@@ -151,9 +151,9 @@ export function bakeSvgVariables(svgEl) {
   const accent = resolveCssColor('var(--ui-accent)', svgEl)
   const accentSoft = resolveCssColor('color-mix(in srgb, var(--ui-accent) 16%, var(--ui-bg-elevated))', svgEl)
   const replacements = [
-    [/var\(--fl-bg[^)]*\)/g, bg],
-    [/var\(--fl-surface[^)]*\)/g, bg2],
-    [/var\(--fl-sidebar[^)]*\)/g, sidebar],
+    [/var\(--sb-bg[^)]*\)/g, bg],
+    [/var\(--sb-surface[^)]*\)/g, bg2],
+    [/var\(--sb-sidebar[^)]*\)/g, sidebar],
     [/var\(--ui-bg-chrome[^)]*\)/g, bg],
     [/var\(--ui-bg-elevated[^)]*\)/g, bg2],
     [/var\(--ui-bg-sidebar[^)]*\)/g, sidebar],
@@ -164,8 +164,8 @@ export function bakeSvgVariables(svgEl) {
     [/var\(--ui-text-tertiary[^)]*\)/g, muted],
     [/var\(--ui-stroke-secondary[^)]*\)/g, stroke],
     [/var\(--ui-stroke-tertiary[^)]*\)/g, stroke],
-    [/var\(--fl-accent-soft[^)]*\)/g, accentSoft],
-    [/var\(--fl-accent-border[^)]*\)/g, accent],
+    [/var\(--sb-accent-soft[^)]*\)/g, accentSoft],
+    [/var\(--sb-accent-border[^)]*\)/g, accent],
     [/var\(--ui-accent[^)]*\)/g, accent]
   ]
   let markup = new XMLSerializer().serializeToString(clone)

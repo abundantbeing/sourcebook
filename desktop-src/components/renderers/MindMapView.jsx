@@ -55,17 +55,17 @@ export function MindMapView({ artifact, onOpenChunk }) {
   const svgRef = useRef(null)
 
   const graph = useMemo(() => layoutTree(root, collapsed), [root, collapsed])
-  const titleId = `fl-mm-title-${artifact?.id || 'map'}`
-  const descId = `fl-mm-desc-${artifact?.id || 'map'}`
+  const titleId = `sb-mm-title-${artifact?.id || 'map'}`
+  const descId = `sb-mm-desc-${artifact?.id || 'map'}`
 
   if (!root) {
-    return <div className="fl-empty">No mind map structure available.</div>
+    return <div className="sb-empty">No mind map structure available.</div>
   }
 
   async function handleCopySvg() {
     const svgText = bakeSvgVariables(svgRef.current)
     await copyText(svgText)
-    sdk.host?.notify?.({ kind: 'success', title: 'Folio', message: 'Copied standalone SVG to clipboard.' })
+    sdk.host?.notify?.({ kind: 'success', title: 'SourceBook', message: 'Copied standalone SVG to clipboard.' })
   }
 
   function handleDownloadSvg() {
@@ -79,28 +79,28 @@ export function MindMapView({ artifact, onOpenChunk }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: 4 }}>
-          <button type="button" className="fl-btn fl-btn-icon" title="Zoom out" onClick={() => setZoom(z => Math.max(0.45, Number((z - 0.15).toFixed(2))))}>
+          <button type="button" className="sb-btn sb-btn-icon" title="Zoom out" onClick={() => setZoom(z => Math.max(0.45, Number((z - 0.15).toFixed(2))))}>
             <Icon name="Minus" size={13} />
           </button>
-          <button type="button" className="fl-btn" onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }) }}>
-            <span className="fl-mono">{Math.round(zoom * 100)}%</span>
+          <button type="button" className="sb-btn" onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }) }}>
+            <span className="sb-mono">{Math.round(zoom * 100)}%</span>
           </button>
-          <button type="button" className="fl-btn fl-btn-icon" title="Zoom in" onClick={() => setZoom(z => Math.min(2, Number((z + 0.15).toFixed(2))))}>
+          <button type="button" className="sb-btn sb-btn-icon" title="Zoom in" onClick={() => setZoom(z => Math.min(2, Number((z + 0.15).toFixed(2))))}>
             <Icon name="Plus" size={13} />
           </button>
         </div>
         <div style={{ display: 'flex', gap: 5 }}>
-          <button type="button" className="fl-btn" onClick={handleCopySvg}>
+          <button type="button" className="sb-btn" onClick={handleCopySvg}>
             <Icon name="Copy" size={12} /> Copy SVG
           </button>
-          <button type="button" className="fl-btn" onClick={handleDownloadSvg}>
+          <button type="button" className="sb-btn" onClick={handleDownloadSvg}>
             <Icon name="Download" size={12} /> SVG
           </button>
         </div>
       </div>
 
       <div
-        className="fl-svg-stage"
+        className="sb-svg-stage"
         style={{ height: 340, cursor: dragging ? 'grabbing' : 'grab', userSelect: 'none' }}
         onPointerDown={e => {
           if (e.target.closest('g[data-node]')) return
@@ -120,7 +120,7 @@ export function MindMapView({ artifact, onOpenChunk }) {
           width="100%"
           height="100%"
           viewBox={`0 0 ${graph.width} ${graph.height}`}
-          style={{ display: 'block', background: 'var(--fl-bg)' }}
+          style={{ display: 'block', background: 'var(--sb-bg)' }}
         >
           <title id={titleId}>{artifact?.spec?.title || 'Concept Mind Map'}</title>
           <desc id={descId}>Interactive hierarchical concept map with {graph.nodes.length} nodes grounded in notebook sources.</desc>
@@ -163,7 +163,7 @@ export function MindMapView({ artifact, onOpenChunk }) {
                     width="186"
                     height="36"
                     rx="8"
-                    fill={isRoot || isSel ? 'var(--fl-accent-soft)' : 'var(--fl-surface)'}
+                    fill={isRoot || isSel ? 'var(--sb-accent-soft)' : 'var(--sb-surface)'}
                     stroke={isRoot || isSel ? 'var(--ui-accent)' : 'var(--ui-stroke-secondary)'}
                     strokeWidth={isRoot || isSel ? '1.6' : '1'}
                   />
@@ -185,7 +185,7 @@ export function MindMapView({ artifact, onOpenChunk }) {
                         setCollapsed(prev => ({ ...prev, [n.id]: !prev[n.id] }))
                       }}
                     >
-                      <circle r="8" fill="var(--fl-surface)" stroke="var(--ui-stroke-secondary)" strokeWidth="1.2" />
+                      <circle r="8" fill="var(--sb-surface)" stroke="var(--ui-stroke-secondary)" strokeWidth="1.2" />
                       <text textAnchor="middle" y="3.5" fill="var(--ui-text-secondary)" fontSize="11" fontWeight="700">
                         {n.collapsed ? '+' : '-'}
                       </text>
@@ -199,12 +199,12 @@ export function MindMapView({ artifact, onOpenChunk }) {
       </div>
 
       {activeNode ? (
-        <div className="fl-ledger-row">
+        <div className="sb-ledger-row">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
             <strong style={{ fontSize: 12.5 }}>{activeNode.label}</strong>
             <div style={{ display: 'flex', gap: 4 }}>
               {(activeNode.cites || []).map((cid, idx) => (
-                <button key={cid} type="button" className="fl-cite" onClick={() => onOpenChunk?.(cid)} title={`Inspect ${cid}`}>
+                <button key={cid} type="button" className="sb-cite" onClick={() => onOpenChunk?.(cid)} title={`Inspect ${cid}`}>
                   {idx + 1}
                 </button>
               ))}

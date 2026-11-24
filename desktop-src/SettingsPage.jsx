@@ -14,7 +14,7 @@ export function SettingsPage() {
         if (alive) setCaps(res)
       })
       .catch(e => {
-        if (alive) setErr(e.message || 'Could not reach Folio backend.')
+        if (alive) setErr(e.message || 'Could not reach SourceBook backend.')
       })
     return () => {
       alive = false
@@ -30,25 +30,25 @@ export function SettingsPage() {
   ]
 
   return (
-    <div className="fl-root" style={{ height: 'auto', overflow: 'visible', background: 'transparent' }}>
+    <div className="sb-root" style={{ height: 'auto', overflow: 'visible', background: 'transparent' }}>
       <Styles />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 640 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
           <div>
-            <div style={{ fontWeight: 650, fontSize: 14 }}>Folio Research Notebooks</div>
+            <div style={{ fontWeight: 650, fontSize: 14 }}>SourceBook Research Notebooks</div>
             <div style={{ fontSize: 12, color: 'var(--ui-text-secondary)', marginTop: 2 }}>
               Source-grounded notebooks, Claim Ledger verification, Coverage Map, and 7 interactive Studio formats.
             </div>
           </div>
-          <button type="button" className="fl-btn fl-btn-primary" onClick={() => sdk.host?.navigate?.('/folio')}>
-            <Icon name="BookOpen" size={13} /> Open Folio
+          <button type="button" className="sb-btn sb-btn-primary" onClick={() => sdk.host?.navigate?.('/sourcebook')}>
+            <Icon name="BookOpen" size={13} /> Open SourceBook
           </button>
         </div>
 
-        {err ? <div className="fl-error-bar" style={{ margin: 0 }}>{err}</div> : null}
+        {err ? <div className="sb-error-bar" style={{ margin: 0 }}>{err}</div> : null}
 
-        <div className="fl-table-wrap">
-          <table className="fl-table">
+        <div className="sb-table-wrap">
+          <table className="sb-table">
             <thead>
               <tr>
                 <th>Capability</th>
@@ -66,14 +66,14 @@ export function SettingsPage() {
           </table>
         </div>
 
-        <div className="fl-ledger-row">
+        <div className="sb-ledger-row">
           <strong style={{ fontSize: 12 }}>Slash commands</strong>
-          <div className="fl-mono" style={{ fontSize: 11.5, color: 'var(--ui-text-secondary)', lineHeight: 1.7 }}>
-            /folio list<br />
-            /folio use &lt;nb_id&gt;<br />
-            /folio add &lt;nb_id&gt; &lt;url or text&gt;<br />
-            /folio ask &lt;nb_id&gt; &lt;question&gt;<br />
-            /folio make &lt;nb_id&gt; &lt;kind&gt; [focus]
+          <div className="sb-mono" style={{ fontSize: 11.5, color: 'var(--ui-text-secondary)', lineHeight: 1.7 }}>
+            /sourcebook list<br />
+            /sourcebook use &lt;nb_id&gt;<br />
+            /sourcebook add &lt;nb_id&gt; &lt;url or text&gt;<br />
+            /sourcebook ask &lt;nb_id&gt; &lt;question&gt;<br />
+            /sourcebook make &lt;nb_id&gt; &lt;kind&gt; [focus]
           </div>
         </div>
       </div>

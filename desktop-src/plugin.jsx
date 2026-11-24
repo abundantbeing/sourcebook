@@ -1,10 +1,10 @@
-// Folio: source-grounded research notebooks and interactive Studio for Hermes Desktop.
+// SourceBook: source-grounded research notebooks and interactive Studio for Hermes Desktop.
 import { sdk, Icon } from './sdk.js'
 import { bindContext } from './api.js'
-import { FolioWorkspace } from './FolioWorkspace.jsx'
+import { SourceBookWorkspace } from './SourceBookWorkspace.jsx'
 import { SettingsPage } from './SettingsPage.jsx'
 
-const ROUTE = '/folio'
+const ROUTE = '/sourcebook'
 
 function StatusChip({ externalState }) {
   const state = typeof sdk.useValue === 'function' && externalState ? sdk.useValue(externalState) : null
@@ -12,13 +12,13 @@ function StatusChip({ externalState }) {
   return (
     <button
       type="button"
-      className="fl-status-chip"
+      className="sb-status-chip"
       onClick={() => sdk.host?.navigate?.(ROUTE)}
-      title={`Open Folio: ${state.title}`}
+      title={`Open SourceBook: ${state.title}`}
     >
       <Icon name="BookOpen" size={12} />
       <span>{state.title}</span>
-      {state.dueCards > 0 ? <span className="fl-mono">({state.dueCards} due)</span> : null}
+      {state.dueCards > 0 ? <span className="sb-mono">({state.dueCards} due)</span> : null}
     </button>
   )
 }
@@ -29,7 +29,7 @@ function CiteDirective({ props, externalState }) {
   return (
     <button
       type="button"
-      className="fl-cite-card"
+      className="sb-cite-card"
       onClick={() => {
         if (externalState) {
           externalState.set({ ...externalState.get(), pendingJump: { nb, chunk } })
@@ -38,15 +38,15 @@ function CiteDirective({ props, externalState }) {
       }}
     >
       <Icon name="BookOpen" size={13} />
-      <span>Folio source</span>
-      {chunk ? <span className="fl-mono">{chunk}</span> : null}
+      <span>SourceBook source</span>
+      {chunk ? <span className="sb-mono">{chunk}</span> : null}
     </button>
   )
 }
 
 export default {
-  id: 'folio',
-  name: 'Folio',
+  id: 'sourcebook',
+  name: 'SourceBook',
   description: 'Source-grounded research notebooks, Claim Ledger, Coverage Map, and 7-format interactive Studio.',
   register(ctx) {
     bindContext(ctx)
@@ -56,13 +56,13 @@ export default {
       id: 'page',
       area: sdk.ROUTES_AREA,
       data: { path: ROUTE },
-      render: () => <FolioWorkspace ctx={ctx} externalState={externalState} />
+      render: () => <SourceBookWorkspace ctx={ctx} externalState={externalState} />
     })
 
     ctx.register({
       id: 'nav',
       area: sdk.SIDEBAR_NAV_AREA,
-      data: { path: ROUTE, label: 'Folio', codicon: 'book' }
+      data: { path: ROUTE, label: 'SourceBook', codicon: 'book' }
     })
 
     if (sdk.PALETTE_AREA) {
@@ -70,9 +70,9 @@ export default {
         id: 'open',
         area: sdk.PALETTE_AREA,
         data: {
-          id: 'folio.open',
-          label: 'Folio: Open research notebooks',
-          keywords: ['folio', 'notebook', 'research', 'studio', 'flashcards', 'mindmap', 'citations'],
+          id: 'sourcebook.open',
+          label: 'SourceBook: Open research notebooks',
+          keywords: ['sourcebook', 'notebook', 'research', 'studio', 'flashcards', 'mindmap', 'citations'],
           run: () => sdk.host?.navigate?.(ROUTE)
         }
       })
@@ -97,8 +97,8 @@ export default {
 
     if (typeof ctx.registerSettingsPage === 'function') {
       ctx.registerSettingsPage({
-        id: 'folio',
-        title: 'Folio',
+        id: 'sourcebook',
+        title: 'SourceBook',
         description: 'Source-grounded research notebooks and Studio.',
         render: () => <SettingsPage />
       })

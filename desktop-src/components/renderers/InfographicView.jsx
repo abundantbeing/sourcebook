@@ -46,7 +46,7 @@ export function InfographicView({ artifact, onOpenChunk }) {
   const svgRef = useRef(null)
 
   if (!blocks.length) {
-    return <div className="fl-empty">No infographic blocks available.</div>
+    return <div className="sb-empty">No infographic blocks available.</div>
   }
 
   const W = 740
@@ -57,13 +57,13 @@ export function InfographicView({ artifact, onOpenChunk }) {
   const gap = 14
   const headerH = 84
   const H = headerH + rows * cardH + Math.max(0, rows - 1) * gap + 28
-  const titleId = `fl-inf-title-${artifact?.id || 'info'}`
-  const descId = `fl-inf-desc-${artifact?.id || 'info'}`
+  const titleId = `sb-inf-title-${artifact?.id || 'info'}`
+  const descId = `sb-inf-desc-${artifact?.id || 'info'}`
 
   async function handleCopySvg() {
     const svgText = bakeSvgVariables(svgRef.current)
     await copyText(svgText)
-    sdk.host?.notify?.({ kind: 'success', title: 'Folio', message: 'Copied standalone infographic SVG.' })
+    sdk.host?.notify?.({ kind: 'success', title: 'SourceBook', message: 'Copied standalone infographic SVG.' })
   }
 
   function handleDownloadSvg() {
@@ -74,30 +74,30 @@ export function InfographicView({ artifact, onOpenChunk }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-        <span className="fl-kind-tag">{layout}</span>
+        <span className="sb-kind-tag">{layout}</span>
         <div style={{ display: 'flex', gap: 5 }}>
-          <button type="button" className="fl-btn" onClick={handleCopySvg}>
+          <button type="button" className="sb-btn" onClick={handleCopySvg}>
             <Icon name="Copy" size={12} /> Copy SVG
           </button>
-          <button type="button" className="fl-btn" onClick={handleDownloadSvg}>
+          <button type="button" className="sb-btn" onClick={handleDownloadSvg}>
             <Icon name="Download" size={12} /> SVG
           </button>
         </div>
       </div>
 
-      <div className="fl-svg-stage">
+      <div className="sb-svg-stage">
         <svg
           ref={svgRef}
           role="img"
           aria-labelledby={`${titleId} ${descId}`}
           width="100%"
           viewBox={`0 0 ${W} ${H}`}
-          style={{ display: 'block', background: 'var(--fl-bg)' }}
+          style={{ display: 'block', background: 'var(--sb-bg)' }}
         >
           <title id={titleId}>{spec.title || 'Infographic'}</title>
           <desc id={descId}>{spec.subtitle || `Structured ${layout} infographic with ${blocks.length} cited items.`}</desc>
 
-          <rect x="0" y="0" width={W} height={H} fill="var(--fl-bg)" />
+          <rect x="0" y="0" width={W} height={H} fill="var(--sb-bg)" />
           <text x="24" y="38" fill="var(--ui-text-primary)" fontSize="20" fontWeight="700" fontFamily="system-ui, -apple-system, sans-serif">
             {String(spec.title || 'Infographic').slice(0, 62)}
           </text>
@@ -123,7 +123,7 @@ export function InfographicView({ artifact, onOpenChunk }) {
               <g key={blk.id || idx}>
                 {isTimeline ? (
                   <>
-                    <circle cx="48" cy={y + 28} r="13" fill="var(--fl-accent-soft)" stroke="var(--ui-accent)" strokeWidth="1.5" />
+                    <circle cx="48" cy={y + 28} r="13" fill="var(--sb-accent-soft)" stroke="var(--ui-accent)" strokeWidth="1.5" />
                     <text x="48" y={y + 32} textAnchor="middle" fill="var(--ui-accent)" fontSize="11" fontWeight="700" fontFamily="ui-monospace, monospace">
                       {idx + 1}
                     </text>
@@ -135,7 +135,7 @@ export function InfographicView({ artifact, onOpenChunk }) {
                   width={cardW}
                   height={cardH}
                   rx="10"
-                  fill="var(--fl-surface)"
+                  fill="var(--sb-surface)"
                   stroke="var(--ui-stroke-secondary)"
                   strokeWidth="1"
                 />
@@ -183,7 +183,7 @@ export function InfographicView({ artifact, onOpenChunk }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
         <span style={{ fontSize: 11.5, color: 'var(--ui-text-tertiary)' }}>Cited passages:</span>
         {Array.from(new Set(blocks.flatMap(b => b.cites || []))).map((cid, idx) => (
-          <button key={cid} type="button" className="fl-cite" onClick={() => onOpenChunk?.(cid)} title={`Inspect ${cid}`}>
+          <button key={cid} type="button" className="sb-cite" onClick={() => onOpenChunk?.(cid)} title={`Inspect ${cid}`}>
             {idx + 1}
           </button>
         ))}

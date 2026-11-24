@@ -23,7 +23,7 @@ export function QuizView({ artifact, onOpenChunk }) {
   }, [artifact?.id])
 
   if (!questions.length) {
-    return <div className="fl-empty">No questions in this quiz.</div>
+    return <div className="sb-empty">No questions in this quiz.</div>
   }
 
   const answeredCount = Object.keys(answers).length
@@ -37,27 +37,27 @@ export function QuizView({ artifact, onOpenChunk }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div className="fl-kpi-strip">
-        <div className="fl-kpi">
-          <div className="fl-kpi-label">Answered</div>
-          <div className="fl-kpi-val">{answeredCount} / {questions.length}</div>
+      <div className="sb-kpi-strip">
+        <div className="sb-kpi">
+          <div className="sb-kpi-label">Answered</div>
+          <div className="sb-kpi-val">{answeredCount} / {questions.length}</div>
         </div>
-        <div className="fl-kpi">
-          <div className="fl-kpi-label">Score</div>
-          <div className="fl-kpi-val" style={{ color: 'var(--fl-ok)' }}>
+        <div className="sb-kpi">
+          <div className="sb-kpi-label">Score</div>
+          <div className="sb-kpi-val" style={{ color: 'var(--sb-ok)' }}>
             {answeredCount ? `${Math.round((correctCount / answeredCount) * 100)}%` : '0%'}
           </div>
         </div>
-        <div className="fl-kpi">
-          <div className="fl-kpi-label">Missed</div>
-          <div className="fl-kpi-val">{Math.max(0, answeredCount - correctCount)}</div>
+        <div className="sb-kpi">
+          <div className="sb-kpi-label">Missed</div>
+          <div className="sb-kpi-val">{Math.max(0, answeredCount - correctCount)}</div>
         </div>
       </div>
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         <button
           type="button"
-          className="fl-btn"
+          className="sb-btn"
           data-active={retryMissedOnly}
           disabled={answeredCount - correctCount <= 0}
           onClick={() => setRetryMissedOnly(v => !v)}
@@ -66,7 +66,7 @@ export function QuizView({ artifact, onOpenChunk }) {
         </button>
         <button
           type="button"
-          className="fl-btn"
+          className="sb-btn"
           onClick={() => {
             setAnswers({})
             setRetryMissedOnly(false)
@@ -84,14 +84,14 @@ export function QuizView({ artifact, onOpenChunk }) {
         const opts = q.options && q.options.length ? q.options : q.type === 'tf' ? ['True', 'False'] : []
 
         return (
-          <article key={key} className="fl-ledger-row">
+          <article key={key} className="sb-ledger-row">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
               <div style={{ fontWeight: 600, fontSize: 12.5 }}>
-                <span className="fl-mono" style={{ color: 'var(--ui-text-tertiary)', marginRight: 6 }}>Q{idx + 1}</span>
+                <span className="sb-mono" style={{ color: 'var(--ui-text-tertiary)', marginRight: 6 }}>Q{idx + 1}</span>
                 {q.prompt}
               </div>
               {answered ? (
-                <span className="fl-verdict" data-v={ok ? 'supported' : 'unsupported'}>
+                <span className="sb-verdict" data-v={ok ? 'supported' : 'unsupported'}>
                   {ok ? 'Correct' : 'Missed'}
                 </span>
               ) : null}
@@ -105,17 +105,17 @@ export function QuizView({ artifact, onOpenChunk }) {
                   let border = 'var(--ui-stroke-secondary)'
                   let bg = 'var(--ui-bg-primary)'
                   if (answered && isRight) {
-                    border = 'var(--fl-ok)'
-                    bg = 'color-mix(in srgb, var(--fl-ok) 12%, var(--ui-bg-primary))'
+                    border = 'var(--sb-ok)'
+                    bg = 'color-mix(in srgb, var(--sb-ok) 12%, var(--ui-bg-primary))'
                   } else if (answered && isSelected && !isRight) {
-                    border = 'var(--fl-bad)'
-                    bg = 'color-mix(in srgb, var(--fl-bad) 12%, var(--ui-bg-primary))'
+                    border = 'var(--sb-bad)'
+                    bg = 'color-mix(in srgb, var(--sb-bad) 12%, var(--ui-bg-primary))'
                   }
                   return (
                     <button
                       key={oi}
                       type="button"
-                      className="fl-btn"
+                      className="sb-btn"
                       style={{
                         height: 'auto',
                         minHeight: 32,
@@ -129,7 +129,7 @@ export function QuizView({ artifact, onOpenChunk }) {
                       }}
                       onClick={() => setAnswers(prev => ({ ...prev, [key]: oi }))}
                     >
-                      <span className="fl-mono" style={{ color: 'var(--ui-text-tertiary)', marginRight: 6 }}>
+                      <span className="sb-mono" style={{ color: 'var(--ui-text-tertiary)', marginRight: 6 }}>
                         {String.fromCharCode(65 + oi)}.
                       </span>
                       <span>{opt}</span>
@@ -140,7 +140,7 @@ export function QuizView({ artifact, onOpenChunk }) {
             ) : (
               <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
                 <input
-                  className="fl-input"
+                  className="sb-input"
                   placeholder="Type your answer and press Enter..."
                   onKeyDown={e => {
                     if (e.key === 'Enter') {
@@ -152,13 +152,13 @@ export function QuizView({ artifact, onOpenChunk }) {
             )}
 
             {answered ? (
-              <div className="fl-quote-box" style={{ marginTop: 4 }}>
+              <div className="sb-quote-box" style={{ marginTop: 4 }}>
                 <div>{q.explanation || `Expected answer: ${String(q.answer)}`}</div>
                 {(q.cites || []).length > 0 ? (
                   <div style={{ marginTop: 6, display: 'flex', gap: 4, alignItems: 'center' }}>
                     <span style={{ fontSize: 11, color: 'var(--ui-text-tertiary)' }}>Source:</span>
                     {(q.cites || []).map((cid, cIdx) => (
-                      <button key={cid} type="button" className="fl-cite" onClick={() => onOpenChunk?.(cid)}>
+                      <button key={cid} type="button" className="sb-cite" onClick={() => onOpenChunk?.(cid)}>
                         {cIdx + 1}
                       </button>
                     ))}

@@ -47,22 +47,22 @@ export function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
     : chunks
 
   return (
-    <section className="fl-inspector" aria-label="Passage Inspector">
-      <div className="fl-pane-head">
+    <section className="sb-inspector" aria-label="Passage Inspector">
+      <div className="sb-pane-head">
         <div style={{ minWidth: 0 }}>
-          <div className="fl-pane-title">Passage Inspector</div>
-          <div className="fl-src-title" style={{ marginTop: 2 }} title={data?.source?.title || sourceId}>
+          <div className="sb-pane-title">Passage Inspector</div>
+          <div className="sb-src-title" style={{ marginTop: 2 }} title={data?.source?.title || sourceId}>
             {data?.source?.title || sourceId}
           </div>
         </div>
-        <button type="button" className="fl-btn fl-btn-ghost fl-btn-icon" onClick={onClose} aria-label="Close inspector">
+        <button type="button" className="sb-btn sb-btn-ghost sb-btn-icon" onClick={onClose} aria-label="Close inspector">
           <Icon name="X" size={15} />
         </button>
       </div>
 
       <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--ui-stroke-tertiary)', display: 'flex', gap: 6 }}>
         <input
-          className="fl-input"
+          className="sb-input"
           value={filter}
           onChange={e => setFilter(e.target.value)}
           placeholder="Filter passages in this source..."
@@ -70,11 +70,11 @@ export function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
         />
       </div>
 
-      <div className="fl-scroll" style={{ flex: 1, padding: '10px 12px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {loading ? <div className="fl-empty">Loading passages...</div> : null}
-        {error ? <div className="fl-error-bar" style={{ margin: 0 }}>{error}</div> : null}
+      <div className="sb-scroll" style={{ flex: 1, padding: '10px 12px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {loading ? <div className="sb-empty">Loading passages...</div> : null}
+        {error ? <div className="sb-error-bar" style={{ margin: 0 }}>{error}</div> : null}
         {!loading && !error && visible.length === 0 ? (
-          <div className="fl-empty">No matching passages.</div>
+          <div className="sb-empty">No matching passages.</div>
         ) : null}
         {visible.map(ch => {
           const isHit = focusChunkId && ch.id === focusChunkId
@@ -82,16 +82,16 @@ export function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
             <article
               key={ch.id}
               ref={isHit ? hitRef : null}
-              className="fl-chunk-card"
+              className="sb-chunk-card"
               data-hit={isHit ? 'true' : undefined}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                  <span className="fl-mono" style={{ fontSize: 10.5, color: 'var(--ui-accent)', fontWeight: 600 }}>
+                  <span className="sb-mono" style={{ fontSize: 10.5, color: 'var(--ui-accent)', fontWeight: 600 }}>
                     {ch.id}
                   </span>
                   {ch.heading ? (
-                    <span className="fl-src-title" style={{ fontSize: 11.5, color: 'var(--ui-text-secondary)' }}>
+                    <span className="sb-src-title" style={{ fontSize: 11.5, color: 'var(--ui-text-secondary)' }}>
                       {ch.heading}
                     </span>
                   ) : null}
@@ -99,7 +99,7 @@ export function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
                 <div style={{ display: 'flex', gap: 3 }}>
                   <button
                     type="button"
-                    className="fl-btn fl-btn-ghost fl-btn-icon"
+                    className="sb-btn sb-btn-ghost sb-btn-icon"
                     title="Copy passage"
                     onClick={() => copyText(ch.text)}
                   >
@@ -108,7 +108,7 @@ export function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
                   {onPromoteQuote ? (
                     <button
                       type="button"
-                      className="fl-btn fl-btn-ghost fl-btn-icon"
+                      className="sb-btn sb-btn-ghost sb-btn-icon"
                       title="Save passage as note"
                       onClick={() => onPromoteQuote(ch, data?.source?.title || sourceId)}
                     >

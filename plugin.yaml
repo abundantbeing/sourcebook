@@ -1,0 +1,39 @@
+manifest_version: 2
+name: folio
+version: "0.1.0"
+description: Source-grounded research notebooks for Hermes. Ingest multi-format sources, ask cited questions with a Claim Ledger, track source coverage, and generate seven interactive Studio formats.
+author: abundantbeing
+license: MIT
+homepage: https://github.com/abundantbeing/folio
+requires_hermes: ">=0.22.6"
+tags:
+  - notebook
+  - research
+  - citations
+  - studio
+  - desktop
+provides_tools:
+  - folio_search
+  - folio_list_notebooks
+  - folio_save_note
+  - folio_studio
+provides_hooks:
+  - pre_llm_call
+python_dependencies: []
+config_schema:
+  chunk_chars:
+    type: integer
+    default: 3200
+    description: Target character size per source chunk (~800 tokens).
+  context_budget_chars:
+    type: integer
+    default: 60000
+    description: Maximum packed source context size before switching from full-notebook stuffing to BM25 retrieval.
+  max_images_per_deck:
+    type: integer
+    default: 4
+    description: Maximum number of generated images allowed per Slide Deck run when image generation is enabled.
+  strict_grounding:
+    type: boolean
+    default: false
+    description: Refuse answers when grounding score falls below 0.60.

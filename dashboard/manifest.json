@@ -1,0 +1,6 @@
+{
+  "name": "folio",
+  "label": "Folio",
+  "description": "Source-grounded research notebooks, Claim Ledger, Coverage Map, and interactive 7-format Studio.",
+  "api_prefix": "/api/plugins/folio"
+}

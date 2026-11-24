@@ -165,7 +165,7 @@ def _extract_facts(chunks: list[dict[str, str]]) -> list[dict[str, Any]]:
     for ch in chunks:
         heading = ch["heading"] or ch["source_title"]
         raw_lines = [ln.strip() for ln in ch["text"].splitlines() if ln.strip() and not ln.strip().startswith("<!--")]
-        sents: list[str] = []
+        paired: list[tuple[str, str]] = []
         for ln in raw_lines:
             if ln.startswith("#"):
                 heading = ln.lstrip("# ").strip() or heading
@@ -176,14 +176,14 @@ def _extract_facts(chunks: list[dict[str, str]]) -> list[dict[str, Any]]:
             for s in re.split(r"(?<=[.!?])\s+", clean_ln):
                 s = s.strip()
                 if len(s) >= 26:
-                    sents.append(s)
-        for s in sents[:6]:
-            num_match = re.search(r"\b(\d+(?:[.,]\d+)?(?:\s*(?:%|ms|s|x|GB|MB|KB|MiB|k|M|B|px)))\b", s)
+                    paired.append((heading, s))
+        for hd, s in paired[:6]:
+            num_match = re.search(r"\b(\d+(?:[.,]\d+)?(?:\s*(?:%|ms|s|x|GB|MB|KB|MiB|k|M|B|px)))(?=\s|[,.;:)]|$)", s)
             facts.append(
                 {
                     "chunk_id": ch["id"],
                     "source_title": ch["source_title"],
-                    "heading": heading,
+                    "heading": hd,
                     "sentence": s,
                     "metric": num_match.group(1) if num_match else "",
                 }

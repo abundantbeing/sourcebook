@@ -536,7 +536,7 @@ def get_source_text(nb: str, src: str) -> dict[str, Any]:
         chunks = [
             dict(r)
             for r in con.execute(
-                "SELECT id, ord, heading, page_start, page_end, char_start, char_end, tokens FROM chunks WHERE source_id=? ORDER BY ord",
+                "SELECT id, ord, heading, page_start, page_end, char_start, char_end, text, tokens FROM chunks WHERE source_id=? ORDER BY ord",
                 (src,),
             ).fetchall()
         ]
@@ -585,6 +585,7 @@ def add_source(
         "enabled": True,
         "sha256": digest,
         "chars": len(clean_text),
+        "word_count": len(clean_text.split()),
         "tokens": max(1, len(clean_text) // 4),
         "chunk_count": len(parts),
         "pages": max((p["page_end"] for p in parts), default=1),

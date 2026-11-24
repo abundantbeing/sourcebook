@@ -137,6 +137,7 @@ def verify_claims(
                 continue
             cites = [c for c in CITE_RE.findall(raw_sent) if c in chunks_by_id]
             claim_text = CITE_RE.sub("", raw_sent).strip()
+            claim_text = re.sub(r"\*\*([^*]+)\*\*", r"\1", claim_text)
             claim_text = re.sub(r"\s{2,}", " ", claim_text).strip(" -:")
             if len(claim_text) < 20:
                 continue
@@ -157,16 +158,16 @@ def verify_claims(
                     best_overlap = overlap
                     best_chunk = cid
                     best_source = titles.get(str(ch.get("source_id") or ""), str(ch.get("source_id") or ""))
-                    # Pick the closest matching sentence from the cited chunk as quote evidence
                     best_s = ""
                     best_s_score = -1.0
                     for s in _split_sentences(ch_text):
-                        st = _content_tokens(s)
+                        s_clean = re.sub(r"^#+\s*", "", s).strip()
+                        st = _content_tokens(s_clean)
                         sc = len(claim_toks & st) / max(1, len(claim_toks))
                         if sc > best_s_score:
                             best_s_score = sc
-                            best_s = s
-                    best_quote = (best_s or ch_text[:220]).strip()[:260]
+                            best_s = s_clean
+                    best_quote = (best_s or re.sub(r"^#+\s*", "", ch_text)[:220]).strip()[:260]
             if not cites:
                 verdict = "unsupported"
             elif best_overlap >= 0.35:
@@ -231,6 +232,7 @@ def extractive_answer(
     lines = [f"{lead_sent} [[c:{lead_cid}]]", ""]
     if len(picked) > 1:
         lines.append("### Supporting passages")
+        lines.append("")
         for cid, stitle, sent in picked[1:]:
             lines.append(f"- **{stitle}**: {sent} [[c:{cid}]]")
     raw_ans = "\n".join(lines).strip()

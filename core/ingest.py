@@ -219,8 +219,8 @@ def extract_image_bytes(raw: bytes, mime_type: str, filename: str, *, ctx: Any =
             {"type": "image", "data": raw, "mime_type": mime_type},
         ],
         json_schema=schema,
-        schema_name="folio.image_ingest",
-        purpose="folio.ingest.image",
+        schema_name="sourcebook.image_ingest",
+        purpose="sourcebook.ingest.image",
         temperature=0.0,
     )
     parsed = res.parsed if isinstance(res.parsed, dict) else {}
@@ -269,7 +269,7 @@ def extract_url(url: str, *, ctx: Any = None) -> tuple[str, str]:
     except Exception:
         pass
 
-    req = urllib.request.Request(clean_url, headers={"User-Agent": "Hermes-Folio/0.1 (+https://github.com/abundantbeing/folio)"})
+    req = urllib.request.Request(clean_url, headers={"User-Agent": "Hermes-SourceBook/0.1 (+https://github.com/abundantbeing/sourcebook)"})
     with urllib.request.urlopen(req, timeout=15) as resp:  # noqa: S310 - validated above with is_safe_url
         ctype = (resp.headers.get("Content-Type") or "").lower()
         body = resp.read(MAX_UPLOAD_BYTES)

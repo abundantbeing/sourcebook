@@ -15,9 +15,9 @@ import logging
 import threading
 from typing import Any, Optional
 
-logger = logging.getLogger("folio.runtime")
+logger = logging.getLogger("sourcebook.runtime")
 
-PLUGIN_ID = "folio"
+PLUGIN_ID = "sourcebook"
 
 _LOCK = threading.Lock()
 _LIVE_CTX: Any = None
@@ -63,7 +63,7 @@ def get_config(key: str, default: Any = None) -> Any:
 
 
 def get_llm(ctx: Any = None) -> Any:
-    """Return a `PluginLlm` facade bound to `folio`, even if `__init__.py` wasn't imported."""
+    """Return a `PluginLlm` facade bound to `sourcebook`, even if `__init__.py` wasn't imported."""
     target = ctx or get_live_context()
     if target is not None and getattr(target, "llm", None) is not None:
         return target.llm
@@ -106,7 +106,7 @@ def redact(text: str, *, force: bool = True) -> str:
 
 
 def broadcast_event(event: str, payload: Optional[dict[str, Any]] = None) -> None:
-    """Push `plugin.folio.<event>` over Hermes Desktop's global event stream (no-op outside gateway)."""
+    """Push `plugin.sourcebook.<event>` over Hermes Desktop's global event stream (no-op outside gateway)."""
     try:
         from hermes_cli.plugin_events import broadcast_plugin_event
 
@@ -159,5 +159,5 @@ def generate_image(prompt: str, aspect_ratio: str = "landscape", *, ctx: Any = N
         if isinstance(data, dict) and data.get("success") and data.get("image"):
             return str(data["image"])
     except Exception as exc:
-        logger.warning("Folio image_generate failed: %s", exc)
+        logger.warning("SourceBook image_generate failed: %s", exc)
     return None

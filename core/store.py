@@ -1,7 +1,7 @@
 """Profile-safe notebook storage, SQLite WAL + FTS5 index, notes, chat, artifacts & bindings.
 
-Zero third-party dependencies. Resolves `<HERMES_HOME>/plugin-data/folio/` dynamically on every
-call via `plugins.plugin_storage.plugin_data_dir("folio")` so multi-profile gateways stay isolated.
+Zero third-party dependencies. Resolves `<HERMES_HOME>/plugin-data/sourcebook/` dynamically on every
+call via `plugins.plugin_storage.plugin_data_dir("sourcebook")` so multi-profile gateways stay isolated.
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ _STOPWORDS = frozenset({
 
 def data_root() -> Path:
     """Dynamic durable data directory (never cached across profile switches)."""
-    override = os.environ.get("FOLIO_DATA_DIR")
+    override = os.environ.get("SOURCEBOOK_DATA_DIR")
     if override:
         root = Path(override)
         root.mkdir(parents=True, exist_ok=True)
@@ -44,9 +44,9 @@ def data_root() -> Path:
     try:
         from plugins.plugin_storage import plugin_data_dir
 
-        return plugin_data_dir("folio")
+        return plugin_data_dir("sourcebook")
     except Exception:
-        base = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes")) / "plugin-data" / "folio"
+        base = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes")) / "plugin-data" / "sourcebook"
         base.mkdir(parents=True, exist_ok=True)
         return base
 
@@ -1072,7 +1072,7 @@ def delete_artifact(nb: str, aid: str) -> bool:
     return True
 
 
-# --- Session Bindings (`/folio use <nb_id>` + `pre_llm_call`) ---------------
+# --- Session Bindings (`/sourcebook use <nb_id>` + `pre_llm_call`) ---------------
 
 def _bindings_path() -> Path:
     return data_root() / "session_bindings.json"

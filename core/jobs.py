@@ -11,7 +11,7 @@ from typing import Any, Callable, Optional
 
 from . import runtime
 
-_EXECUTOR = ThreadPoolExecutor(max_workers=4, thread_name_prefix="folio-job")
+_EXECUTOR = ThreadPoolExecutor(max_workers=4, thread_name_prefix="sourcebook-job")
 _LOCK = threading.Lock()
 _JOBS: dict[str, dict[str, Any]] = {}
 _MAX_RETAINED_JOBS = 200

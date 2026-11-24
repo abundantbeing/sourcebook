@@ -1,1 +1,1 @@
-"""Folio core package."""
+"""SourceBook core package."""

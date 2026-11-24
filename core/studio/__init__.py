@@ -397,7 +397,7 @@ def _extractive_studio(kind: str, context: str, allowed_ids: set[str], p: dict[s
                 "layout": "closing",
                 "title": "Every finding links back to a verifiable source passage.",
                 "bullets": [f"{st}: {len(its)} cited observations" for st, its in list(sources_grouped.items())[:4]],
-                "notes": "Open any citation in Folio to inspect the original passage.",
+                "notes": "Open any citation in SourceBook to inspect the original passage.",
                 "cites": sorted({f["chunk_id"] for f in facts[:4]}),
             }
         )
@@ -475,7 +475,7 @@ def run(
 
     instructions = (gen.instructions + SHARED_RULES).format(**p)
     llm = runtime.get_llm(ctx)
-    use_task = "folio_studio" if runtime.get_live_context() is not None else None
+    use_task = "sourcebook_studio" if runtime.get_live_context() is not None else None
 
     if gen.schema_file is None and gen.schema is None:
         if progress:
@@ -485,7 +485,7 @@ def run(
                 {"role": "system", "content": instructions},
                 {"role": "user", "content": f"<sources>\n{context}\n</sources>"},
             ],
-            "purpose": f"folio.studio.{kind}",
+            "purpose": f"sourcebook.studio.{kind}",
             "temperature": 0.25,
         }
         if use_task:
@@ -517,8 +517,8 @@ def run(
             "instructions": prompt_instr,
             "input": [{"type": "text", "text": f"<sources>\n{context}\n</sources>"}],
             "json_schema": schema,
-            "schema_name": f"folio.{kind}",
-            "purpose": f"folio.studio.{kind}",
+            "schema_name": f"sourcebook.{kind}",
+            "purpose": f"sourcebook.studio.{kind}",
             "temperature": 0.25 if attempt == 0 else 0.0,
         }
         if use_task:
@@ -675,7 +675,7 @@ def _export_slides_marp(slug: str, spec: dict[str, Any]) -> tuple[str, str, str]
 
 def _export_slides_html(slug: str, spec: dict[str, Any]) -> tuple[str, str, str]:
     """Self-contained offline HTML presentation deck (zero external assets, printable to PDF)."""
-    title = html_lib.escape(str(spec.get("title") or "Folio Deck"))
+    title = html_lib.escape(str(spec.get("title") or "SourceBook Deck"))
     slides_html: list[str] = []
     for idx, sl in enumerate(spec.get("slides") or [], start=1):
         layout = html_lib.escape(str(sl.get("layout") or "bullets"))

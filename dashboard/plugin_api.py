@@ -6,8 +6,6 @@ deterministically from Path(__file__).resolve().parents[1] so it works identical
 under plugins.isolation: host, and in standalone pytest.
 """
 
-from __future__ import annotations
-
 import importlib.util
 import sys
 from pathlib import Path

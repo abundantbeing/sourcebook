@@ -821,10 +821,19 @@ def coverage_map(nb: str) -> dict[str, Any]:
             "title": s["title"],
             "total_chunks": len(chunks),
             "cited_chunks": cited,
+            "touched_chunks": cited,
             "coverage": ratio,
             "strip": [min(3, c["hits"]) for c in chunks],
         })
-    return {"sources": per_source, "cold_chunks": cold[:10]}
+    total_chunks = sum(item["total_chunks"] for item in per_source)
+    touched_chunks = sum(item["cited_chunks"] for item in per_source)
+    return {
+        "total_chunks": total_chunks,
+        "touched_chunks": touched_chunks,
+        "coverage": round(touched_chunks / total_chunks, 2) if total_chunks else 0.0,
+        "sources": per_source,
+        "cold_chunks": cold[:10],
+    }
 
 
 # --- Notes CRUD + Living Notes Staleness + Promote to Source ----------------

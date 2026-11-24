@@ -346,7 +346,7 @@ export function SidebarSources({
                       <div className="fl-src-meta">
                         <Icon name={KIND_ICONS[src.kind] || 'FileText'} size={11} />
                         <span className="fl-kind-tag">{src.kind}</span>
-                        <span className="fl-num">{fmtWords(src.word_count)} w</span>
+                        <span className="fl-num">{fmtWords(src.word_count ?? Math.round((src.chars || 0) / 5))} w</span>
                         <span className="fl-num">{src.chunk_count} ch</span>
                       </div>
                       <div className="fl-src-bar" title={`Coverage: ${pct}%`}>

@@ -6,18 +6,36 @@ function wrapText(text, maxChars, maxLines = 4) {
   const words = String(text || '').trim().split(/\s+/).filter(Boolean)
   const lines = []
   let cur = ''
-  for (const w of words) {
+  let consumed = 0
+  for (let i = 0; i < words.length; i += 1) {
+    const w = words[i]
     if (!cur) {
       cur = w
+      consumed = i + 1
     } else if (cur.length + 1 + w.length <= maxChars) {
       cur += ' ' + w
+      consumed = i + 1
     } else {
       lines.push(cur)
       cur = w
-      if (lines.length >= maxLines - 1) break
+      consumed = i + 1
+      if (lines.length >= maxLines - 1) {
+        // Fill last line cleanly
+        for (let j = i + 1; j < words.length; j += 1) {
+          if (cur.length + 1 + words[j].length <= maxChars - 3) {
+            cur += ' ' + words[j]
+            consumed = j + 1
+          } else {
+            break
+          }
+        }
+        break
+      }
     }
   }
-  if (cur && lines.length < maxLines) lines.push(cur)
+  if (cur && lines.length < maxLines) {
+    lines.push(consumed < words.length ? `${cur.replace(/[.,;:\-]+$/, '')}...` : cur)
+  }
   return lines
 }
 
@@ -31,13 +49,13 @@ export function InfographicView({ artifact, onOpenChunk }) {
     return <div className="fl-empty">No infographic blocks available.</div>
   }
 
-  const W = 720
+  const W = 740
   const isTimeline = layout === 'timeline' || layout === 'process'
   const cols = isTimeline ? 1 : 2
   const rows = Math.ceil(blocks.length / cols)
-  const cardH = isTimeline ? 94 : 138
+  const cardH = isTimeline ? 104 : 156
   const gap = 14
-  const headerH = 82
+  const headerH = 84
   const H = headerH + rows * cardH + Math.max(0, rows - 1) * gap + 28
   const titleId = `fl-inf-title-${artifact?.id || 'info'}`
   const descId = `fl-inf-desc-${artifact?.id || 'info'}`
@@ -74,12 +92,12 @@ export function InfographicView({ artifact, onOpenChunk }) {
           aria-labelledby={`${titleId} ${descId}`}
           width="100%"
           viewBox={`0 0 ${W} ${H}`}
-          style={{ display: 'block', background: 'var(--ui-bg-secondary)' }}
+          style={{ display: 'block', background: 'var(--fl-bg)' }}
         >
           <title id={titleId}>{spec.title || 'Infographic'}</title>
           <desc id={descId}>{spec.subtitle || `Structured ${layout} infographic with ${blocks.length} cited items.`}</desc>
 
-          <rect x="0" y="0" width={W} height={H} fill="var(--ui-bg-secondary)" />
+          <rect x="0" y="0" width={W} height={H} fill="var(--fl-bg)" />
           <text x="24" y="38" fill="var(--ui-text-primary)" fontSize="20" fontWeight="700" fontFamily="system-ui, -apple-system, sans-serif">
             {String(spec.title || 'Infographic').slice(0, 62)}
           </text>
@@ -88,7 +106,7 @@ export function InfographicView({ artifact, onOpenChunk }) {
               {String(spec.subtitle).slice(0, 96)}
             </text>
           ) : null}
-          <line x1="24" y1="72" x2={W - 24} y2="72" stroke="var(--ui-stroke-tertiary)" strokeWidth="1" />
+          <line x1="24" y1="74" x2={W - 24} y2="74" stroke="var(--ui-stroke-tertiary)" strokeWidth="1" />
 
           {isTimeline ? (
             <line x1="48" y1={headerH + 22} x2="48" y2={H - 36} stroke="var(--ui-stroke-secondary)" strokeWidth="2" />
@@ -100,7 +118,7 @@ export function InfographicView({ artifact, onOpenChunk }) {
             const cardW = isTimeline ? W - 96 : (W - 48 - gap) / 2
             const x = isTimeline ? 72 : 24 + col * (cardW + gap)
             const y = headerH + row * (cardH + gap)
-            const bodyLines = wrapText(blk.body, isTimeline ? 76 : 42, 4)
+            const bodyLines = wrapText(blk.body, isTimeline ? 80 : 45, 4)
             return (
               <g key={blk.id || idx}>
                 {isTimeline ? (
@@ -117,16 +135,16 @@ export function InfographicView({ artifact, onOpenChunk }) {
                   width={cardW}
                   height={cardH}
                   rx="10"
-                  fill="var(--ui-bg-primary)"
+                  fill="var(--fl-surface)"
                   stroke="var(--ui-stroke-secondary)"
                   strokeWidth="1"
                 />
                 {blk.value ? (
                   <text
-                    x={x + 14}
-                    y={y + 30}
+                    x={x + 16}
+                    y={y + 32}
                     fill="var(--ui-accent)"
-                    fontSize={isTimeline ? '15' : '22'}
+                    fontSize={isTimeline ? '15' : '24'}
                     fontWeight="750"
                     fontFamily="ui-monospace, SFMono-Regular, monospace"
                   >
@@ -134,24 +152,24 @@ export function InfographicView({ artifact, onOpenChunk }) {
                   </text>
                 ) : null}
                 <text
-                  x={x + 14}
-                  y={y + (blk.value ? 50 : 28)}
+                  x={x + 16}
+                  y={y + (blk.value ? 55 : 30)}
                   fill="var(--ui-text-primary)"
-                  fontSize="13"
+                  fontSize="13.5"
                   fontWeight="650"
                   fontFamily="system-ui, -apple-system, sans-serif"
                 >
-                  {String(blk.heading || `Item ${idx + 1}`).slice(0, isTimeline ? 64 : 36)}
+                  {String(blk.heading || `Item ${idx + 1}`).slice(0, isTimeline ? 64 : 38)}
                 </text>
                 <text
-                  x={x + 14}
-                  y={y + (blk.value ? 69 : 48)}
+                  x={x + 16}
+                  y={y + (blk.value ? 76 : 52)}
                   fill="var(--ui-text-secondary)"
-                  fontSize="11.5"
+                  fontSize="12"
                   fontFamily="system-ui, -apple-system, sans-serif"
                 >
                   {bodyLines.map((ln, lIdx) => (
-                    <tspan key={lIdx} x={x + 14} dy={lIdx === 0 ? 0 : 15}>
+                    <tspan key={lIdx} x={x + 16} dy={lIdx === 0 ? 0 : 16}>
                       {ln}
                     </tspan>
                   ))}

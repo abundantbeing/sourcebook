@@ -6,59 +6,69 @@ const CITE_SPLIT_RE = /(\[\[c:[a-zA-Z0-9_-]+:\d+\]\])/g
 const CITE_EXTRACT_RE = /^\[\[c:([a-zA-Z0-9_-]+:\d+)\]\]$/
 
 function renderInlineCited(text, citeIndexMap, onOpenChunk) {
-  const paragraphs = String(text || '').split(/\n{2,}/)
-  return paragraphs.map((para, pIdx) => {
-    const trimmed = para.trim()
-    if (!trimmed) return null
-    const lines = trimmed.split('\n')
-    const isList = lines.every(l => /^\s*[-*+]\s+/.test(l))
-    const renderSpan = line => {
-      const tokens = line.split(CITE_SPLIT_RE)
-      return tokens.map((tok, tIdx) => {
-        const m = CITE_EXTRACT_RE.exec(tok)
-        if (m) {
-          const cid = m[1]
-          const num = citeIndexMap.get(cid) || '?'
-          return (
-            <button
-              key={`${tIdx}-${cid}`}
-              type="button"
-              className="fl-cite"
-              title={`Inspect cited passage ${cid}`}
-              onClick={() => onOpenChunk(cid)}
-            >
-              {num}
-            </button>
-          )
+  const renderSpan = line => {
+    const tokens = line.split(CITE_SPLIT_RE)
+    return tokens.map((tok, tIdx) => {
+      const m = CITE_EXTRACT_RE.exec(tok)
+      if (m) {
+        const cid = m[1]
+        const num = citeIndexMap.get(cid) || '?'
+        return (
+          <button
+            key={`${tIdx}-${cid}`}
+            type="button"
+            className="fl-cite"
+            title={`Inspect cited passage ${cid}`}
+            onClick={() => onOpenChunk(cid)}
+          >
+            {num}
+          </button>
+        )
+      }
+      const boldParts = tok.split(/(\*\*[^*]+\*\*)/g)
+      return boldParts.map((bp, bIdx) => {
+        if (bp.startsWith('**') && bp.endsWith('**') && bp.length > 4) {
+          return <strong key={`${tIdx}-${bIdx}`}>{bp.slice(2, -2)}</strong>
         }
-        // Basic bold rendering without raw HTML
-        const boldParts = tok.split(/(\*\*[^*]+\*\*)/g)
-        return boldParts.map((bp, bIdx) => {
-          if (bp.startsWith('**') && bp.endsWith('**') && bp.length > 4) {
-            return <strong key={`${tIdx}-${bIdx}`}>{bp.slice(2, -2)}</strong>
-          }
-          return bp
-        })
+        return bp
       })
-    }
+    })
+  }
 
-    if (trimmed.startsWith('### ')) {
-      return <h3 key={pIdx}>{renderSpan(trimmed.slice(4))}</h3>
+  const lines = String(text || '').split('\n')
+  const out = []
+  let listBuf = []
+  const flushList = key => {
+    if (!listBuf.length) return
+    out.push(
+      <ul key={`ul-${key}`}>
+        {listBuf.map((item, i) => <li key={i}>{renderSpan(item)}</li>)}
+      </ul>
+    )
+    listBuf = []
+  }
+
+  lines.forEach((raw, idx) => {
+    const t = raw.trim()
+    if (!t) {
+      flushList(idx)
+      return
     }
-    if (trimmed.startsWith('## ')) {
-      return <h2 key={pIdx}>{renderSpan(trimmed.slice(3))}</h2>
+    if (/^[-*+]\s+/.test(t)) {
+      listBuf.push(t.replace(/^[-*+]\s+/, ''))
+      return
     }
-    if (isList) {
-      return (
-        <ul key={pIdx}>
-          {lines.map((l, lIdx) => (
-            <li key={lIdx}>{renderSpan(l.replace(/^\s*[-*+]\s+/, ''))}</li>
-          ))}
-        </ul>
-      )
+    flushList(idx)
+    if (t.startsWith('### ')) {
+      out.push(<h3 key={idx}>{renderSpan(t.slice(4))}</h3>)
+    } else if (t.startsWith('## ')) {
+      out.push(<h2 key={idx}>{renderSpan(t.slice(3))}</h2>)
+    } else {
+      out.push(<p key={idx}>{renderSpan(t)}</p>)
     }
-    return <p key={pIdx}>{renderSpan(trimmed)}</p>
   })
+  flushList('end')
+  return out
 }
 
 export function ChatPanel({

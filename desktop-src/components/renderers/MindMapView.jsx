@@ -6,8 +6,8 @@ function layoutTree(root, collapsed) {
   const nodes = []
   const edges = []
   let leafY = 0
-  const xStep = 192
-  const yStep = 58
+  const xStep = 224
+  const yStep = 56
 
   function walk(node, depth, parentId) {
     const id = node.id || `${depth}-${nodes.length}`
@@ -20,7 +20,7 @@ function layoutTree(root, collapsed) {
       depth,
       hasChildren: Array.isArray(node.children) && node.children.length > 0,
       collapsed: Boolean(collapsed[id]),
-      x: 40 + depth * xStep,
+      x: 32 + depth * xStep,
       y: 0
     }
     if (!kids.length) {
@@ -40,8 +40,8 @@ function layoutTree(root, collapsed) {
 
   if (root) walk(root, 0, null)
   const byId = new Map(nodes.map(n => [n.id, n]))
-  const maxX = Math.max(540, ...nodes.map(n => n.x + 170))
-  const maxY = Math.max(320, ...nodes.map(n => n.y + 48))
+  const maxX = Math.max(640, ...nodes.map(n => n.x + 216))
+  const maxY = Math.max(340, ...nodes.map(n => n.y + 48))
   return { nodes, edges, byId, width: maxX, height: maxY }
 }
 
@@ -120,7 +120,7 @@ export function MindMapView({ artifact, onOpenChunk }) {
           width="100%"
           height="100%"
           viewBox={`0 0 ${graph.width} ${graph.height}`}
-          style={{ display: 'block', background: 'var(--ui-bg-secondary)' }}
+          style={{ display: 'block', background: 'var(--fl-bg)' }}
         >
           <title id={titleId}>{artifact?.spec?.title || 'Concept Mind Map'}</title>
           <desc id={descId}>Interactive hierarchical concept map with {graph.nodes.length} nodes grounded in notebook sources.</desc>
@@ -129,7 +129,7 @@ export function MindMapView({ artifact, onOpenChunk }) {
               const a = graph.byId.get(ed.from)
               const b = graph.byId.get(ed.to)
               if (!a || !b) return null
-              const sx = a.x + 150
+              const sx = a.x + 186
               const sy = a.y
               const tx = b.x
               const ty = b.y
@@ -147,7 +147,7 @@ export function MindMapView({ artifact, onOpenChunk }) {
             {graph.nodes.map(n => {
               const isRoot = n.depth === 0
               const isSel = activeNode && activeNode.id === n.id
-              const label = n.label.length > 22 ? `${n.label.slice(0, 21)}...` : n.label
+              const label = n.label.length > 24 ? `${n.label.slice(0, 23)}...` : n.label
               return (
                 <g
                   key={n.id}
@@ -160,10 +160,10 @@ export function MindMapView({ artifact, onOpenChunk }) {
                   }}
                 >
                   <rect
-                    width="150"
+                    width="186"
                     height="36"
                     rx="8"
-                    fill={isRoot || isSel ? 'var(--fl-accent-soft)' : 'var(--ui-bg-primary)'}
+                    fill={isRoot || isSel ? 'var(--fl-accent-soft)' : 'var(--fl-surface)'}
                     stroke={isRoot || isSel ? 'var(--ui-accent)' : 'var(--ui-stroke-secondary)'}
                     strokeWidth={isRoot || isSel ? '1.6' : '1'}
                   />
@@ -179,14 +179,14 @@ export function MindMapView({ artifact, onOpenChunk }) {
                   </text>
                   {n.hasChildren ? (
                     <g
-                      transform="translate(136, 18)"
+                      transform="translate(186, 18)"
                       onClick={e => {
                         e.stopPropagation()
                         setCollapsed(prev => ({ ...prev, [n.id]: !prev[n.id] }))
                       }}
                     >
-                      <circle r="7" fill="var(--ui-bg-secondary)" stroke="var(--ui-stroke-secondary)" strokeWidth="1" />
-                      <text textAnchor="middle" y="3.5" fill="var(--ui-text-secondary)" fontSize="10" fontWeight="700">
+                      <circle r="8" fill="var(--fl-surface)" stroke="var(--ui-stroke-secondary)" strokeWidth="1.2" />
+                      <text textAnchor="middle" y="3.5" fill="var(--ui-text-secondary)" fontSize="11" fontWeight="700">
                         {n.collapsed ? '+' : '-'}
                       </text>
                     </g>

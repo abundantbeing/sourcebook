@@ -1,6 +1,6 @@
-// Scoped styles for Folio using native Hermes Desktop theme tokens (--ui-*).
-// Flat surfaces, hairline rules, tabular numerals, explicit transition properties,
-// branded scrollbars, zero glows, zero box shadows behind flat panels.
+// Scoped styles for Folio using native Hermes Desktop neutral surface tokens.
+// Uses --ui-bg-chrome, --ui-bg-sidebar, --ui-bg-elevated, --ui-bg-editor, and --ui-bg-quinary
+// so Folio matches Hermes Desktop natively in both dark and light themes.
 
 export const CSS = `
 .fl-root {
@@ -9,16 +9,21 @@ export const CSS = `
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--ui-bg-primary);
-  color: var(--ui-text-primary);
-  font-size: 13px;
-  line-height: 1.5;
+  --fl-bg: var(--ui-bg-chrome, var(--background));
+  --fl-sidebar: var(--ui-bg-sidebar, var(--ui-bg-chrome));
+  --fl-surface: var(--ui-bg-elevated, var(--ui-bg-editor));
+  --fl-subtle: var(--ui-bg-quinary, var(--ui-bg-quaternary));
+  --fl-hover: var(--ui-bg-quaternary);
   --fl-ease: cubic-bezier(0.23, 1, 0.32, 1);
   --fl-accent-soft: color-mix(in srgb, var(--ui-accent) 13%, transparent);
   --fl-accent-border: color-mix(in srgb, var(--ui-accent) 42%, var(--ui-stroke-secondary));
   --fl-ok: #2da44e;
   --fl-warn: #d29922;
   --fl-bad: var(--destructive, #cf222e);
+  background: var(--fl-bg);
+  color: var(--ui-text-primary);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .fl-root *, .fl-root *::before, .fl-root *::after {
@@ -64,7 +69,7 @@ export const CSS = `
   gap: 12px;
   padding: 0 16px;
   border-bottom: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-chrome, var(--ui-bg-secondary));
+  background: var(--fl-sidebar);
   min-width: 0;
 }
 
@@ -83,7 +88,7 @@ export const CSS = `
   font-size: 13px;
   letter-spacing: -0.01em;
   color: var(--ui-text-primary);
-  padding-right: 8px;
+  padding-right: 10px;
   border-right: 1px solid var(--ui-stroke-tertiary);
   flex-shrink: 0;
 }
@@ -108,16 +113,16 @@ export const CSS = `
   padding: 0 10px;
   border-radius: 7px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-elevated, var(--ui-bg-primary));
+  background: var(--fl-surface);
   color: var(--ui-text-primary);
   font-size: 12.5px;
   font-weight: 550;
   cursor: pointer;
-  max-width: 260px;
+  max-width: 280px;
   transition: background-color 140ms var(--fl-ease), border-color 140ms var(--fl-ease), transform 120ms var(--fl-ease);
 }
 .fl-nb-select:hover {
-  background: var(--ui-bg-quaternary);
+  background: var(--fl-hover);
   border-color: var(--ui-stroke-primary, var(--ui-stroke-secondary));
 }
 .fl-nb-select:active {
@@ -148,7 +153,7 @@ export const CSS = `
   transition: background-color 140ms var(--fl-ease), color 140ms var(--fl-ease), border-color 140ms var(--fl-ease), transform 120ms var(--fl-ease);
 }
 .fl-btn:hover:not(:disabled) {
-  background: var(--ui-bg-quaternary);
+  background: var(--fl-hover);
   color: var(--ui-text-primary);
 }
 .fl-btn:active:not(:disabled) {
@@ -201,7 +206,7 @@ export const CSS = `
   align-items: center;
   padding: 2px;
   border-radius: 8px;
-  background: var(--ui-bg-quaternary);
+  background: var(--fl-subtle);
   border: 1px solid var(--ui-stroke-tertiary);
   gap: 2px;
 }
@@ -225,7 +230,7 @@ export const CSS = `
   color: var(--ui-text-primary);
 }
 .fl-seg-btn[data-active="true"] {
-  background: var(--ui-bg-elevated, var(--ui-bg-primary));
+  background: var(--fl-surface);
   color: var(--ui-text-primary);
   font-weight: 600;
   box-shadow: inset 0 0 0 1px var(--ui-stroke-secondary);
@@ -240,20 +245,20 @@ export const CSS = `
   height: 28px;
   border-radius: 7px;
   border: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-secondary);
+  background: var(--fl-surface);
   font-size: 11.5px;
   color: var(--ui-text-secondary);
   cursor: pointer;
   transition: background-color 140ms var(--fl-ease), border-color 140ms var(--fl-ease);
 }
 .fl-cov-meter:hover {
-  background: var(--ui-bg-quaternary);
+  background: var(--fl-hover);
 }
 .fl-cov-track {
   width: 44px;
   height: 5px;
   border-radius: 999px;
-  background: var(--ui-bg-quaternary);
+  background: var(--ui-stroke-tertiary);
   overflow: hidden;
 }
 .fl-cov-fill {
@@ -289,14 +294,14 @@ export const CSS = `
 }
 .fl-pane-left {
   border-right: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-secondary);
+  background: var(--fl-sidebar);
 }
 .fl-pane-center {
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
 }
 .fl-pane-right {
   border-left: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-secondary);
+  background: var(--fl-sidebar);
 }
 
 .fl-pane-head {
@@ -323,7 +328,7 @@ export const CSS = `
   padding: 10px;
   border-radius: 9px;
   border: 1px dashed var(--ui-stroke-secondary);
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
   display: flex;
   flex-direction: column;
   gap: 7px;
@@ -345,7 +350,7 @@ export const CSS = `
   padding: 6px 8px 14px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .fl-src-row {
@@ -353,14 +358,14 @@ export const CSS = `
   grid-template-columns: 18px minmax(0, 1fr) auto;
   align-items: start;
   gap: 8px;
-  padding: 8px 8px;
+  padding: 8px 9px;
   border-radius: 8px;
   border: 1px solid transparent;
   cursor: pointer;
   transition: background-color 130ms var(--fl-ease), border-color 130ms var(--fl-ease);
 }
 .fl-src-row:hover {
-  background: var(--ui-bg-quaternary);
+  background: var(--fl-hover);
 }
 .fl-src-row[data-selected="true"] {
   background: var(--fl-accent-soft);
@@ -411,10 +416,11 @@ export const CSS = `
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: 4px;
-  background: var(--ui-bg-quaternary);
-  color: var(--ui-text-tertiary);
+  background: var(--fl-subtle);
+  color: var(--ui-text-secondary);
+  border: 1px solid var(--ui-stroke-tertiary);
 }
 
 /* Center chat, Claim Ledger, Coverage Map */
@@ -426,15 +432,15 @@ export const CSS = `
   gap: 12px;
   padding: 8px 18px;
   border-bottom: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
 }
 
 .fl-briefing {
-  margin: 16px 20px 4px;
+  margin: 0;
   padding: 14px 16px;
   border-radius: 10px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-secondary);
+  background: var(--fl-surface);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -470,7 +476,7 @@ export const CSS = `
   padding: 5px 10px;
   border-radius: 7px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
   color: var(--ui-text-secondary);
   cursor: pointer;
   text-align: left;
@@ -489,19 +495,19 @@ export const CSS = `
   padding: 16px 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .fl-msg {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-width: 780px;
+  max-width: 820px;
 }
 .fl-msg-user {
   align-self: flex-end;
-  background: var(--ui-bg-quaternary);
-  border: 1px solid var(--ui-stroke-tertiary);
+  background: var(--fl-subtle);
+  border: 1px solid var(--ui-stroke-secondary);
   padding: 9px 13px;
   border-radius: 10px;
   color: var(--ui-text-primary);
@@ -511,8 +517,8 @@ export const CSS = `
   align-self: stretch;
   padding: 14px 16px;
   border-radius: 10px;
-  border: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-elevated, var(--ui-bg-secondary));
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--fl-surface);
 }
 .fl-msg-body {
   font-size: 13px;
@@ -527,16 +533,17 @@ export const CSS = `
 }
 .fl-msg-body ul, .fl-msg-body ol {
   margin: 6px 0 8px;
-  padding-left: 20px;
+  padding-left: 18px;
 }
 .fl-msg-body li {
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 .fl-msg-body h3, .fl-msg-body h2 {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 650;
-  margin: 12px 0 6px;
-  color: var(--ui-text-primary);
+  letter-spacing: 0.01em;
+  margin: 10px 0 6px;
+  color: var(--ui-text-secondary);
 }
 
 /* Signature marginalia citation pill */
@@ -589,22 +596,22 @@ export const CSS = `
   padding: 2px 7px;
   border-radius: 5px;
   border: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
 }
 .fl-verdict[data-v="supported"] {
   color: var(--fl-ok);
   border-color: color-mix(in srgb, var(--fl-ok) 38%, transparent);
-  background: color-mix(in srgb, var(--fl-ok) 10%, transparent);
+  background: color-mix(in srgb, var(--fl-ok) 12%, transparent);
 }
 .fl-verdict[data-v="partial"] {
   color: var(--fl-warn);
   border-color: color-mix(in srgb, var(--fl-warn) 38%, transparent);
-  background: color-mix(in srgb, var(--fl-warn) 10%, transparent);
+  background: color-mix(in srgb, var(--fl-warn) 12%, transparent);
 }
 .fl-verdict[data-v="unsupported"] {
   color: var(--fl-bad);
   border-color: color-mix(in srgb, var(--fl-bad) 38%, transparent);
-  background: color-mix(in srgb, var(--fl-bad) 10%, transparent);
+  background: color-mix(in srgb, var(--fl-bad) 12%, transparent);
 }
 
 /* Composer */
@@ -612,7 +619,7 @@ export const CSS = `
   flex: 0 0 auto;
   padding: 10px 20px 14px;
   border-top: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
 }
 .fl-composer {
   display: flex;
@@ -621,7 +628,7 @@ export const CSS = `
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-secondary);
+  background: var(--fl-surface);
   transition: border-color 140ms var(--fl-ease);
 }
 .fl-composer:focus-within {
@@ -645,7 +652,7 @@ export const CSS = `
   padding: 0 10px;
   border-radius: 7px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
   color: var(--ui-text-primary);
   font: inherit;
   font-size: 12.5px;
@@ -657,7 +664,7 @@ export const CSS = `
   gap: 8px;
 }
 
-/* Claim Ledger & Coverage Map tables */
+/* Claim Ledger & Coverage Map */
 .fl-panel-pad {
   padding: 16px 20px 28px;
   display: flex;
@@ -669,7 +676,7 @@ export const CSS = `
   grid-template-columns: repeat(3, minmax(0, 1fr));
   border: 1px solid var(--ui-stroke-secondary);
   border-radius: 9px;
-  background: var(--ui-bg-secondary);
+  background: var(--fl-surface);
   overflow: hidden;
 }
 .fl-kpi {
@@ -695,8 +702,8 @@ export const CSS = `
 .fl-ledger-row {
   padding: 12px 14px;
   border-radius: 9px;
-  border: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-secondary);
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--fl-surface);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -704,7 +711,7 @@ export const CSS = `
 .fl-quote-box {
   padding: 7px 10px;
   border-left: 2px solid var(--ui-accent);
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
   border-radius: 0 6px 6px 0;
   font-size: 12px;
   color: var(--ui-text-secondary);
@@ -724,7 +731,7 @@ export const CSS = `
   padding: 9px 10px;
   border-radius: 8px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-primary);
+  background: var(--fl-surface);
   color: var(--ui-text-primary);
   font: inherit;
   font-size: 12px;
@@ -751,7 +758,7 @@ export const CSS = `
 .fl-art-list {
   flex: 1;
   min-height: 0;
-  padding: 6px 12px 16px;
+  padding: 8px 12px 16px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -763,13 +770,13 @@ export const CSS = `
   gap: 8px;
   padding: 9px 10px;
   border-radius: 8px;
-  border: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-primary);
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--fl-surface);
   cursor: pointer;
   transition: background-color 130ms var(--fl-ease), border-color 130ms var(--fl-ease);
 }
 .fl-art-item:hover {
-  background: var(--ui-bg-quaternary);
+  background: var(--fl-hover);
 }
 .fl-art-item[data-active="true"] {
   border-color: var(--fl-accent-border);
@@ -782,7 +789,7 @@ export const CSS = `
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
 }
 .fl-viewer-head {
   flex: 0 0 auto;
@@ -792,21 +799,21 @@ export const CSS = `
   gap: 8px;
   padding: 10px 14px;
   border-bottom: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-secondary);
+  background: var(--fl-sidebar);
 }
 .fl-viewer-body {
   flex: 1;
   min-height: 0;
-  padding: 14px 16px 20px;
+  padding: 16px 18px 22px;
 }
 
 /* Flashcards */
 .fl-fc-card {
-  min-height: 210px;
+  min-height: 220px;
   padding: 22px 24px;
   border-radius: 12px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-secondary);
+  background: var(--fl-surface);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -828,7 +835,7 @@ export const CSS = `
   border: 1px solid var(--ui-stroke-secondary);
   border-radius: 9px;
   overflow: auto;
-  background: var(--ui-bg-primary);
+  background: var(--fl-surface);
 }
 .fl-table {
   width: 100%;
@@ -839,8 +846,8 @@ export const CSS = `
   position: sticky;
   top: 0;
   text-align: left;
-  padding: 8px 10px;
-  background: var(--ui-bg-secondary);
+  padding: 9px 11px;
+  background: var(--fl-sidebar);
   border-bottom: 1px solid var(--ui-stroke-secondary);
   color: var(--ui-text-secondary);
   font-weight: 600;
@@ -849,13 +856,13 @@ export const CSS = `
   user-select: none;
 }
 .fl-table td {
-  padding: 8px 10px;
+  padding: 9px 11px;
   border-bottom: 1px solid var(--ui-stroke-tertiary);
   vertical-align: top;
   color: var(--ui-text-primary);
 }
 .fl-table tbody tr:hover {
-  background: var(--ui-bg-quaternary);
+  background: var(--fl-hover);
 }
 
 /* Slide deck stage */
@@ -864,28 +871,28 @@ export const CSS = `
   width: 100%;
   border-radius: 10px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-secondary);
-  padding: 24px 28px;
+  background: var(--fl-surface);
+  padding: 28px 34px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
   overflow: hidden;
 }
 .fl-slide-strip {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   overflow-x: auto;
   padding: 4px 0;
 }
 .fl-slide-thumb {
-  flex: 0 0 112px;
-  padding: 7px 8px;
-  border-radius: 7px;
-  border: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-secondary);
+  flex: 0 0 132px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--fl-surface);
   color: var(--ui-text-secondary);
-  font-size: 10.5px;
+  font-size: 11px;
   text-align: left;
   cursor: pointer;
   overflow: hidden;
@@ -902,32 +909,32 @@ export const CSS = `
   top: 48px;
   right: 0;
   bottom: 0;
-  width: min(440px, 46vw);
-  background: var(--ui-bg-elevated, var(--ui-bg-primary));
+  width: min(460px, 46vw);
+  background: var(--fl-sidebar);
   border-left: 1px solid var(--ui-stroke-secondary);
   display: flex;
   flex-direction: column;
   z-index: 25;
 }
 .fl-chunk-card {
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-secondary);
+  padding: 12px 14px;
+  border-radius: 9px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--fl-surface);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 .fl-chunk-card[data-hit="true"] {
   border-color: var(--ui-accent);
-  background: var(--fl-accent-soft);
+  background: color-mix(in srgb, var(--ui-accent) 9%, var(--fl-surface));
 }
 
 /* Modal overlay */
 .fl-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgb(0 0 0 / 0.48);
+  background: rgb(0 0 0 / 0.52);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -939,7 +946,7 @@ export const CSS = `
   max-height: 84vh;
   border-radius: 12px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-elevated, var(--ui-bg-primary));
+  background: var(--fl-surface);
   color: var(--ui-text-primary);
   display: flex;
   flex-direction: column;
@@ -1007,7 +1014,7 @@ export const CSS = `
 .fl-svg-stage {
   border: 1px solid var(--ui-stroke-secondary);
   border-radius: 10px;
-  background: var(--ui-bg-secondary);
+  background: var(--fl-surface);
   overflow: hidden;
   position: relative;
 }

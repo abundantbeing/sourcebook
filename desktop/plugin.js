@@ -131,18 +131,23 @@ function bakeSvgVariables(svgEl) {
   if (!svgEl) return "";
   const clone = svgEl.cloneNode(true);
   clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-  const bg = resolveCssColor("var(--ui-bg-primary)", svgEl);
-  const bg2 = resolveCssColor("var(--ui-bg-secondary)", svgEl);
+  const bg = resolveCssColor("var(--ui-bg-chrome)", svgEl);
+  const bg2 = resolveCssColor("var(--ui-bg-elevated)", svgEl);
+  const sidebar = resolveCssColor("var(--ui-bg-sidebar)", svgEl);
   const fg = resolveCssColor("var(--ui-text-primary)", svgEl);
   const muted = resolveCssColor("var(--ui-text-secondary)", svgEl);
   const stroke = resolveCssColor("var(--ui-stroke-secondary)", svgEl);
   const accent = resolveCssColor("var(--ui-accent)", svgEl);
-  const accentSoft = resolveCssColor("color-mix(in srgb, var(--ui-accent) 16%, var(--ui-bg-secondary))", svgEl);
+  const accentSoft = resolveCssColor("color-mix(in srgb, var(--ui-accent) 16%, var(--ui-bg-elevated))", svgEl);
   const replacements = [
+    [/var\(--fl-bg[^)]*\)/g, bg],
+    [/var\(--fl-surface[^)]*\)/g, bg2],
+    [/var\(--fl-sidebar[^)]*\)/g, sidebar],
+    [/var\(--ui-bg-chrome[^)]*\)/g, bg],
+    [/var\(--ui-bg-elevated[^)]*\)/g, bg2],
+    [/var\(--ui-bg-sidebar[^)]*\)/g, sidebar],
     [/var\(--ui-bg-primary[^)]*\)/g, bg],
     [/var\(--ui-bg-secondary[^)]*\)/g, bg2],
-    [/var\(--ui-bg-elevated[^)]*\)/g, bg2],
-    [/var\(--ui-bg-quaternary[^)]*\)/g, bg2],
     [/var\(--ui-text-primary[^)]*\)/g, fg],
     [/var\(--ui-text-secondary[^)]*\)/g, muted],
     [/var\(--ui-text-tertiary[^)]*\)/g, muted],
@@ -171,16 +176,21 @@ var CSS = `
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--ui-bg-primary);
-  color: var(--ui-text-primary);
-  font-size: 13px;
-  line-height: 1.5;
+  --fl-bg: var(--ui-bg-chrome, var(--background));
+  --fl-sidebar: var(--ui-bg-sidebar, var(--ui-bg-chrome));
+  --fl-surface: var(--ui-bg-elevated, var(--ui-bg-editor));
+  --fl-subtle: var(--ui-bg-quinary, var(--ui-bg-quaternary));
+  --fl-hover: var(--ui-bg-quaternary);
   --fl-ease: cubic-bezier(0.23, 1, 0.32, 1);
   --fl-accent-soft: color-mix(in srgb, var(--ui-accent) 13%, transparent);
   --fl-accent-border: color-mix(in srgb, var(--ui-accent) 42%, var(--ui-stroke-secondary));
   --fl-ok: #2da44e;
   --fl-warn: #d29922;
   --fl-bad: var(--destructive, #cf222e);
+  background: var(--fl-bg);
+  color: var(--ui-text-primary);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .fl-root *, .fl-root *::before, .fl-root *::after {
@@ -226,7 +236,7 @@ var CSS = `
   gap: 12px;
   padding: 0 16px;
   border-bottom: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-chrome, var(--ui-bg-secondary));
+  background: var(--fl-sidebar);
   min-width: 0;
 }
 
@@ -245,7 +255,7 @@ var CSS = `
   font-size: 13px;
   letter-spacing: -0.01em;
   color: var(--ui-text-primary);
-  padding-right: 8px;
+  padding-right: 10px;
   border-right: 1px solid var(--ui-stroke-tertiary);
   flex-shrink: 0;
 }
@@ -270,16 +280,16 @@ var CSS = `
   padding: 0 10px;
   border-radius: 7px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-elevated, var(--ui-bg-primary));
+  background: var(--fl-surface);
   color: var(--ui-text-primary);
   font-size: 12.5px;
   font-weight: 550;
   cursor: pointer;
-  max-width: 260px;
+  max-width: 280px;
   transition: background-color 140ms var(--fl-ease), border-color 140ms var(--fl-ease), transform 120ms var(--fl-ease);
 }
 .fl-nb-select:hover {
-  background: var(--ui-bg-quaternary);
+  background: var(--fl-hover);
   border-color: var(--ui-stroke-primary, var(--ui-stroke-secondary));
 }
 .fl-nb-select:active {
@@ -310,7 +320,7 @@ var CSS = `
   transition: background-color 140ms var(--fl-ease), color 140ms var(--fl-ease), border-color 140ms var(--fl-ease), transform 120ms var(--fl-ease);
 }
 .fl-btn:hover:not(:disabled) {
-  background: var(--ui-bg-quaternary);
+  background: var(--fl-hover);
   color: var(--ui-text-primary);
 }
 .fl-btn:active:not(:disabled) {
@@ -363,7 +373,7 @@ var CSS = `
   align-items: center;
   padding: 2px;
   border-radius: 8px;
-  background: var(--ui-bg-quaternary);
+  background: var(--fl-subtle);
   border: 1px solid var(--ui-stroke-tertiary);
   gap: 2px;
 }
@@ -387,7 +397,7 @@ var CSS = `
   color: var(--ui-text-primary);
 }
 .fl-seg-btn[data-active="true"] {
-  background: var(--ui-bg-elevated, var(--ui-bg-primary));
+  background: var(--fl-surface);
   color: var(--ui-text-primary);
   font-weight: 600;
   box-shadow: inset 0 0 0 1px var(--ui-stroke-secondary);
@@ -402,20 +412,20 @@ var CSS = `
   height: 28px;
   border-radius: 7px;
   border: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-secondary);
+  background: var(--fl-surface);
   font-size: 11.5px;
   color: var(--ui-text-secondary);
   cursor: pointer;
   transition: background-color 140ms var(--fl-ease), border-color 140ms var(--fl-ease);
 }
 .fl-cov-meter:hover {
-  background: var(--ui-bg-quaternary);
+  background: var(--fl-hover);
 }
 .fl-cov-track {
   width: 44px;
   height: 5px;
   border-radius: 999px;
-  background: var(--ui-bg-quaternary);
+  background: var(--ui-stroke-tertiary);
   overflow: hidden;
 }
 .fl-cov-fill {
@@ -451,14 +461,14 @@ var CSS = `
 }
 .fl-pane-left {
   border-right: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-secondary);
+  background: var(--fl-sidebar);
 }
 .fl-pane-center {
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
 }
 .fl-pane-right {
   border-left: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-secondary);
+  background: var(--fl-sidebar);
 }
 
 .fl-pane-head {
@@ -485,7 +495,7 @@ var CSS = `
   padding: 10px;
   border-radius: 9px;
   border: 1px dashed var(--ui-stroke-secondary);
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
   display: flex;
   flex-direction: column;
   gap: 7px;
@@ -507,7 +517,7 @@ var CSS = `
   padding: 6px 8px 14px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .fl-src-row {
@@ -515,14 +525,14 @@ var CSS = `
   grid-template-columns: 18px minmax(0, 1fr) auto;
   align-items: start;
   gap: 8px;
-  padding: 8px 8px;
+  padding: 8px 9px;
   border-radius: 8px;
   border: 1px solid transparent;
   cursor: pointer;
   transition: background-color 130ms var(--fl-ease), border-color 130ms var(--fl-ease);
 }
 .fl-src-row:hover {
-  background: var(--ui-bg-quaternary);
+  background: var(--fl-hover);
 }
 .fl-src-row[data-selected="true"] {
   background: var(--fl-accent-soft);
@@ -573,10 +583,11 @@ var CSS = `
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: 4px;
-  background: var(--ui-bg-quaternary);
-  color: var(--ui-text-tertiary);
+  background: var(--fl-subtle);
+  color: var(--ui-text-secondary);
+  border: 1px solid var(--ui-stroke-tertiary);
 }
 
 /* Center chat, Claim Ledger, Coverage Map */
@@ -588,15 +599,15 @@ var CSS = `
   gap: 12px;
   padding: 8px 18px;
   border-bottom: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
 }
 
 .fl-briefing {
-  margin: 16px 20px 4px;
+  margin: 0;
   padding: 14px 16px;
   border-radius: 10px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-secondary);
+  background: var(--fl-surface);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -632,7 +643,7 @@ var CSS = `
   padding: 5px 10px;
   border-radius: 7px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
   color: var(--ui-text-secondary);
   cursor: pointer;
   text-align: left;
@@ -651,19 +662,19 @@ var CSS = `
   padding: 16px 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .fl-msg {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-width: 780px;
+  max-width: 820px;
 }
 .fl-msg-user {
   align-self: flex-end;
-  background: var(--ui-bg-quaternary);
-  border: 1px solid var(--ui-stroke-tertiary);
+  background: var(--fl-subtle);
+  border: 1px solid var(--ui-stroke-secondary);
   padding: 9px 13px;
   border-radius: 10px;
   color: var(--ui-text-primary);
@@ -673,8 +684,8 @@ var CSS = `
   align-self: stretch;
   padding: 14px 16px;
   border-radius: 10px;
-  border: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-elevated, var(--ui-bg-secondary));
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--fl-surface);
 }
 .fl-msg-body {
   font-size: 13px;
@@ -689,16 +700,17 @@ var CSS = `
 }
 .fl-msg-body ul, .fl-msg-body ol {
   margin: 6px 0 8px;
-  padding-left: 20px;
+  padding-left: 18px;
 }
 .fl-msg-body li {
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 .fl-msg-body h3, .fl-msg-body h2 {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 650;
-  margin: 12px 0 6px;
-  color: var(--ui-text-primary);
+  letter-spacing: 0.01em;
+  margin: 10px 0 6px;
+  color: var(--ui-text-secondary);
 }
 
 /* Signature marginalia citation pill */
@@ -751,22 +763,22 @@ var CSS = `
   padding: 2px 7px;
   border-radius: 5px;
   border: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
 }
 .fl-verdict[data-v="supported"] {
   color: var(--fl-ok);
   border-color: color-mix(in srgb, var(--fl-ok) 38%, transparent);
-  background: color-mix(in srgb, var(--fl-ok) 10%, transparent);
+  background: color-mix(in srgb, var(--fl-ok) 12%, transparent);
 }
 .fl-verdict[data-v="partial"] {
   color: var(--fl-warn);
   border-color: color-mix(in srgb, var(--fl-warn) 38%, transparent);
-  background: color-mix(in srgb, var(--fl-warn) 10%, transparent);
+  background: color-mix(in srgb, var(--fl-warn) 12%, transparent);
 }
 .fl-verdict[data-v="unsupported"] {
   color: var(--fl-bad);
   border-color: color-mix(in srgb, var(--fl-bad) 38%, transparent);
-  background: color-mix(in srgb, var(--fl-bad) 10%, transparent);
+  background: color-mix(in srgb, var(--fl-bad) 12%, transparent);
 }
 
 /* Composer */
@@ -774,7 +786,7 @@ var CSS = `
   flex: 0 0 auto;
   padding: 10px 20px 14px;
   border-top: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
 }
 .fl-composer {
   display: flex;
@@ -783,7 +795,7 @@ var CSS = `
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-secondary);
+  background: var(--fl-surface);
   transition: border-color 140ms var(--fl-ease);
 }
 .fl-composer:focus-within {
@@ -807,7 +819,7 @@ var CSS = `
   padding: 0 10px;
   border-radius: 7px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
   color: var(--ui-text-primary);
   font: inherit;
   font-size: 12.5px;
@@ -819,7 +831,7 @@ var CSS = `
   gap: 8px;
 }
 
-/* Claim Ledger & Coverage Map tables */
+/* Claim Ledger & Coverage Map */
 .fl-panel-pad {
   padding: 16px 20px 28px;
   display: flex;
@@ -831,7 +843,7 @@ var CSS = `
   grid-template-columns: repeat(3, minmax(0, 1fr));
   border: 1px solid var(--ui-stroke-secondary);
   border-radius: 9px;
-  background: var(--ui-bg-secondary);
+  background: var(--fl-surface);
   overflow: hidden;
 }
 .fl-kpi {
@@ -857,8 +869,8 @@ var CSS = `
 .fl-ledger-row {
   padding: 12px 14px;
   border-radius: 9px;
-  border: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-secondary);
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--fl-surface);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -866,7 +878,7 @@ var CSS = `
 .fl-quote-box {
   padding: 7px 10px;
   border-left: 2px solid var(--ui-accent);
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
   border-radius: 0 6px 6px 0;
   font-size: 12px;
   color: var(--ui-text-secondary);
@@ -886,7 +898,7 @@ var CSS = `
   padding: 9px 10px;
   border-radius: 8px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-primary);
+  background: var(--fl-surface);
   color: var(--ui-text-primary);
   font: inherit;
   font-size: 12px;
@@ -913,7 +925,7 @@ var CSS = `
 .fl-art-list {
   flex: 1;
   min-height: 0;
-  padding: 6px 12px 16px;
+  padding: 8px 12px 16px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -925,13 +937,13 @@ var CSS = `
   gap: 8px;
   padding: 9px 10px;
   border-radius: 8px;
-  border: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-primary);
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--fl-surface);
   cursor: pointer;
   transition: background-color 130ms var(--fl-ease), border-color 130ms var(--fl-ease);
 }
 .fl-art-item:hover {
-  background: var(--ui-bg-quaternary);
+  background: var(--fl-hover);
 }
 .fl-art-item[data-active="true"] {
   border-color: var(--fl-accent-border);
@@ -944,7 +956,7 @@ var CSS = `
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: var(--ui-bg-primary);
+  background: var(--fl-bg);
 }
 .fl-viewer-head {
   flex: 0 0 auto;
@@ -954,21 +966,21 @@ var CSS = `
   gap: 8px;
   padding: 10px 14px;
   border-bottom: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-secondary);
+  background: var(--fl-sidebar);
 }
 .fl-viewer-body {
   flex: 1;
   min-height: 0;
-  padding: 14px 16px 20px;
+  padding: 16px 18px 22px;
 }
 
 /* Flashcards */
 .fl-fc-card {
-  min-height: 210px;
+  min-height: 220px;
   padding: 22px 24px;
   border-radius: 12px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-secondary);
+  background: var(--fl-surface);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -990,7 +1002,7 @@ var CSS = `
   border: 1px solid var(--ui-stroke-secondary);
   border-radius: 9px;
   overflow: auto;
-  background: var(--ui-bg-primary);
+  background: var(--fl-surface);
 }
 .fl-table {
   width: 100%;
@@ -1001,8 +1013,8 @@ var CSS = `
   position: sticky;
   top: 0;
   text-align: left;
-  padding: 8px 10px;
-  background: var(--ui-bg-secondary);
+  padding: 9px 11px;
+  background: var(--fl-sidebar);
   border-bottom: 1px solid var(--ui-stroke-secondary);
   color: var(--ui-text-secondary);
   font-weight: 600;
@@ -1011,13 +1023,13 @@ var CSS = `
   user-select: none;
 }
 .fl-table td {
-  padding: 8px 10px;
+  padding: 9px 11px;
   border-bottom: 1px solid var(--ui-stroke-tertiary);
   vertical-align: top;
   color: var(--ui-text-primary);
 }
 .fl-table tbody tr:hover {
-  background: var(--ui-bg-quaternary);
+  background: var(--fl-hover);
 }
 
 /* Slide deck stage */
@@ -1026,28 +1038,28 @@ var CSS = `
   width: 100%;
   border-radius: 10px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-secondary);
-  padding: 24px 28px;
+  background: var(--fl-surface);
+  padding: 28px 34px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
   overflow: hidden;
 }
 .fl-slide-strip {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   overflow-x: auto;
   padding: 4px 0;
 }
 .fl-slide-thumb {
-  flex: 0 0 112px;
-  padding: 7px 8px;
-  border-radius: 7px;
-  border: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-secondary);
+  flex: 0 0 132px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--fl-surface);
   color: var(--ui-text-secondary);
-  font-size: 10.5px;
+  font-size: 11px;
   text-align: left;
   cursor: pointer;
   overflow: hidden;
@@ -1064,32 +1076,32 @@ var CSS = `
   top: 48px;
   right: 0;
   bottom: 0;
-  width: min(440px, 46vw);
-  background: var(--ui-bg-elevated, var(--ui-bg-primary));
+  width: min(460px, 46vw);
+  background: var(--fl-sidebar);
   border-left: 1px solid var(--ui-stroke-secondary);
   display: flex;
   flex-direction: column;
   z-index: 25;
 }
 .fl-chunk-card {
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--ui-stroke-tertiary);
-  background: var(--ui-bg-secondary);
+  padding: 12px 14px;
+  border-radius: 9px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--fl-surface);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 .fl-chunk-card[data-hit="true"] {
   border-color: var(--ui-accent);
-  background: var(--fl-accent-soft);
+  background: color-mix(in srgb, var(--ui-accent) 9%, var(--fl-surface));
 }
 
 /* Modal overlay */
 .fl-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgb(0 0 0 / 0.48);
+  background: rgb(0 0 0 / 0.52);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1101,7 +1113,7 @@ var CSS = `
   max-height: 84vh;
   border-radius: 12px;
   border: 1px solid var(--ui-stroke-secondary);
-  background: var(--ui-bg-elevated, var(--ui-bg-primary));
+  background: var(--fl-surface);
   color: var(--ui-text-primary);
   display: flex;
   flex-direction: column;
@@ -1169,7 +1181,7 @@ var CSS = `
 .fl-svg-stage {
   border: 1px solid var(--ui-stroke-secondary);
   border-radius: 10px;
-  background: var(--ui-bg-secondary);
+  background: var(--fl-surface);
   overflow: hidden;
   position: relative;
 }
@@ -1581,7 +1593,7 @@ function SidebarSources({
                   /* @__PURE__ */ jsx3(Icon, { name: KIND_ICONS[src.kind] || "FileText", size: 11 }),
                   /* @__PURE__ */ jsx3("span", { className: "fl-kind-tag", children: src.kind }),
                   /* @__PURE__ */ jsxs("span", { className: "fl-num", children: [
-                    fmtWords(src.word_count),
+                    fmtWords(src.word_count ?? Math.round((src.chars || 0) / 5)),
                     " w"
                   ] }),
                   /* @__PURE__ */ jsxs("span", { className: "fl-num", children: [
@@ -1911,51 +1923,65 @@ import { Fragment as Fragment2, jsx as jsx5, jsxs as jsxs3 } from "react/jsx-run
 var CITE_SPLIT_RE = /(\[\[c:[a-zA-Z0-9_-]+:\d+\]\])/g;
 var CITE_EXTRACT_RE = /^\[\[c:([a-zA-Z0-9_-]+:\d+)\]\]$/;
 function renderInlineCited(text, citeIndexMap, onOpenChunk) {
-  const paragraphs = String(text || "").split(/\n{2,}/);
-  return paragraphs.map((para, pIdx) => {
-    const trimmed = para.trim();
-    if (!trimmed) return null;
-    const lines = trimmed.split("\n");
-    const isList = lines.every((l) => /^\s*[-*+]\s+/.test(l));
-    const renderSpan = (line) => {
-      const tokens = line.split(CITE_SPLIT_RE);
-      return tokens.map((tok, tIdx) => {
-        const m = CITE_EXTRACT_RE.exec(tok);
-        if (m) {
-          const cid = m[1];
-          const num = citeIndexMap.get(cid) || "?";
-          return /* @__PURE__ */ jsx5(
-            "button",
-            {
-              type: "button",
-              className: "fl-cite",
-              title: `Inspect cited passage ${cid}`,
-              onClick: () => onOpenChunk(cid),
-              children: num
-            },
-            `${tIdx}-${cid}`
-          );
+  const renderSpan = (line) => {
+    const tokens = line.split(CITE_SPLIT_RE);
+    return tokens.map((tok, tIdx) => {
+      const m = CITE_EXTRACT_RE.exec(tok);
+      if (m) {
+        const cid = m[1];
+        const num = citeIndexMap.get(cid) || "?";
+        return /* @__PURE__ */ jsx5(
+          "button",
+          {
+            type: "button",
+            className: "fl-cite",
+            title: `Inspect cited passage ${cid}`,
+            onClick: () => onOpenChunk(cid),
+            children: num
+          },
+          `${tIdx}-${cid}`
+        );
+      }
+      const boldParts = tok.split(/(\*\*[^*]+\*\*)/g);
+      return boldParts.map((bp, bIdx) => {
+        if (bp.startsWith("**") && bp.endsWith("**") && bp.length > 4) {
+          return /* @__PURE__ */ jsx5("strong", { children: bp.slice(2, -2) }, `${tIdx}-${bIdx}`);
         }
-        const boldParts = tok.split(/(\*\*[^*]+\*\*)/g);
-        return boldParts.map((bp, bIdx) => {
-          if (bp.startsWith("**") && bp.endsWith("**") && bp.length > 4) {
-            return /* @__PURE__ */ jsx5("strong", { children: bp.slice(2, -2) }, `${tIdx}-${bIdx}`);
-          }
-          return bp;
-        });
+        return bp;
       });
-    };
-    if (trimmed.startsWith("### ")) {
-      return /* @__PURE__ */ jsx5("h3", { children: renderSpan(trimmed.slice(4)) }, pIdx);
+    });
+  };
+  const lines = String(text || "").split("\n");
+  const out = [];
+  let listBuf = [];
+  const flushList = (key) => {
+    if (!listBuf.length) return;
+    out.push(
+      /* @__PURE__ */ jsx5("ul", { children: listBuf.map((item, i) => /* @__PURE__ */ jsx5("li", { children: renderSpan(item) }, i)) }, `ul-${key}`)
+    );
+    listBuf = [];
+  };
+  lines.forEach((raw, idx) => {
+    const t = raw.trim();
+    if (!t) {
+      flushList(idx);
+      return;
     }
-    if (trimmed.startsWith("## ")) {
-      return /* @__PURE__ */ jsx5("h2", { children: renderSpan(trimmed.slice(3)) }, pIdx);
+    if (/^[-*+]\s+/.test(t)) {
+      listBuf.push(t.replace(/^[-*+]\s+/, ""));
+      return;
     }
-    if (isList) {
-      return /* @__PURE__ */ jsx5("ul", { children: lines.map((l, lIdx) => /* @__PURE__ */ jsx5("li", { children: renderSpan(l.replace(/^\s*[-*+]\s+/, "")) }, lIdx)) }, pIdx);
+    flushList(idx);
+    if (t.startsWith("### ")) {
+      out.push(/* @__PURE__ */ jsx5("h3", { children: renderSpan(t.slice(4)) }, idx));
+    } else if (t.startsWith("## ")) {
+      out.push(/* @__PURE__ */ jsx5("h2", { children: renderSpan(t.slice(3)) }, idx));
+    } else {
+      out.push(/* @__PURE__ */ jsx5("p", { children: renderSpan(t) }, idx));
     }
-    return /* @__PURE__ */ jsx5("p", { children: renderSpan(trimmed) }, pIdx);
   });
+  flushList("end");
+  return out;
 }
 function ChatPanel({
   ctx,
@@ -2839,8 +2865,8 @@ function layoutTree(root, collapsed) {
   const nodes = [];
   const edges = [];
   let leafY = 0;
-  const xStep = 192;
-  const yStep = 58;
+  const xStep = 224;
+  const yStep = 56;
   function walk(node, depth, parentId) {
     const id = node.id || `${depth}-${nodes.length}`;
     const kids = !collapsed[id] && Array.isArray(node.children) ? node.children : [];
@@ -2852,7 +2878,7 @@ function layoutTree(root, collapsed) {
       depth,
       hasChildren: Array.isArray(node.children) && node.children.length > 0,
       collapsed: Boolean(collapsed[id]),
-      x: 40 + depth * xStep,
+      x: 32 + depth * xStep,
       y: 0
     };
     if (!kids.length) {
@@ -2871,8 +2897,8 @@ function layoutTree(root, collapsed) {
   }
   if (root) walk(root, 0, null);
   const byId = new Map(nodes.map((n) => [n.id, n]));
-  const maxX = Math.max(540, ...nodes.map((n) => n.x + 170));
-  const maxY = Math.max(320, ...nodes.map((n) => n.y + 48));
+  const maxX = Math.max(640, ...nodes.map((n) => n.x + 216));
+  const maxY = Math.max(340, ...nodes.map((n) => n.y + 48));
   return { nodes, edges, byId, width: maxX, height: maxY };
 }
 function MindMapView({ artifact, onOpenChunk }) {
@@ -2947,7 +2973,7 @@ function MindMapView({ artifact, onOpenChunk }) {
             width: "100%",
             height: "100%",
             viewBox: `0 0 ${graph.width} ${graph.height}`,
-            style: { display: "block", background: "var(--ui-bg-secondary)" },
+            style: { display: "block", background: "var(--fl-bg)" },
             children: [
               /* @__PURE__ */ jsx9("title", { id: titleId, children: artifact?.spec?.title || "Concept Mind Map" }),
               /* @__PURE__ */ jsxs7("desc", { id: descId, children: [
@@ -2960,7 +2986,7 @@ function MindMapView({ artifact, onOpenChunk }) {
                   const a = graph.byId.get(ed.from);
                   const b = graph.byId.get(ed.to);
                   if (!a || !b) return null;
-                  const sx = a.x + 150;
+                  const sx = a.x + 186;
                   const sy = a.y;
                   const tx = b.x;
                   const ty = b.y;
@@ -2979,7 +3005,7 @@ function MindMapView({ artifact, onOpenChunk }) {
                 graph.nodes.map((n) => {
                   const isRoot = n.depth === 0;
                   const isSel = activeNode && activeNode.id === n.id;
-                  const label = n.label.length > 22 ? `${n.label.slice(0, 21)}...` : n.label;
+                  const label = n.label.length > 24 ? `${n.label.slice(0, 23)}...` : n.label;
                   return /* @__PURE__ */ jsxs7(
                     "g",
                     {
@@ -2994,10 +3020,10 @@ function MindMapView({ artifact, onOpenChunk }) {
                         /* @__PURE__ */ jsx9(
                           "rect",
                           {
-                            width: "150",
+                            width: "186",
                             height: "36",
                             rx: "8",
-                            fill: isRoot || isSel ? "var(--fl-accent-soft)" : "var(--ui-bg-primary)",
+                            fill: isRoot || isSel ? "var(--fl-accent-soft)" : "var(--fl-surface)",
                             stroke: isRoot || isSel ? "var(--ui-accent)" : "var(--ui-stroke-secondary)",
                             strokeWidth: isRoot || isSel ? "1.6" : "1"
                           }
@@ -3017,14 +3043,14 @@ function MindMapView({ artifact, onOpenChunk }) {
                         n.hasChildren ? /* @__PURE__ */ jsxs7(
                           "g",
                           {
-                            transform: "translate(136, 18)",
+                            transform: "translate(186, 18)",
                             onClick: (e) => {
                               e.stopPropagation();
                               setCollapsed((prev) => ({ ...prev, [n.id]: !prev[n.id] }));
                             },
                             children: [
-                              /* @__PURE__ */ jsx9("circle", { r: "7", fill: "var(--ui-bg-secondary)", stroke: "var(--ui-stroke-secondary)", strokeWidth: "1" }),
-                              /* @__PURE__ */ jsx9("text", { textAnchor: "middle", y: "3.5", fill: "var(--ui-text-secondary)", fontSize: "10", fontWeight: "700", children: n.collapsed ? "+" : "-" })
+                              /* @__PURE__ */ jsx9("circle", { r: "8", fill: "var(--fl-surface)", stroke: "var(--ui-stroke-secondary)", strokeWidth: "1.2" }),
+                              /* @__PURE__ */ jsx9("text", { textAnchor: "middle", y: "3.5", fill: "var(--ui-text-secondary)", fontSize: "11", fontWeight: "700", children: n.collapsed ? "+" : "-" })
                             ]
                           }
                         ) : null
@@ -3056,18 +3082,35 @@ function wrapText(text, maxChars, maxLines = 4) {
   const words = String(text || "").trim().split(/\s+/).filter(Boolean);
   const lines = [];
   let cur = "";
-  for (const w of words) {
+  let consumed = 0;
+  for (let i = 0; i < words.length; i += 1) {
+    const w = words[i];
     if (!cur) {
       cur = w;
+      consumed = i + 1;
     } else if (cur.length + 1 + w.length <= maxChars) {
       cur += " " + w;
+      consumed = i + 1;
     } else {
       lines.push(cur);
       cur = w;
-      if (lines.length >= maxLines - 1) break;
+      consumed = i + 1;
+      if (lines.length >= maxLines - 1) {
+        for (let j = i + 1; j < words.length; j += 1) {
+          if (cur.length + 1 + words[j].length <= maxChars - 3) {
+            cur += " " + words[j];
+            consumed = j + 1;
+          } else {
+            break;
+          }
+        }
+        break;
+      }
     }
   }
-  if (cur && lines.length < maxLines) lines.push(cur);
+  if (cur && lines.length < maxLines) {
+    lines.push(consumed < words.length ? `${cur.replace(/[.,;:\-]+$/, "")}...` : cur);
+  }
   return lines;
 }
 function InfographicView({ artifact, onOpenChunk }) {
@@ -3078,13 +3121,13 @@ function InfographicView({ artifact, onOpenChunk }) {
   if (!blocks.length) {
     return /* @__PURE__ */ jsx10("div", { className: "fl-empty", children: "No infographic blocks available." });
   }
-  const W = 720;
+  const W = 740;
   const isTimeline = layout === "timeline" || layout === "process";
   const cols = isTimeline ? 1 : 2;
   const rows = Math.ceil(blocks.length / cols);
-  const cardH = isTimeline ? 94 : 138;
+  const cardH = isTimeline ? 104 : 156;
   const gap = 14;
-  const headerH = 82;
+  const headerH = 84;
   const H = headerH + rows * cardH + Math.max(0, rows - 1) * gap + 28;
   const titleId = `fl-inf-title-${artifact?.id || "info"}`;
   const descId = `fl-inf-desc-${artifact?.id || "info"}`;
@@ -3119,14 +3162,14 @@ function InfographicView({ artifact, onOpenChunk }) {
         "aria-labelledby": `${titleId} ${descId}`,
         width: "100%",
         viewBox: `0 0 ${W} ${H}`,
-        style: { display: "block", background: "var(--ui-bg-secondary)" },
+        style: { display: "block", background: "var(--fl-bg)" },
         children: [
           /* @__PURE__ */ jsx10("title", { id: titleId, children: spec.title || "Infographic" }),
           /* @__PURE__ */ jsx10("desc", { id: descId, children: spec.subtitle || `Structured ${layout} infographic with ${blocks.length} cited items.` }),
-          /* @__PURE__ */ jsx10("rect", { x: "0", y: "0", width: W, height: H, fill: "var(--ui-bg-secondary)" }),
+          /* @__PURE__ */ jsx10("rect", { x: "0", y: "0", width: W, height: H, fill: "var(--fl-bg)" }),
           /* @__PURE__ */ jsx10("text", { x: "24", y: "38", fill: "var(--ui-text-primary)", fontSize: "20", fontWeight: "700", fontFamily: "system-ui, -apple-system, sans-serif", children: String(spec.title || "Infographic").slice(0, 62) }),
           spec.subtitle ? /* @__PURE__ */ jsx10("text", { x: "24", y: "59", fill: "var(--ui-text-secondary)", fontSize: "12.5", fontFamily: "system-ui, -apple-system, sans-serif", children: String(spec.subtitle).slice(0, 96) }) : null,
-          /* @__PURE__ */ jsx10("line", { x1: "24", y1: "72", x2: W - 24, y2: "72", stroke: "var(--ui-stroke-tertiary)", strokeWidth: "1" }),
+          /* @__PURE__ */ jsx10("line", { x1: "24", y1: "74", x2: W - 24, y2: "74", stroke: "var(--ui-stroke-tertiary)", strokeWidth: "1" }),
           isTimeline ? /* @__PURE__ */ jsx10("line", { x1: "48", y1: headerH + 22, x2: "48", y2: H - 36, stroke: "var(--ui-stroke-secondary)", strokeWidth: "2" }) : null,
           blocks.map((blk, idx) => {
             const col = idx % cols;
@@ -3134,7 +3177,7 @@ function InfographicView({ artifact, onOpenChunk }) {
             const cardW = isTimeline ? W - 96 : (W - 48 - gap) / 2;
             const x = isTimeline ? 72 : 24 + col * (cardW + gap);
             const y = headerH + row * (cardH + gap);
-            const bodyLines = wrapText(blk.body, isTimeline ? 76 : 42, 4);
+            const bodyLines = wrapText(blk.body, isTimeline ? 80 : 45, 4);
             return /* @__PURE__ */ jsxs8("g", { children: [
               isTimeline ? /* @__PURE__ */ jsxs8(Fragment3, { children: [
                 /* @__PURE__ */ jsx10("circle", { cx: "48", cy: y + 28, r: "13", fill: "var(--fl-accent-soft)", stroke: "var(--ui-accent)", strokeWidth: "1.5" }),
@@ -3148,7 +3191,7 @@ function InfographicView({ artifact, onOpenChunk }) {
                   width: cardW,
                   height: cardH,
                   rx: "10",
-                  fill: "var(--ui-bg-primary)",
+                  fill: "var(--fl-surface)",
                   stroke: "var(--ui-stroke-secondary)",
                   strokeWidth: "1"
                 }
@@ -3156,10 +3199,10 @@ function InfographicView({ artifact, onOpenChunk }) {
               blk.value ? /* @__PURE__ */ jsx10(
                 "text",
                 {
-                  x: x + 14,
-                  y: y + 30,
+                  x: x + 16,
+                  y: y + 32,
                   fill: "var(--ui-accent)",
-                  fontSize: isTimeline ? "15" : "22",
+                  fontSize: isTimeline ? "15" : "24",
                   fontWeight: "750",
                   fontFamily: "ui-monospace, SFMono-Regular, monospace",
                   children: String(blk.value).slice(0, 22)
@@ -3168,24 +3211,24 @@ function InfographicView({ artifact, onOpenChunk }) {
               /* @__PURE__ */ jsx10(
                 "text",
                 {
-                  x: x + 14,
-                  y: y + (blk.value ? 50 : 28),
+                  x: x + 16,
+                  y: y + (blk.value ? 55 : 30),
                   fill: "var(--ui-text-primary)",
-                  fontSize: "13",
+                  fontSize: "13.5",
                   fontWeight: "650",
                   fontFamily: "system-ui, -apple-system, sans-serif",
-                  children: String(blk.heading || `Item ${idx + 1}`).slice(0, isTimeline ? 64 : 36)
+                  children: String(blk.heading || `Item ${idx + 1}`).slice(0, isTimeline ? 64 : 38)
                 }
               ),
               /* @__PURE__ */ jsx10(
                 "text",
                 {
-                  x: x + 14,
-                  y: y + (blk.value ? 69 : 48),
+                  x: x + 16,
+                  y: y + (blk.value ? 76 : 52),
                   fill: "var(--ui-text-secondary)",
-                  fontSize: "11.5",
+                  fontSize: "12",
                   fontFamily: "system-ui, -apple-system, sans-serif",
-                  children: bodyLines.map((ln, lIdx) => /* @__PURE__ */ jsx10("tspan", { x: x + 14, dy: lIdx === 0 ? 0 : 15, children: ln }, lIdx))
+                  children: bodyLines.map((ln, lIdx) => /* @__PURE__ */ jsx10("tspan", { x: x + 16, dy: lIdx === 0 ? 0 : 16, children: ln }, lIdx))
                 }
               )
             ] }, blk.id || idx);

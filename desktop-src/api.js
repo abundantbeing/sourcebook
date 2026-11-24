@@ -142,18 +142,23 @@ export function bakeSvgVariables(svgEl) {
   if (!svgEl) return ''
   const clone = svgEl.cloneNode(true)
   clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-  const bg = resolveCssColor('var(--ui-bg-primary)', svgEl)
-  const bg2 = resolveCssColor('var(--ui-bg-secondary)', svgEl)
+  const bg = resolveCssColor('var(--ui-bg-chrome)', svgEl)
+  const bg2 = resolveCssColor('var(--ui-bg-elevated)', svgEl)
+  const sidebar = resolveCssColor('var(--ui-bg-sidebar)', svgEl)
   const fg = resolveCssColor('var(--ui-text-primary)', svgEl)
   const muted = resolveCssColor('var(--ui-text-secondary)', svgEl)
   const stroke = resolveCssColor('var(--ui-stroke-secondary)', svgEl)
   const accent = resolveCssColor('var(--ui-accent)', svgEl)
-  const accentSoft = resolveCssColor('color-mix(in srgb, var(--ui-accent) 16%, var(--ui-bg-secondary))', svgEl)
+  const accentSoft = resolveCssColor('color-mix(in srgb, var(--ui-accent) 16%, var(--ui-bg-elevated))', svgEl)
   const replacements = [
+    [/var\(--fl-bg[^)]*\)/g, bg],
+    [/var\(--fl-surface[^)]*\)/g, bg2],
+    [/var\(--fl-sidebar[^)]*\)/g, sidebar],
+    [/var\(--ui-bg-chrome[^)]*\)/g, bg],
+    [/var\(--ui-bg-elevated[^)]*\)/g, bg2],
+    [/var\(--ui-bg-sidebar[^)]*\)/g, sidebar],
     [/var\(--ui-bg-primary[^)]*\)/g, bg],
     [/var\(--ui-bg-secondary[^)]*\)/g, bg2],
-    [/var\(--ui-bg-elevated[^)]*\)/g, bg2],
-    [/var\(--ui-bg-quaternary[^)]*\)/g, bg2],
     [/var\(--ui-text-primary[^)]*\)/g, fg],
     [/var\(--ui-text-secondary[^)]*\)/g, muted],
     [/var\(--ui-text-tertiary[^)]*\)/g, muted],

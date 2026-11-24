@@ -1,10 +1,10 @@
 manifest_version: 2
-name: folio
+name: sourcebook
 version: "0.1.0"
 description: Source-grounded research notebooks for Hermes. Ingest multi-format sources, ask cited questions with a Claim Ledger, track source coverage, and generate seven interactive Studio formats.
 author: abundantbeing
 license: MIT
-homepage: https://github.com/abundantbeing/folio
+homepage: https://github.com/abundantbeing/sourcebook
 requires_hermes: ">=0.22.6"
 tags:
   - notebook
@@ -13,10 +13,10 @@ tags:
   - studio
   - desktop
 provides_tools:
-  - folio_search
-  - folio_list_notebooks
-  - folio_save_note
-  - folio_studio
+  - sourcebook_search
+  - sourcebook_list_notebooks
+  - sourcebook_save_note
+  - sourcebook_studio
 provides_hooks:
   - pre_llm_call
 python_dependencies: []

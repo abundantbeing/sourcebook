@@ -1,6 +1,6 @@
 {
-  "name": "folio",
-  "label": "Folio",
+  "name": "sourcebook",
+  "label": "SourceBook",
   "description": "Source-grounded research notebooks, Claim Ledger, Coverage Map, and interactive 7-format Studio.",
   "icon": "BookOpen",
   "version": "0.1.0",

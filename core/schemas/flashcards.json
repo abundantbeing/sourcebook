@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "properties": {
+    "deck": { "type": "string" },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "front": { "type": "string" },
+          "back": { "type": "string" },
+          "hint": { "type": "string" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "cites": { "type": "array", "items": { "type": "string" } },
+          "difficulty": { "type": "integer", "minimum": 1, "maximum": 3 }
+        },
+        "required": ["id", "front", "back", "cites"]
+      }
+    }
+  },
+  "required": ["deck", "cards"]
+}

@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "properties": {
+    "title": { "type": "string" },
+    "columns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": { "type": "string" },
+          "label": { "type": "string" },
+          "type": { "type": "string", "enum": ["text", "number", "date", "url"] }
+        },
+        "required": ["key", "label"]
+      }
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cells": { "type": "object" },
+          "cites": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["cells", "cites"]
+      }
+    }
+  },
+  "required": ["title", "columns", "rows"]
+}

@@ -1,0 +1,35 @@
+{
+  "type": "object",
+  "properties": {
+    "title": { "type": "string" },
+    "theme": { "type": "string", "enum": ["hermes", "paper", "noir", "bold"] },
+    "slides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "layout": {
+            "type": "string",
+            "enum": ["title", "bullets", "two-col", "quote", "stat", "image-left", "image-full", "section", "closing"]
+          },
+          "title": { "type": "string" },
+          "bullets": { "type": "array", "items": { "type": "string" } },
+          "body": { "type": "string" },
+          "stat": {
+            "type": "object",
+            "properties": {
+              "value": { "type": "string" },
+              "label": { "type": "string" }
+            }
+          },
+          "notes": { "type": "string" },
+          "cites": { "type": "array", "items": { "type": "string" } },
+          "image_prompt": { "type": "string" }
+        },
+        "required": ["id", "layout", "title", "cites"]
+      }
+    }
+  },
+  "required": ["title", "slides"]
+}

@@ -1,0 +1,32 @@
+{
+  "type": "object",
+  "properties": {
+    "title": { "type": "string" },
+    "subtitle": { "type": "string" },
+    "layout": {
+      "type": "string",
+      "enum": ["stat-grid", "timeline", "process", "comparison", "hub-spoke", "pyramid"]
+    },
+    "palette": {
+      "type": "string",
+      "enum": ["theme", "warm", "cool", "mono"]
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": { "type": "string" },
+          "heading": { "type": "string" },
+          "value": { "type": "string" },
+          "body": { "type": "string" },
+          "icon": { "type": "string" },
+          "cites": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["heading", "body", "cites"]
+      }
+    },
+    "hero_image_prompt": { "type": "string" }
+  },
+  "required": ["title", "layout", "blocks"]
+}

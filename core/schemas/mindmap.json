@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "$defs": {
+    "node": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "summary": { "type": "string" },
+        "cites": { "type": "array", "items": { "type": "string" } },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/node" }
+        }
+      },
+      "required": ["id", "label"]
+    }
+  },
+  "properties": {
+    "title": { "type": "string" },
+    "root": { "$ref": "#/$defs/node" }
+  },
+  "required": ["title", "root"]
+}

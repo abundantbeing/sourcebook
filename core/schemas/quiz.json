@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "properties": {
+    "title": { "type": "string" },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "type": "string", "enum": ["mcq", "tf", "short"] },
+          "prompt": { "type": "string" },
+          "options": { "type": "array", "items": { "type": "string" } },
+          "answer": {},
+          "explanation": { "type": "string" },
+          "difficulty": { "type": "string", "enum": ["easy", "med", "hard"] },
+          "cites": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["id", "type", "prompt", "answer", "explanation", "cites"]
+      }
+    }
+  },
+  "required": ["title", "questions"]
+}

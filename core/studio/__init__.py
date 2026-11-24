@@ -191,6 +191,14 @@ def _extract_facts(chunks: list[dict[str, str]]) -> list[dict[str, Any]]:
     return facts
 
 
+def _clip(text: str, limit: int) -> str:
+    s = (text or "").strip()
+    if len(s) <= limit:
+        return s
+    cut = s[:limit].rsplit(" ", 1)[0].rstrip(",.;:- ")
+    return (cut or s[:limit]).rstrip() + "..."
+
+
 def _extractive_studio(kind: str, context: str, allowed_ids: set[str], p: dict[str, Any]) -> tuple[dict[str, Any], list[str], dict[str, Any]]:
     """Deterministic local synthesis for all 7 Studio formats when no LLM provider is configured."""
     chunks = _parse_packed_chunks(context)
@@ -313,7 +321,7 @@ def _extractive_studio(kind: str, context: str, allowed_ids: set[str], p: dict[s
                         "source": f["source_title"],
                         "section": f["heading"],
                         "metric": f["metric"] or "Qualitative",
-                        "finding": f["sentence"][:150],
+                        "finding": _clip(f["sentence"], 220),
                     },
                     "cites": [f["chunk_id"]],
                 }
@@ -339,7 +347,7 @@ def _extractive_studio(kind: str, context: str, allowed_ids: set[str], p: dict[s
                     "id": f"b_{idx + 1}",
                     "heading": " ".join(f["heading"].split()[:6]) or f"Highlight {idx + 1}",
                     "value": f["metric"] or f"0{idx + 1}",
-                    "body": f["sentence"][:170],
+                    "body": _clip(f["sentence"], 210),
                     "cites": [f["chunk_id"]],
                 }
             )

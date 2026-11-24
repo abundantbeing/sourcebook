@@ -1,4 +1,4 @@
-"""Integration tests for Folio (store, FTS5, ingest, Claim Ledger, Studio, FastAPI, agent register)."""
+"""Integration tests for SourceBook (store, FTS5, ingest, Claim Ledger, Studio, FastAPI, agent register)."""
 
 from __future__ import annotations
 
@@ -18,8 +18,8 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
-def _load_folio_pkg():
-    pkg_name = "_folio_repo_test_pkg"
+def _load_sourcebook_pkg():
+    pkg_name = "_sourcebook_repo_test_pkg"
     if pkg_name in sys.modules:
         return sys.modules[pkg_name]
     spec = importlib.util.spec_from_file_location(
@@ -36,15 +36,15 @@ def _load_folio_pkg():
 
 @pytest.fixture()
 def isolated_data_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    data_dir = tmp_path / "folio_data"
+    data_dir = tmp_path / "sourcebook_data"
     data_dir.mkdir()
-    monkeypatch.setenv("FOLIO_DATA_DIR", str(data_dir))
+    monkeypatch.setenv("SOURCEBOOK_DATA_DIR", str(data_dir))
     return data_dir
 
 
 def test_notebook_source_note_crud_and_promote(isolated_data_dir: Path) -> None:
-    folio = _load_folio_pkg()
-    store = folio.store
+    sourcebook = _load_sourcebook_pkg()
+    store = sourcebook.store
 
     nb = store.create_notebook("Systems Study", icon="book-open")
     assert nb["id"].startswith("nb_")
@@ -70,11 +70,11 @@ def test_notebook_source_note_crud_and_promote(isolated_data_dir: Path) -> None:
 
 
 def test_path_traversal_rejected(isolated_data_dir: Path) -> None:
-    folio = _load_folio_pkg()
+    sourcebook = _load_sourcebook_pkg()
     with pytest.raises(ValueError):
-        folio.store.get_notebook("../escape")
+        sourcebook.store.get_notebook("../escape")
     with pytest.raises(ValueError):
-        folio.store.nb_dir("nb_../../etc")
+        sourcebook.store.nb_dir("nb_../../etc")
 
 
 @pytest.mark.parametrize(
@@ -89,21 +89,21 @@ def test_path_traversal_rejected(isolated_data_dir: Path) -> None:
     ],
 )
 def test_fts5_handles_reserved_keywords_and_punctuation(isolated_data_dir: Path, query: str) -> None:
-    folio = _load_folio_pkg()
-    nb = folio.store.create_notebook("FTS Safety")
-    folio.store.add_source(
+    sourcebook = _load_sourcebook_pkg()
+    nb = sourcebook.store.create_notebook("FTS Safety")
+    sourcebook.store.add_source(
         nb["id"],
         "Benchmarks",
         "Latency dropped to 18ms at p99 while throughput doubled across C++ and Java workers.",
         kind="text",
     )
-    hits = folio.store.search(nb["id"], query, k=5)
+    hits = sourcebook.store.search(nb["id"], query, k=5)
     assert isinstance(hits, list)
 
 
 def test_docx_csv_json_and_html_ingestion(isolated_data_dir: Path) -> None:
-    folio = _load_folio_pkg()
-    nb = folio.store.create_notebook("Formats")
+    sourcebook = _load_sourcebook_pkg()
+    nb = sourcebook.store.create_notebook("Formats")
 
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w") as zf:
@@ -114,67 +114,67 @@ def test_docx_csv_json_and_html_ingestion(isolated_data_dir: Path) -> None:
             '<w:body><w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Quarterly Review</w:t></w:r></w:p>'
             '<w:p><w:r><w:t>Revenue grew 42% year over year with 98.4% uptime.</w:t></w:r></w:p></w:body></w:document>',
         )
-    docx_src = folio.ingest.ingest_bytes(nb["id"], "report.docx", buf.getvalue())
+    docx_src = sourcebook.ingest.ingest_bytes(nb["id"], "report.docx", buf.getvalue())
     assert docx_src["kind"] == "docx"
 
-    csv_src = folio.ingest.ingest_bytes(nb["id"], "metrics.csv", b"region,latency_ms,uptime\nus-east,14,99.95\neu-west,21,99.91\n")
+    csv_src = sourcebook.ingest.ingest_bytes(nb["id"], "metrics.csv", b"region,latency_ms,uptime\nus-east,14,99.95\neu-west,21,99.91\n")
     assert csv_src["kind"] == "csv"
 
-    json_src = folio.ingest.ingest_bytes(nb["id"], "nodes.json", json.dumps([{"node": "alpha", "rps": 4200}]).encode())
+    json_src = sourcebook.ingest.ingest_bytes(nb["id"], "nodes.json", json.dumps([{"node": "alpha", "rps": 4200}]).encode())
     assert json_src["kind"] == "json"
 
-    title, md = folio.ingest.extract_html_to_markdown("<html><head><title>Doc</title></head><body><h1>Intro</h1><p>Grounded text.</p><script>bad()</script></body></html>")
+    title, md = sourcebook.ingest.extract_html_to_markdown("<html><head><title>Doc</title></head><body><h1>Intro</h1><p>Grounded text.</p><script>bad()</script></body></html>")
     assert title == "Doc"
     assert "Grounded text." in md
     assert "bad()" not in md
 
 
 def test_claim_ledger_and_extractive_chat(isolated_data_dir: Path) -> None:
-    folio = _load_folio_pkg()
-    nb = folio.store.create_notebook("Claim Ledger Test")
-    src = folio.store.add_source(
+    sourcebook = _load_sourcebook_pkg()
+    nb = sourcebook.store.create_notebook("Claim Ledger Test")
+    src = sourcebook.store.add_source(
         nb["id"],
         "Storage Spec",
         "# WAL Mode\n\nSQLite WAL mode allows concurrent readers while a single writer appends pages to the write-ahead log.\n\nFTS5 tokenizes chunks with Porter stemming for fast BM25 ranking.",
         kind="markdown",
     )
-    res = folio.ask(nb["id"], "How does SQLite WAL mode handle concurrency?", extractive=True)
+    res = sourcebook.ask(nb["id"], "How does SQLite WAL mode handle concurrency?", extractive=True)
     assert res["citations"]
     assert res["grounding"]["mode"] == "extractive"
     assert res["claims"]
     assert any(c["verdict"] == "supported" for c in res["claims"])
 
-    saved_claims = folio.store.list_verified_claims(nb["id"])
+    saved_claims = sourcebook.store.list_verified_claims(nb["id"])
     assert len(saved_claims) == len(res["claims"])
     assert src["id"] in res["source_ids"]
 
 
 def test_extractive_studio_all_seven_kinds_and_exports(isolated_data_dir: Path) -> None:
-    folio = _load_folio_pkg()
-    nb = folio.store.create_notebook("Studio Deck")
-    folio.store.add_source(
+    sourcebook = _load_sourcebook_pkg()
+    nb = sourcebook.store.create_notebook("Studio Deck")
+    sourcebook.store.add_source(
         nb["id"],
         "Engine Notes",
         "# Architecture\n\nHermes Desktop loads plugins inside an explicit SDK surface with zero app markup patching.\n\n## Latency\n\nLocal FTS5 queries finish in 6ms on 400 indexed chunks and support 99.2% recall on exact phrase lookups.",
         kind="markdown",
     )
     for kind in ("report", "mindmap", "flashcards", "quiz", "table", "infographic", "slides"):
-        art = folio.make(nb["id"], kind, {"focus": "Hermes plugin architecture", "extractive": True})
+        art = sourcebook.make(nb["id"], kind, {"focus": "Hermes plugin architecture", "extractive": True})
         assert art["kind"] == kind
         assert art["spec"]
-        fname, mtype, body = folio.studio.export_artifact(art, "md")
+        fname, mtype, body = sourcebook.studio.export_artifact(art, "md")
         assert fname and mtype and body
 
     # Verify specialized exports
-    arts = {a["kind"]: folio.store.get_artifact(nb["id"], a["id"]) for a in folio.store.list_artifacts(nb["id"])}
-    assert folio.studio.export_artifact(arts["table"], "csv")[0].endswith(".csv")
-    assert folio.studio.export_artifact(arts["flashcards"], "anki")[0].endswith(".tsv")
-    assert folio.studio.export_artifact(arts["mindmap"], "opml")[0].endswith(".opml")
-    assert folio.studio.export_artifact(arts["slides"], "html")[0].endswith(".deck.html")
+    arts = {a["kind"]: sourcebook.store.get_artifact(nb["id"], a["id"]) for a in sourcebook.store.list_artifacts(nb["id"])}
+    assert sourcebook.studio.export_artifact(arts["table"], "csv")[0].endswith(".csv")
+    assert sourcebook.studio.export_artifact(arts["flashcards"], "anki")[0].endswith(".tsv")
+    assert sourcebook.studio.export_artifact(arts["mindmap"], "opml")[0].endswith(".opml")
+    assert sourcebook.studio.export_artifact(arts["slides"], "html")[0].endswith(".deck.html")
 
 
 def test_register_matches_plugin_yaml_and_pre_llm_call(isolated_data_dir: Path) -> None:
-    folio = _load_folio_pkg()
+    sourcebook = _load_sourcebook_pkg()
     manifest = yaml.safe_load((REPO_ROOT / "plugin.yaml").read_text(encoding="utf-8"))
 
     class FakeCtx:
@@ -205,17 +205,17 @@ def test_register_matches_plugin_yaml_and_pre_llm_call(isolated_data_dir: Path) 
             self.skills.append(name)
 
     ctx = FakeCtx()
-    folio.register(ctx)
+    sourcebook.register(ctx)
 
     assert sorted(ctx.tools) == sorted(manifest["provides_tools"])
     assert sorted(ctx.hooks.keys()) == sorted(manifest["provides_hooks"])
-    assert "folio" in ctx.commands
-    assert "folio_chat" in ctx.aux_tasks
+    assert "sourcebook" in ctx.commands
+    assert "sourcebook_chat" in ctx.aux_tasks
 
-    nb = folio.store.create_notebook("Bound Session")
-    folio.store.add_source(nb["id"], "Notes", "Quantum error correction uses surface codes with logical error rates below 1%.", kind="text")
+    nb = sourcebook.store.create_notebook("Bound Session")
+    sourcebook.store.add_source(nb["id"], "Notes", "Quantum error correction uses surface codes with logical error rates below 1%.", kind="text")
     assert ctx.hooks["pre_llm_call"](session_id="sess_unbound", user_message="surface codes") is None
-    folio.store.bind_session("sess_bound", nb["id"])
+    sourcebook.store.bind_session("sess_bound", nb["id"])
     injected = ctx.hooks["pre_llm_call"](session_id="sess_bound", user_message="surface codes")
     assert injected is not None and "surface codes" in injected["context"]
 
@@ -224,39 +224,39 @@ def test_dashboard_plugin_api_routes(isolated_data_dir: Path) -> None:
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
 
-    spec = importlib.util.spec_from_file_location("folio_api_test_mod", REPO_ROOT / "dashboard" / "plugin_api.py")
+    spec = importlib.util.spec_from_file_location("sourcebook_api_test_mod", REPO_ROOT / "dashboard" / "plugin_api.py")
     assert spec and spec.loader
     api_mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(api_mod)
 
     app = FastAPI()
-    app.include_router(api_mod.router, prefix="/api/plugins/folio")
+    app.include_router(api_mod.router, prefix="/api/plugins/sourcebook")
     client = TestClient(app)
 
-    assert client.get("/api/plugins/folio/ping").json()["ok"] is True
-    nb = client.post("/api/plugins/folio/notebooks", json={"title": "API Test"}).json()
+    assert client.get("/api/plugins/sourcebook/ping").json()["ok"] is True
+    nb = client.post("/api/plugins/sourcebook/notebooks", json={"title": "API Test"}).json()
 
     up = client.post(
-        f"/api/plugins/folio/notebooks/{nb['id']}/sources/upload",
+        f"/api/plugins/sourcebook/notebooks/{nb['id']}/sources/upload",
         files={"file": ("notes.md", b"# Caching\n\nContent-addressed caching cuts rebuild time by 74%.", "text/markdown")},
     )
     assert up.status_code == 200
     assert up.json()["chunk_count"] >= 1
 
     ask_job = client.post(
-        f"/api/plugins/folio/notebooks/{nb['id']}/ask",
+        f"/api/plugins/sourcebook/notebooks/{nb['id']}/ask",
         json={"text": "How much does caching cut rebuild time?", "extractive": True},
     ).json()["job"]
     for _ in range(40):
-        st = client.get(f"/api/plugins/folio/jobs/{ask_job}").json()
+        st = client.get(f"/api/plugins/sourcebook/jobs/{ask_job}").json()
         if st["status"] in ("done", "error"):
             break
         time.sleep(0.05)
     assert st["status"] == "done"
 
-    claims = client.get(f"/api/plugins/folio/notebooks/{nb['id']}/claims").json()
+    claims = client.get(f"/api/plugins/sourcebook/notebooks/{nb['id']}/claims").json()
     assert len(claims) >= 1
-    cov = client.get(f"/api/plugins/folio/notebooks/{nb['id']}/coverage").json()
+    cov = client.get(f"/api/plugins/sourcebook/notebooks/{nb['id']}/coverage").json()
     assert cov["touched_chunks"] >= 1
 
 

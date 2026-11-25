@@ -1,13 +1,15 @@
-"""Profile-safe notebook storage, SQLite WAL + FTS5 index, notes, chat, artifacts & bindings.
+"""Profile-safe notebook storage, SQLite WAL + FTS5 + hybrid semantic vector index, claims graph, notes, chat, artifacts & bindings.
 
-Zero third-party dependencies. Resolves `<HERMES_HOME>/plugin-data/sourcebook/` dynamically on every
-call via `plugins.plugin_storage.plugin_data_dir("sourcebook")` so multi-profile gateways stay isolated.
+Zero mandatory third-party dependencies. Resolves `<HERMES_HOME>/plugin-data/sourcebook/` dynamically
+on every call via `plugins.plugin_storage.plugin_data_dir("sourcebook")` so multi-profile gateways stay isolated.
 """
 
 from __future__ import annotations
 
+import array
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -22,14 +24,96 @@ _ID_RE = re.compile(r"^[a-z]+_[a-f0-9]{6,32}$")
 _CHUNK_ID_RE = re.compile(r"^[a-z]+_[a-f0-9]{6,32}:\d+$")
 _TOKEN_RE = re.compile(r"[^\W_]{2,}", re.UNICODE)
 _PAGE_MARKER_RE = re.compile(r"<!--\s*p:(\d+)\s*-->")
+_TIME_MARKER_RE = re.compile(r"<!--\s*t:(\d+)\s*-->")
+_METRIC_CLAIM_RE = re.compile(
+    r"\b([A-Za-z][A-Za-z0-9 _/-]{2,42}?)\s+(?:is|are|was|were|reached|hit|measured|averages?|averaged|remains?|dropped to|rose to|takes?|costs?|uses?|requires?|:)\s+"
+    r"(?:about|around|approximately|~|roughly|at least|up to|over|under)?\s*"
+    r"(\$?\d+(?:[.,]\d+)?\s*(?:%|ms|s|sec|seconds|min|minutes|hours|x|GB|MB|KB|MiB|TB|k|M|B|px|req/s|rps|tok/s|tokens|USD|dollars)?)\b",
+    re.IGNORECASE,
+)
+_POLARITY_CLAIM_RE = re.compile(
+    r"\b([A-Za-z][A-Za-z0-9 _-]{3,36}?)\s+(does not|doesn't|cannot|can't|never|fails to|is not|isn't|supports|enables|requires|uses|provides|includes)\s+([A-Za-z0-9 _-]{3,48})",
+    re.IGNORECASE,
+)
+_YEAR_RE = re.compile(r"\b(19\d{2}|20\d{2})\b")
+
+_VEC_DIM = 192
 
 _STOPWORDS = frozenset({
     "the", "and", "for", "that", "this", "with", "from", "have", "what", "when", "where",
     "which", "who", "whom", "whose", "why", "how", "are", "was", "were", "been", "being",
     "into", "about", "than", "then", "them", "they", "their", "there", "these", "those",
     "your", "you", "our", "its", "can", "could", "would", "should", "will", "not", "but",
-    "all", "any", "some", "does", "did", "has", "had", "may", "might",
+    "all", "any", "some", "does", "did", "has", "had", "may", "might", "also", "very",
 })
+
+_SYN_GROUPS = [
+    {"drop", "decline", "decrease", "fall", "contract", "reduce", "lower", "shrink", "dip"},
+    {"rise", "increase", "grow", "expand", "climb", "surge", "gain", "boost", "higher"},
+    {"fast", "quick", "rapid", "speed", "throughput", "latency", "delay", "performance"},
+    {"cost", "price", "spend", "expense", "budget", "fee", "revenue", "margin", "booking"},
+    {"error", "fail", "failure", "bug", "defect", "crash", "outage", "fault", "issue"},
+    {"safe", "secure", "security", "protect", "guard", "privacy", "redact", "encrypt"},
+    {"store", "storage", "persist", "save", "index", "database", "sqlite", "cache"},
+    {"user", "customer", "client", "reader", "researcher", "operator"},
+    {"model", "llm", "provider", "engine", "assistant", "agent"},
+    {"verify", "verified", "confirm", "validate", "check", "audit", "ground", "cite", "citation"},
+    {"source", "document", "file", "passage", "excerpt", "paper", "article", "report"},
+    {"conflict", "contradict", "disagree", "differ", "mismatch", "inconsistent", "oppose"},
+    {"auth", "authentication", "login", "credential", "token", "oauth", "permission"},
+]
+_SYN_MAP: dict[str, str] = {}
+for _g in _SYN_GROUPS:
+    _r = sorted(_g)[0]
+    for _w in _g:
+        _SYN_MAP[_w] = _r
+
+
+def _stem_token(tok: str) -> str:
+    w = tok.lower()
+    if w in _SYN_MAP:
+        return _SYN_MAP[w]
+    for suf in ("ingly", "ation", "tion", "ment", "ness", "able", "ible", "ing", "ied", "ies", "ers", "ed", "es", "ly", "s"):
+        if len(w) > len(suf) + 2 and w.endswith(suf):
+            b = w[: -len(suf)]
+            return _SYN_MAP.get(b, b)
+    return w
+
+
+def _hash_embed(text: str, dim: int = _VEC_DIM) -> bytes:
+    """Zero-dependency local semantic vector combining stemmed canonical tokens, bigrams, and char 4-grams."""
+    vec = [0.0] * dim
+    raw_toks = [t.lower() for t in _TOKEN_RE.findall(text or "") if t.lower() not in _STOPWORDS]
+    stems = [_stem_token(t) for t in raw_toks]
+
+    def _add(feature: str, weight: float) -> None:
+        h = hashlib.blake2b(feature.encode("utf-8", errors="ignore"), digest_size=4).digest()
+        val = int.from_bytes(h, "little")
+        idx = val % dim
+        sign = 1.0 if (val & 1) else -1.0
+        vec[idx] += sign * weight
+
+    for st in stems[:400]:
+        _add(f"w:{st}", 2.0)
+        if len(st) >= 4:
+            for i in range(len(st) - 3):
+                _add(f"g:{st[i:i+4]}", 0.45)
+    for i in range(min(250, max(0, len(stems) - 1))):
+        _add(f"b:{stems[i]}_{stems[i+1]}", 1.2)
+
+    norm = math.sqrt(sum(v * v for v in vec)) or 1.0
+    arr = array.array("f", (v / norm for v in vec))
+    return arr.tobytes()
+
+
+def _dot_bytes(a_bytes: bytes, b_bytes: bytes) -> float:
+    if not a_bytes or not b_bytes or len(a_bytes) != len(b_bytes):
+        return 0.0
+    a = array.array("f")
+    b = array.array("f")
+    a.frombytes(a_bytes)
+    b.frombytes(b_bytes)
+    return float(sum(x * y for x, y in zip(a, b)))
 
 
 # --- Profile-safe dynamic paths ---------------------------------------------
@@ -106,7 +190,7 @@ def _read_json(path: Path, default: Any = None) -> Any:
         return default
 
 
-# --- SQLite WAL + FTS5 ------------------------------------------------------
+# --- SQLite WAL + FTS5 + Hybrid Vectors + Claims ----------------------------
 
 def _open_db(nb: str) -> sqlite3.Connection:
     d = nb_dir(nb, must_exist=True)
@@ -141,6 +225,13 @@ def _open_db(nb: str) -> sqlite3.Connection:
           heading,
           tokenize='porter unicode61'
         );
+        CREATE TABLE IF NOT EXISTS chunk_vectors (
+          chunk_id  TEXT PRIMARY KEY REFERENCES chunks(id) ON DELETE CASCADE,
+          source_id TEXT NOT NULL,
+          dim       INTEGER NOT NULL DEFAULT 192,
+          vec       BLOB NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_chunk_vectors_source ON chunk_vectors(source_id);
         CREATE TABLE IF NOT EXISTS chunk_hits (
           chunk_id    TEXT PRIMARY KEY REFERENCES chunks(id) ON DELETE CASCADE,
           chat_hits   INTEGER NOT NULL DEFAULT 0,
@@ -165,12 +256,7 @@ def _open_db(nb: str) -> sqlite3.Connection:
 
 
 def build_fts_query(raw: str, max_terms: int = 16) -> Optional[str]:
-    """Turn arbitrary user input into a crash-proof FTS5 MATCH query.
-
-    Every token is double-quoted so SQLite FTS5 reserved keywords (`AND`, `OR`, `NOT`, `NEAR`)
-    and operator characters (`:`, `-`, `*`, `^`, `"`, `()`, `+`) can never raise OperationalError.
-    Returns None when no searchable terms exist.
-    """
+    """Turn arbitrary user input into a crash-proof FTS5 MATCH query."""
     if not raw or not isinstance(raw, str):
         return None
     tokens = _TOKEN_RE.findall(raw)
@@ -207,9 +293,9 @@ def _split_atomic_blocks(text: str) -> list[tuple[str, int, int]]:
 
     def flush(end_pos: int) -> None:
         nonlocal buf
-        chunk_text = "".join(buf)
-        if chunk_text.strip():
-            blocks.append((chunk_text, buf_start, end_pos))
+        chunk_text_str = "".join(buf)
+        if chunk_text_str.strip():
+            blocks.append((chunk_text_str, buf_start, end_pos))
         buf = []
 
     for line in lines:
@@ -276,7 +362,7 @@ def _split_atomic_blocks(text: str) -> list[tuple[str, int, int]]:
 
 
 def chunk_text(text: str, target_chars: int = 3200, overlap_chars: int = 400) -> list[dict[str, Any]]:
-    """Structure-aware chunker preserving headings, page markers, tables, code blocks, and offsets."""
+    """Structure-aware chunker preserving headings, page/timestamp markers, tables, code blocks, and offsets."""
     normalized = text.replace("\r\n", "\n").replace("\r", "\n")
     blocks = _split_atomic_blocks(normalized)
     if not blocks:
@@ -296,7 +382,7 @@ def chunk_text(text: str, target_chars: int = 3200, overlap_chars: int = 400) ->
     cur_page = 1
     parts: list[dict[str, Any]] = []
 
-    buf_blocks: list[tuple[str, int, int, int, str]] = []  # (text, cstart, cend, page, heading)
+    buf_blocks: list[tuple[str, int, int, int, str]] = []
     buf_len = 0
 
     def emit_buf() -> None:
@@ -317,7 +403,6 @@ def chunk_text(text: str, target_chars: int = 3200, overlap_chars: int = 400) ->
             "text": combined,
             "tokens": max(1, len(combined) // 4),
         })
-        # Keep trailing overlap blocks up to overlap_chars
         kept: list[tuple[str, int, int, int, str]] = []
         kept_len = 0
         for item in reversed(buf_blocks):
@@ -343,7 +428,6 @@ def chunk_text(text: str, target_chars: int = 3200, overlap_chars: int = 400) ->
                 heading_stack.append((hashes, title))
         breadcrumb = " > ".join(h for _, h in heading_stack)
 
-        # If a single huge paragraph exceeds 1.5x target, slice cleanly on newline/space
         if len(btext) > int(target_chars * 1.5) and not stripped.startswith(("```", "~~~", "|")):
             if buf_blocks:
                 emit_buf()
@@ -386,6 +470,220 @@ def chunk_text(text: str, target_chars: int = 3200, overlap_chars: int = 400) ->
     return parts
 
 
+# --- Claim Extraction & Cross-Source Contradiction Engine -------------------
+
+def _norm_subject_key(text: str) -> str:
+    toks = [_stem_token(t) for t in _TOKEN_RE.findall(text or "") if t.lower() not in _STOPWORDS and len(t) >= 3]
+    return " ".join(toks[:4])
+
+
+def _extract_claims_for_chunk(cid: str, src_id: str, text: str) -> list[dict[str, Any]]:
+    """Extract structured metric & polarity claims from a source chunk for cross-source contradiction detection."""
+    out: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for raw_line in (text or "").splitlines():
+        line = raw_line.strip().lstrip("#-*+ ")
+        if len(line) < 18 or line.startswith(("<!--", "```")):
+            continue
+        year_m = _YEAR_RE.search(line)
+        date_ref = year_m.group(1) if year_m else None
+
+        for m in _METRIC_CLAIM_RE.finditer(line):
+            subj = m.group(1).strip(" ,.;:()-")
+            val = re.sub(r"\s+", " ", m.group(2).strip())
+            nk = _norm_subject_key(subj)
+            if len(nk) < 3 or (nk, val.lower()) in seen:
+                continue
+            seen.add((nk, val.lower()))
+            out.append({
+                "id": f"cl_{uuid.uuid4().hex[:10]}",
+                "chunk_id": cid,
+                "source_id": src_id,
+                "subject": subj[:80],
+                "predicate": "metric",
+                "object": val[:48],
+                "polarity": 1,
+                "date_ref": date_ref,
+                "norm_key": f"m:{nk}",
+            })
+            if len(out) >= 10:
+                return out
+
+        for m in _POLARITY_CLAIM_RE.finditer(line):
+            subj = m.group(1).strip(" ,.;:()-")
+            verb = m.group(2).strip().lower()
+            obj = m.group(3).strip(" ,.;:()-")
+            pol = -1 if any(neg in verb for neg in ("not", "n't", "never", "fail")) else 1
+            nk = f"{_norm_subject_key(subj)}|{_norm_subject_key(obj)}"
+            if len(nk) < 7 or (nk, str(pol)) in seen:
+                continue
+            seen.add((nk, str(pol)))
+            out.append({
+                "id": f"cl_{uuid.uuid4().hex[:10]}",
+                "chunk_id": cid,
+                "source_id": src_id,
+                "subject": subj[:80],
+                "predicate": verb[:28],
+                "object": obj[:80],
+                "polarity": pol,
+                "date_ref": date_ref,
+                "norm_key": f"p:{nk}",
+            })
+            if len(out) >= 12:
+                return out
+    return out
+
+
+def _index_source_rows(con: sqlite3.Connection, src_id: str, parts: list[dict[str, Any]]) -> None:
+    for i, p in enumerate(parts):
+        cid = f"{src_id}:{i}"
+        con.execute(
+            "INSERT INTO chunks(id, source_id, ord, heading, page_start, page_end, char_start, char_end, text, tokens) "
+            "VALUES(?,?,?,?,?,?,?,?,?,?)",
+            (cid, src_id, i, p["heading"], p["page_start"], p["page_end"], p["char_start"], p["char_end"], p["text"], p["tokens"]),
+        )
+        con.execute(
+            "INSERT INTO chunks_fts(id, source_id, text, heading) VALUES(?,?,?,?)",
+            (cid, src_id, p["text"], p["heading"]),
+        )
+        vec_blob = _hash_embed(f"{p['heading']}\n{p['text']}")
+        con.execute(
+            "INSERT OR REPLACE INTO chunk_vectors(chunk_id, source_id, dim, vec) VALUES(?,?,?,?)",
+            (cid, src_id, _VEC_DIM, vec_blob),
+        )
+        for cl in _extract_claims_for_chunk(cid, src_id, p["text"]):
+            con.execute(
+                "INSERT INTO claims(id, chunk_id, source_id, subject, predicate, object, polarity, date_ref, norm_key) "
+                "VALUES(?,?,?,?,?,?,?,?,?)",
+                (cl["id"], cl["chunk_id"], cl["source_id"], cl["subject"], cl["predicate"], cl["object"], cl["polarity"], cl["date_ref"], cl["norm_key"]),
+            )
+
+
+def _ensure_vectors_and_claims(con: sqlite3.Connection) -> None:
+    """Backfill chunk_vectors and claims automatically for older notebooks created prior to hybrid search."""
+    missing_vecs = con.execute(
+        "SELECT c.id, c.source_id, c.heading, c.text FROM chunks c "
+        "LEFT JOIN chunk_vectors v ON v.chunk_id = c.id WHERE v.chunk_id IS NULL LIMIT 400"
+    ).fetchall()
+    if missing_vecs:
+        for r in missing_vecs:
+            con.execute(
+                "INSERT OR REPLACE INTO chunk_vectors(chunk_id, source_id, dim, vec) VALUES(?,?,?,?)",
+                (r["id"], r["source_id"], _VEC_DIM, _hash_embed(f"{r['heading']}\n{r['text']}")),
+            )
+        con.commit()
+
+    has_chunks = con.execute("SELECT 1 FROM chunks LIMIT 1").fetchone()
+    has_claims = con.execute("SELECT 1 FROM claims LIMIT 1").fetchone()
+    if has_chunks and not has_claims:
+        rows = con.execute("SELECT id, source_id, text FROM chunks").fetchall()
+        for r in rows:
+            for cl in _extract_claims_for_chunk(r["id"], r["source_id"], r["text"]):
+                con.execute(
+                    "INSERT INTO claims(id, chunk_id, source_id, subject, predicate, object, polarity, date_ref, norm_key) "
+                    "VALUES(?,?,?,?,?,?,?,?,?)",
+                    (cl["id"], cl["chunk_id"], cl["source_id"], cl["subject"], cl["predicate"], cl["object"], cl["polarity"], cl["date_ref"], cl["norm_key"]),
+                )
+        con.commit()
+
+
+def find_contradictions(nb: str) -> dict[str, Any]:
+    """Compare structured claims across distinct active sources to detect numeric/polarity conflicts & consensus."""
+    sources = {s["id"]: s for s in list_sources(nb) if s.get("enabled")}
+    if len(sources) < 2:
+        return {"conflicts": [], "consensus": [], "total_claims": 0}
+
+    with closing(_open_db(nb)) as con:
+        _ensure_vectors_and_claims(con)
+        rows = con.execute(
+            "SELECT cl.*, c.text AS chunk_text FROM claims cl JOIN chunks c ON c.id = cl.chunk_id"
+        ).fetchall()
+
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    total_claims = 0
+    for r in rows:
+        sid = r["source_id"]
+        if sid not in sources:
+            continue
+        total_claims += 1
+        item = dict(r)
+        item["source_title"] = sources[sid]["title"]
+        grouped.setdefault(r["norm_key"], []).append(item)
+
+    conflicts: list[dict[str, Any]] = []
+    consensus: list[dict[str, Any]] = []
+
+    for norm_key, items in grouped.items():
+        by_src: dict[str, dict[str, Any]] = {}
+        for it in items:
+            by_src.setdefault(it["source_id"], it)
+        if len(by_src) < 2:
+            continue
+        distinct = list(by_src.values())
+        if norm_key.startswith("m:"):
+            # Compare numeric metric values across sources
+            vals = {(re.sub(r"\s+", "", d["object"].lower())): d for d in distinct}
+            if len(vals) >= 2:
+                pair = list(vals.values())[:2]
+                conflicts.append({
+                    "id": f"cf_{hashlib.md5(norm_key.encode()).hexdigest()[:8]}",
+                    "kind": "numeric",
+                    "topic": pair[0]["subject"],
+                    "summary": f"{pair[0]['source_title']} states {pair[0]['object']}, whereas {pair[1]['source_title']} states {pair[1]['object']}.",
+                    "side_a": {
+                        "source_id": pair[0]["source_id"],
+                        "source_title": pair[0]["source_title"],
+                        "chunk_id": pair[0]["chunk_id"],
+                        "value": pair[0]["object"],
+                        "date_ref": pair[0]["date_ref"],
+                        "excerpt": pair[0]["chunk_text"][:220],
+                    },
+                    "side_b": {
+                        "source_id": pair[1]["source_id"],
+                        "source_title": pair[1]["source_title"],
+                        "chunk_id": pair[1]["chunk_id"],
+                        "value": pair[1]["object"],
+                        "date_ref": pair[1]["date_ref"],
+                        "excerpt": pair[1]["chunk_text"][:220],
+                    },
+                })
+            else:
+                consensus.append({
+                    "topic": distinct[0]["subject"],
+                    "value": distinct[0]["object"],
+                    "sources": [{"source_title": d["source_title"], "chunk_id": d["chunk_id"]} for d in distinct[:4]],
+                })
+        elif norm_key.startswith("p:"):
+            pos = [d for d in distinct if int(d["polarity"]) > 0]
+            neg = [d for d in distinct if int(d["polarity"]) < 0]
+            if pos and neg:
+                a, b = pos[0], neg[0]
+                conflicts.append({
+                    "id": f"cf_{hashlib.md5(norm_key.encode()).hexdigest()[:8]}",
+                    "kind": "polarity",
+                    "topic": a["subject"],
+                    "summary": f"{a['source_title']} states '{a['subject']} {a['predicate']} {a['object']}', while {b['source_title']} states '{b['subject']} {b['predicate']} {b['object']}'.",
+                    "side_a": {
+                        "source_id": a["source_id"],
+                        "source_title": a["source_title"],
+                        "chunk_id": a["chunk_id"],
+                        "value": f"{a['predicate']} {a['object']}",
+                        "date_ref": a["date_ref"],
+                        "excerpt": a["chunk_text"][:220],
+                    },
+                    "side_b": {
+                        "source_id": b["source_id"],
+                        "source_title": b["source_title"],
+                        "chunk_id": b["chunk_id"],
+                        "value": f"{b['predicate']} {b['object']}",
+                        "date_ref": b["date_ref"],
+                        "excerpt": b["chunk_text"][:220],
+                    },
+                })
+
+    return {"conflicts": conflicts[:25], "consensus": consensus[:15], "total_claims": total_claims}
+
+
 # --- Notebooks CRUD ---------------------------------------------------------
 
 def _count_due_flashcards(d: Path) -> int:
@@ -413,6 +711,8 @@ def list_notebooks() -> list[dict[str, Any]]:
         meta = _read_json(d / "notebook.json")
         if not isinstance(meta, dict):
             continue
+        meta.setdefault("model", "")
+        meta.setdefault("provider", "")
         meta["source_count"] = sum(1 for _ in (d / "sources").glob("*/meta.json"))
         meta["note_count"] = sum(1 for _ in (d / "notes").glob("*.json"))
         meta["artifact_count"] = sum(1 for _ in (d / "artifacts").glob("*/artifact.json"))
@@ -427,6 +727,8 @@ def get_notebook(nb: str) -> dict[str, Any]:
     meta = _read_json(d / "notebook.json")
     if not isinstance(meta, dict):
         raise FileNotFoundError(f"notebook {nb!r} not found")
+    meta.setdefault("model", "")
+    meta.setdefault("provider", "")
     meta["source_count"] = sum(1 for _ in (d / "sources").glob("*/meta.json"))
     meta["note_count"] = sum(1 for _ in (d / "notes").glob("*.json"))
     meta["artifact_count"] = sum(1 for _ in (d / "artifacts").glob("*/artifact.json"))
@@ -457,6 +759,8 @@ def create_notebook(
         "persona": "default",
         "length": "standard",
         "strict": False,
+        "provider": "",
+        "model": "",
         "guide": None,
         "created": now,
         "updated": now,
@@ -470,10 +774,15 @@ def create_notebook(
 def update_notebook(nb: str, **patch: Any) -> dict[str, Any]:
     d = nb_dir(nb, must_exist=True)
     meta = _read_json(d / "notebook.json")
-    allowed = {"title", "icon", "emoji", "color", "persona", "length", "strict", "guide"}
+    allowed = {"title", "icon", "emoji", "color", "persona", "length", "strict", "provider", "model", "guide"}
     for k, v in patch.items():
         if k in allowed and v is not None:
-            meta[k] = v.strip()[:160] if k == "title" and isinstance(v, str) else v
+            if k == "title" and isinstance(v, str):
+                meta[k] = v.strip()[:160]
+            elif k in ("provider", "model") and isinstance(v, str):
+                meta[k] = v.strip()[:160]
+            else:
+                meta[k] = v
     meta["updated"] = time.time()
     _write_json_atomic(d / "notebook.json", meta)
     return get_notebook(nb)
@@ -484,7 +793,6 @@ def delete_notebook(nb: str) -> bool:
     if not d.exists():
         return False
     shutil.rmtree(d)
-    # Clean any session bindings referencing this notebook
     bindings = _load_bindings()
     changed = False
     for sid in [k for k, v in bindings.items() if v.get("nb_id") == nb]:
@@ -506,7 +814,7 @@ def _touch_notebook(nb: str) -> None:
         pass
 
 
-# --- Sources CRUD -----------------------------------------------------------
+# --- Sources CRUD + In-Place Refresh ----------------------------------------
 
 def list_sources(nb: str) -> list[dict[str, Any]]:
     d = nb_dir(nb, must_exist=True)
@@ -540,6 +848,10 @@ def get_source_text(nb: str, src: str) -> dict[str, Any]:
                 (src,),
             ).fetchall()
         ]
+    for c in chunks:
+        m = _TIME_MARKER_RE.search(c.get("text") or "")
+        if m:
+            c["timestamp_sec"] = int(m.group(1))
     return {"source": meta, "text": text, "chunks": chunks}
 
 
@@ -561,10 +873,16 @@ def add_source(
         raise ValueError("source text is empty")
     digest = hashlib.sha256(clean_text.encode("utf-8")).hexdigest()
 
-    # Deduplicate identical content inside the same notebook
+    # If a linked local path or URL already exists in this notebook, refresh it in place if content changed
+    origin_path = (extra_meta or {}).get("origin_path")
     for existing in list_sources(nb):
         if existing.get("sha256") == digest:
             return existing
+        if origin_path and existing.get("origin_path") == origin_path:
+            return refresh_source_content(
+                nb, existing["id"], clean_text, title=title or existing.get("title"),
+                raw_bytes=raw_bytes, raw_ext=raw_ext, chunk_chars=chunk_chars, extra_meta=extra_meta,
+            )
 
     src = _mint_id("s")
     sdir = _confined(d, d / "sources" / src)
@@ -601,20 +919,70 @@ def add_source(
     _write_json_atomic(sdir / "meta.json", meta)
 
     with closing(_open_db(nb)) as con:
-        for i, p in enumerate(parts):
-            cid = f"{src}:{i}"
-            con.execute(
-                "INSERT INTO chunks(id, source_id, ord, heading, page_start, page_end, char_start, char_end, text, tokens) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?)",
-                (cid, src, i, p["heading"], p["page_start"], p["page_end"], p["char_start"], p["char_end"], p["text"], p["tokens"]),
-            )
-            con.execute(
-                "INSERT INTO chunks_fts(id, source_id, text, heading) VALUES(?,?,?,?)",
-                (cid, src, p["text"], p["heading"]),
-            )
+        _index_source_rows(con, src, parts)
         con.commit()
     _touch_notebook(nb)
     return meta
+
+
+def refresh_source_content(
+    nb: str,
+    src: str,
+    text: str,
+    *,
+    title: Optional[str] = None,
+    raw_bytes: Optional[bytes] = None,
+    raw_ext: Optional[str] = None,
+    chunk_chars: int = 3200,
+    extra_meta: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """Update a source's content & index in place, updating `sha256` so Living Notes & Artifacts detect staleness."""
+    _validate_id(src, "s")
+    d = nb_dir(nb, must_exist=True)
+    sdir = _confined(d, d / "sources" / src)
+    meta_path = sdir / "meta.json"
+    meta = _read_json(meta_path)
+    if not isinstance(meta, dict):
+        raise FileNotFoundError(f"source {src!r} not found")
+    clean_text = (text or "").strip()
+    if not clean_text:
+        raise ValueError("refreshed source text is empty")
+    digest = hashlib.sha256(clean_text.encode("utf-8")).hexdigest()
+    changed = digest != meta.get("sha256")
+    (sdir / "text.md").write_text(clean_text, encoding="utf-8")
+    if raw_bytes is not None and raw_ext:
+        safe_ext = re.sub(r"[^a-zA-Z0-9]", "", raw_ext.lstrip("."))[:10]
+        if safe_ext:
+            (sdir / f"original.{safe_ext}").write_bytes(raw_bytes)
+
+    parts = chunk_text(clean_text, target_chars=chunk_chars)
+    now = time.time()
+    if title:
+        meta["title"] = title.strip()[:200]
+    meta.update({
+        "sha256": digest,
+        "chars": len(clean_text),
+        "word_count": len(clean_text.split()),
+        "tokens": max(1, len(clean_text) // 4),
+        "chunk_count": len(parts),
+        "pages": max((p["page_end"] for p in parts), default=1),
+        "status": "ready",
+        "error": None,
+        "updated": now,
+        "last_synced": now,
+    })
+    if extra_meta:
+        meta.update(extra_meta)
+    _write_json_atomic(meta_path, meta)
+
+    if changed:
+        with closing(_open_db(nb)) as con:
+            con.execute("DELETE FROM chunks_fts WHERE source_id=?", (src,))
+            con.execute("DELETE FROM chunks WHERE source_id=?", (src,))
+            _index_source_rows(con, src, parts)
+            con.commit()
+    _touch_notebook(nb)
+    return {**meta, "changed": changed}
 
 
 def set_source(nb: str, src: str, **patch: Any) -> dict[str, Any]:
@@ -658,7 +1026,7 @@ def source_hashes_map(nb: str, source_ids: Optional[Iterable[str]] = None) -> di
     }
 
 
-# --- Search, Chunks & Coverage Map ------------------------------------------
+# --- Hybrid Semantic + BM25 RRF Search, Chunks & Coverage Map ---------------
 
 def search(
     nb: str,
@@ -668,11 +1036,17 @@ def search(
     k: int = 12,
     per_source: int = 4,
 ) -> list[dict[str, Any]]:
+    """Hybrid search fusing SQLite FTS5 BM25 + local semantic vector similarity via Reciprocal Rank Fusion."""
     allowed = set(source_ids) if source_ids is not None else None
     fts_q = build_fts_query(query)
+    q_vec = _hash_embed(query or "")
+    q_stems = {_stem_token(t) for t in _TOKEN_RE.findall(query or "") if t.lower() not in _STOPWORDS}
+
     with closing(_open_db(nb)) as con:
-        out: list[dict[str, Any]] = []
-        seen: dict[str, int] = {}
+        _ensure_vectors_and_claims(con)
+
+        # 1. BM25 keyword ranks
+        bm25_ranks: dict[str, int] = {}
         if fts_q:
             try:
                 rows = con.execute(
@@ -682,22 +1056,55 @@ def search(
                 ).fetchall()
             except sqlite3.OperationalError:
                 rows = []
+            rank = 1
             for r in rows:
-                sid = r["source_id"]
-                if allowed is not None and sid not in allowed:
+                if allowed is not None and r["source_id"] not in allowed:
                     continue
-                if seen.get(sid, 0) >= per_source:
+                bm25_ranks[r["id"]] = rank
+                rank += 1
+
+        # 2. Semantic vector cosine ranks (handles paraphrases & synonyms missed by exact keywords)
+        vec_scores: list[tuple[float, str]] = []
+        if q_stems:
+            vrows = con.execute("SELECT chunk_id, source_id, vec FROM chunk_vectors").fetchall()
+            for vr in vrows:
+                if allowed is not None and vr["source_id"] not in allowed:
                     continue
-                seen[sid] = seen.get(sid, 0) + 1
-                row = con.execute("SELECT * FROM chunks WHERE id=?", (r["id"],)).fetchone()
-                if row:
-                    item = dict(row)
-                    item["page"] = item["page_start"]
-                    out.append(item)
-                if len(out) >= k:
-                    break
-        # Graceful fallback when query has no searchable tokens or zero BM25 hits:
-        # return leading chunks across enabled sources so the model can still inspect/refuse honestly.
+                sim = _dot_bytes(q_vec, vr["vec"])
+                if sim > 0.08:
+                    vec_scores.append((sim, vr["chunk_id"]))
+            vec_scores.sort(key=lambda x: x[0], reverse=True)
+        vec_ranks: dict[str, int] = {cid: idx + 1 for idx, (_, cid) in enumerate(vec_scores[:80])}
+
+        # 3. Reciprocal Rank Fusion (RRF, k=40)
+        rrf: dict[str, float] = {}
+        for cid, r in bm25_ranks.items():
+            rrf[cid] = rrf.get(cid, 0.0) + (1.0 / (40.0 + r))
+        for cid, r in vec_ranks.items():
+            rrf[cid] = rrf.get(cid, 0.0) + (0.85 / (40.0 + r))
+
+        ranked_ids = [cid for cid, _ in sorted(rrf.items(), key=lambda kv: kv[1], reverse=True)]
+
+        out: list[dict[str, Any]] = []
+        seen: dict[str, int] = {}
+        for cid in ranked_ids:
+            row = con.execute("SELECT * FROM chunks WHERE id=?", (cid,)).fetchone()
+            if not row:
+                continue
+            sid = row["source_id"]
+            if allowed is not None and sid not in allowed:
+                continue
+            if seen.get(sid, 0) >= per_source:
+                continue
+            seen[sid] = seen.get(sid, 0) + 1
+            item = dict(row)
+            item["page"] = item["page_start"]
+            item["rrf_score"] = round(rrf.get(cid, 0.0), 4)
+            out.append(item)
+            if len(out) >= k:
+                break
+
+        # Graceful fallback when query has no searchable tokens or zero hits
         if not out:
             rows = con.execute("SELECT * FROM chunks ORDER BY ord, source_id LIMIT 80").fetchall()
             for row in rows:
@@ -716,37 +1123,28 @@ def search(
 
 
 def search_all_notebooks(query: str, limit: int = 20) -> list[dict[str, Any]]:
-    fts_q = build_fts_query(query)
-    if not fts_q:
+    if not (query or "").strip():
         return []
     hits: list[dict[str, Any]] = []
     for nb_meta in list_notebooks():
         nb = nb_meta["id"]
         titles = {s["id"]: s["title"] for s in list_sources(nb)}
-        with closing(_open_db(nb)) as con:
-            try:
-                rows = con.execute(
-                    "SELECT id, source_id, bm25(chunks_fts) AS score "
-                    "FROM chunks_fts WHERE chunks_fts MATCH ? ORDER BY score LIMIT 5",
-                    (fts_q,),
-                ).fetchall()
-            except sqlite3.OperationalError:
+        matched = search(nb, query, k=5, per_source=3)
+        for idx, c in enumerate(matched):
+            if not c.get("rrf_score"):
                 continue
-            for r in rows:
-                c = con.execute("SELECT id, source_id, heading, page_start, text FROM chunks WHERE id=?", (r["id"],)).fetchone()
-                if c:
-                    hits.append({
-                        "notebook_id": nb,
-                        "notebook_title": nb_meta["title"],
-                        "notebook_icon": nb_meta.get("icon", "book-open"),
-                        "source_id": c["source_id"],
-                        "source_title": titles.get(c["source_id"], c["source_id"]),
-                        "chunk_id": c["id"],
-                        "heading": c["heading"],
-                        "page": c["page_start"],
-                        "snippet": c["text"][:220],
-                        "score": float(r["score"]),
-                    })
+            hits.append({
+                "notebook_id": nb,
+                "notebook_title": nb_meta["title"],
+                "notebook_icon": nb_meta.get("icon", "book-open"),
+                "source_id": c["source_id"],
+                "source_title": titles.get(c["source_id"], c["source_id"]),
+                "chunk_id": c["id"],
+                "heading": c["heading"],
+                "page": c["page_start"],
+                "snippet": c["text"][:220],
+                "score": -float(c.get("rrf_score", 0.0)),
+            })
     hits.sort(key=lambda h: h["score"])
     return hits[:limit]
 
@@ -901,6 +1299,10 @@ def update_note(nb: str, note_id: str, **patch: Any) -> dict[str, Any]:
     for k in ("title", "markdown", "pinned", "citations"):
         if k in patch and patch[k] is not None:
             note[k] = patch[k].strip()[:200] if k == "title" and isinstance(patch[k], str) else patch[k]
+    if patch.get("resync_hashes"):
+        cited_src_ids = {c.split(":", 1)[0] for c in (note.get("citations") or []) if ":" in c}
+        note["source_hashes"] = source_hashes_map(nb, cited_src_ids) if cited_src_ids else {}
+        note["stale"] = False
     note["updated"] = time.time()
     _write_json_atomic(p, note)
     _touch_notebook(nb)
@@ -990,7 +1392,13 @@ def clear_messages(nb: str) -> None:
         path.unlink()
 
 
-# --- Artifacts CRUD + Mutable UI State (SM-2 / Quiz) ------------------------
+# --- Artifacts CRUD + Mutable UI State (SM-2 / Quiz) + Audio Files ----------
+
+def artifact_dir(nb: str, aid: str) -> Path:
+    _validate_id(aid, "a")
+    d = nb_dir(nb, must_exist=True)
+    return _confined(d, d / "artifacts" / aid)
+
 
 def save_artifact(
     nb: str,
@@ -1000,11 +1408,16 @@ def save_artifact(
     *,
     source_ids: Optional[list[str]] = None,
     grounding: Optional[dict[str, Any]] = None,
+    audio_bytes: Optional[bytes] = None,
 ) -> dict[str, Any]:
     d = nb_dir(nb, must_exist=True)
     aid = _mint_id("a")
     adir = _confined(d, d / "artifacts" / aid)
     adir.mkdir(parents=True, exist_ok=True)
+    has_audio = False
+    if audio_bytes:
+        (adir / "overview.mp3").write_bytes(audio_bytes)
+        has_audio = True
     title = spec.get("title") or spec.get("deck") or (params or {}).get("focus") or kind.title()
     art = {
         "id": aid,
@@ -1015,11 +1428,18 @@ def save_artifact(
         "source_hashes": source_hashes_map(nb, source_ids) if source_ids else {},
         "spec": spec,
         "grounding": grounding,
+        "has_audio": has_audio,
         "created": time.time(),
     }
     _write_json_atomic(adir / "artifact.json", art)
     _touch_notebook(nb)
     return art
+
+
+def get_artifact_audio_path(nb: str, aid: str) -> Optional[Path]:
+    adir = artifact_dir(nb, aid)
+    p = adir / "overview.mp3"
+    return p if p.is_file() else None
 
 
 def list_artifacts(nb: str) -> list[dict[str, Any]]:
@@ -1033,26 +1453,27 @@ def list_artifacts(nb: str) -> list[dict[str, Any]]:
         snap = a.get("source_hashes") or {}
         a["stale"] = any(live_hashes.get(sid) != h for sid, h in snap.items() if sid in live_hashes)
         a["state"] = _read_json(p.parent / "state.json", {}) or {}
+        a["has_audio"] = bool(a.get("has_audio") or (p.parent / "overview.mp3").is_file())
         out.append(a)
     out.sort(key=lambda a: a.get("created", 0), reverse=True)
     return out
 
 
 def get_artifact(nb: str, aid: str) -> Optional[dict[str, Any]]:
-    _validate_id(aid, "a")
-    d = nb_dir(nb, must_exist=True)
-    adir = _confined(d, d / "artifacts" / aid)
+    adir = artifact_dir(nb, aid)
     art = _read_json(adir / "artifact.json")
     if not isinstance(art, dict):
         return None
+    live_hashes = source_hashes_map(nb)
+    snap = art.get("source_hashes") or {}
+    art["stale"] = any(live_hashes.get(sid) != h for sid, h in snap.items() if sid in live_hashes)
     art["state"] = _read_json(adir / "state.json", {}) or {}
+    art["has_audio"] = bool(art.get("has_audio") or (adir / "overview.mp3").is_file())
     return art
 
 
 def update_artifact_state(nb: str, aid: str, state_patch: dict[str, Any]) -> dict[str, Any]:
-    _validate_id(aid, "a")
-    d = nb_dir(nb, must_exist=True)
-    adir = _confined(d, d / "artifacts" / aid)
+    adir = artifact_dir(nb, aid)
     if not (adir / "artifact.json").is_file():
         raise FileNotFoundError(f"artifact {aid!r} not found")
     cur = _read_json(adir / "state.json", {}) or {}
@@ -1062,9 +1483,7 @@ def update_artifact_state(nb: str, aid: str, state_patch: dict[str, Any]) -> dic
 
 
 def delete_artifact(nb: str, aid: str) -> bool:
-    _validate_id(aid, "a")
-    d = nb_dir(nb, must_exist=True)
-    adir = _confined(d, d / "artifacts" / aid)
+    adir = artifact_dir(nb, aid)
     if not adir.exists():
         return False
     shutil.rmtree(adir)

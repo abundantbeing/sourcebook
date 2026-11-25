@@ -419,6 +419,97 @@ def test_dashboard_plugin_api_routes(isolated_data_dir: Path) -> None:
     assert cov["touched_chunks"] >= 1
 
 
+def test_slide_deck_outline_revise_rename_and_pptx_pdf_exports(isolated_data_dir: Path) -> None:
+    import base64
+    import io
+    import zipfile
+
+    import sourcebook
+
+    nb = sourcebook.store.create_notebook("Pitch Deck Verification")
+    s1 = sourcebook.store.add_source(
+        nb["id"],
+        "Benchmarks.md",
+        "# Storage Benchmarks\n\nWAL checkpointing reduced crash replay time by 84% under concurrent load.\n\nQuery latency dropped from 42 ms to 6 ms across 10,000 indexed chunks.\n",
+        kind="markdown",
+    )
+    s2 = sourcebook.store.add_source(
+        nb["id"],
+        "Architecture.md",
+        "# Core Architecture\n\nSourceBook runs locally on SQLite WAL with FTS5 BM25 and hybrid semantic retrieval.\n\nPhase 1 ingests documents. Phase 2 verifies claims. Phase 3 synthesizes 8 Studio formats.\n",
+        kind="markdown",
+    )
+
+    # 1. Draft outline with subset source selection
+    out_res = sourcebook.outline_slides(
+        nb["id"],
+        {"deck_format": "presenter", "deck_purpose": "pitch", "count": 6, "instructions": "Investor pitch deck"},
+        source_ids=[s1["id"], s2["id"]],
+    )
+    outline_slides = out_res["outline"]["slides"]
+    assert len(outline_slides) >= 3
+    outline_slides[0]["title"] = "Custom Edited Cover Headline"
+
+    # 2. Generate deck from approved outline + simulate a cached ImageGen PNG on slide 1
+    png_1x1 = base64.b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+    )
+    art = sourcebook.make(
+        nb["id"],
+        "slides",
+        {
+            "deck_format": "detailed",
+            "deck_purpose": "pitch",
+            "theme": "keynote",
+            "approved_outline": outline_slides,
+            "include_images": False,
+        },
+        source_ids=[s1["id"], s2["id"]],
+    )
+    assert art["spec"]["slides"][0]["title"] == "Custom Edited Cover Headline"
+
+    # Attach a test generated PNG to verify full-bleed & hybrid media embedding inside PPTX + PDF
+    spec_with_img = dict(art["spec"])
+    spec_with_img["slides"][0]["image_file"] = "slide_01.png"
+    spec_with_img["slides"][0]["image_mode"] = "full_slide"
+    art = sourcebook.store.update_artifact(
+        nb["id"],
+        art["id"],
+        title="Synapse Pitch Master",
+        spec=spec_with_img,
+        media_files={"slide_01.png": png_1x1},
+    )
+    assert art["title"] == "Synapse Pitch Master"
+    assert sourcebook.store.get_artifact_media_path(nb["id"], art["id"], "slide_01.png") is not None
+
+    # 3. Export native PowerPoint (.pptx) and inspect valid OOXML structure, embedded media & speaker notes
+    media_dir = sourcebook.store.get_artifact_media_dir(nb["id"], art["id"])
+    pptx_name, pptx_mime, pptx_bytes = sourcebook.studio.export_artifact_binary(art, "pptx", media_dir=media_dir, theme="keynote")
+    assert pptx_name.endswith(".pptx")
+    assert "presentationml" in pptx_mime
+    with zipfile.ZipFile(io.BytesIO(pptx_bytes)) as zf:
+        names = set(zf.namelist())
+        assert "ppt/presentation.xml" in names
+        assert "ppt/slides/slide1.xml" in names
+        assert "ppt/media/image1.png" in names
+        assert "ppt/notesSlides/notesSlide1.xml" in names
+        s1_xml = zf.read("ppt/slides/slide1.xml").decode("utf-8")
+        assert "<p:pic>" in s1_xml
+
+    # 4. Export native 16:9 PDF (.pdf)
+    pdf_name, pdf_mime, pdf_bytes = sourcebook.studio.export_artifact_binary(art, "pdf", media_dir=media_dir, theme="keynote")
+    assert pdf_name.endswith(".pdf")
+    assert pdf_mime == "application/pdf"
+    assert pdf_bytes.startswith(b"%PDF-")
+    assert len(pdf_bytes) > 800
+
+    # 5. Revise deck in place
+    revised = sourcebook.revise_artifact(nb["id"], art["id"], "Make it concise for executives", {"deck_format": "presenter"})
+    assert revised["id"] == art["id"]
+    assert revised["params"]["revision_prompt"] == "Make it concise for executives"
+    assert len(revised["spec"]["slides"]) >= 3
+
+
 def test_desktop_bundle_passes_syntax_and_house_lint() -> None:
     bundle = REPO_ROOT / "desktop" / "plugin.js"
     assert bundle.is_file()

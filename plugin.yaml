@@ -1,7 +1,7 @@
 manifest_version: 2
 name: sourcebook
 version: "0.1.0"
-description: Source-grounded research notebooks for Hermes. Ingest multi-format sources, ask cited questions with a Claim Ledger, track source coverage, and generate seven interactive Studio formats.
+description: Source-grounded research notebooks for Hermes with hybrid retrieval, cross-source contradiction detection, universal model routing, and an 8-format Studio including 2-host Audio Overviews.
 author: abundantbeing
 license: MIT
 homepage: https://github.com/abundantbeing/sourcebook
@@ -11,12 +11,14 @@ tags:
   - research
   - citations
   - studio
+  - audio
   - desktop
 provides_tools:
   - sourcebook_search
   - sourcebook_list_notebooks
   - sourcebook_save_note
   - sourcebook_studio
+  - sourcebook_analyze_data
 provides_hooks:
   - pre_llm_call
 python_dependencies: []
@@ -28,7 +30,7 @@ config_schema:
   context_budget_chars:
     type: integer
     default: 60000
-    description: Maximum packed source context size before switching from full-notebook stuffing to BM25 retrieval.
+    description: Maximum packed source context size before switching from full-notebook stuffing to hybrid semantic + BM25 retrieval.
   max_images_per_deck:
     type: integer
     default: 4

@@ -1,8 +1,8 @@
 """SourceBook: Hermes Agent plugin half (register(ctx)).
 
 Registers:
-  - Auxiliary LLM task slots: sourcebook_chat, sourcebook_studio, sourcebook_ingest
-  - Tools declared in plugin.yaml: sourcebook_search, sourcebook_list_notebooks, sourcebook_save_note, sourcebook_studio
+  - Auxiliary LLM task slots: sourcebook_chat, sourcebook_studio, sourcebook_ingest, sourcebook_audio
+  - Tools declared in plugin.yaml: sourcebook_search, sourcebook_list_notebooks, sourcebook_save_note, sourcebook_studio, sourcebook_analyze_data
   - Hook declared in plugin.yaml: pre_llm_call (active only on user-bound sessions)
   - Slash command /sourcebook (works across Desktop, CLI, TUI, Telegram, Discord, Slack)
   - Gateway RPC methods chat.ask and studio.run (bounded concurrency and profile-safe threads)
@@ -19,7 +19,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Optional
 
-from .core import ground, ingest, runtime, store, studio
+from .core import analytics, audio, ground, ingest, runtime, store, studio
 
 logger = logging.getLogger("sourcebook")
 
@@ -34,7 +34,7 @@ def context_for(nb: str, query: str, source_ids: Optional[list[str]] = None) -> 
     budget = int(runtime.get_config("context_budget_chars", 60000) or 60000)
     chunks = store.all_chunks(nb, ids)
     if sum(len(c["text"]) for c in chunks) > budget:
-        chunks = store.search(nb, query, ids, k=12, per_source=4)
+        chunks = store.search(nb, query, ids, k=16, per_source=5)
     titles = {sid: s["title"] for sid, s in srcs.items()}
     packed, allowed = ground.pack(chunks, titles, budget_chars=budget)
     return packed, allowed, ids, chunks, titles
@@ -49,6 +49,8 @@ def ask(
     persona: Optional[str] = None,
     length: Optional[str] = None,
     strict: Optional[bool] = None,
+    provider: Optional[str] = None,
+    model: Optional[str] = None,
     extractive: bool = False,
     persist: bool = True,
     ctx: Any = None,
@@ -56,11 +58,13 @@ def ask(
 ) -> dict[str, Any]:
     nb_meta = store.get_notebook(nb)
     if progress:
-        progress("Searching active sources...", 20)
+        progress("Searching active sources with hybrid retrieval...", 20)
     packed, allowed, used_ids, chunks, titles = context_for(nb, text, source_ids)
     eff_persona = persona or nb_meta.get("persona", "default")
     eff_length = length or nb_meta.get("length", "standard")
     eff_strict = bool(nb_meta.get("strict", False) if strict is None else strict)
+    eff_provider = provider if provider is not None else (nb_meta.get("provider") or "")
+    eff_model = model if model is not None else (nb_meta.get("model") or "")
     chunks_by_id = {str(c["id"]): c for c in chunks}
 
     answer: str
@@ -83,25 +87,30 @@ def ask(
         msgs.append({"role": "user", "content": runtime.redact(text, force=True)})
 
         if progress:
-            progress("Drafting grounded answer...", 55)
-        llm = runtime.get_llm(ctx)
-        call_kwargs: dict[str, Any] = {"messages": msgs, "purpose": "sourcebook.chat", "temperature": 0.15 if eff_strict else 0.25}
-        if runtime.get_live_context() is not None:
-            call_kwargs["task"] = "sourcebook_chat"
+            target_lbl = eff_model or "active Hermes model"
+            progress(f"Drafting grounded answer ({target_lbl})...", 55)
         try:
-            res = llm.complete(**call_kwargs)
-            answer, cites, grounding_info = ground.validate(res.text, allowed)
+            raw_text, meta = runtime.complete_chat(
+                msgs,
+                purpose="sourcebook.chat",
+                task="sourcebook_chat",
+                provider=eff_provider or None,
+                model=eff_model or None,
+                temperature=0.15 if eff_strict else 0.25,
+                ctx=ctx,
+            )
+            if progress:
+                progress("Verifying claims and citations...", 82, partial_text=raw_text)
+            answer, cites, grounding_info = ground.validate(raw_text, allowed)
+            grounding_info.update({k: v for k, v in meta.items() if v})
+        except runtime.ModelOverrideDeniedError:
+            raise
         except Exception:
-            call_kwargs.pop("task", None)
-            try:
-                res = llm.complete(**call_kwargs)
-                answer, cites, grounding_info = ground.validate(res.text, allowed)
-            except Exception:
-                ranked = store.search(nb, text, used_ids, k=10, per_source=4) or chunks[:10]
-                answer, cites, grounding_info = ground.extractive_answer(text, ranked, titles, strict=eff_strict)
+            ranked = store.search(nb, text, used_ids, k=10, per_source=4) or chunks[:10]
+            answer, cites, grounding_info = ground.extractive_answer(text, ranked, titles, strict=eff_strict)
 
     if progress:
-        progress("Verifying claims and citations...", 90)
+        progress("Verifying claims and citations...", 92, partial_text=answer)
     claims = ground.verify_claims(answer, chunks_by_id, titles)
     grounding_info["claims_supported"] = sum(1 for c in claims if c["verdict"] == "supported")
     grounding_info["claims_partial"] = sum(1 for c in claims if c["verdict"] == "partial")
@@ -148,6 +157,7 @@ def _extractive_guide(chunks: list[dict[str, Any]], titles: dict[str, str]) -> d
 
 
 def build_guide(nb: str, *, ctx: Any = None, progress: Any = None) -> dict[str, Any]:
+    nb_meta = store.get_notebook(nb)
     if progress:
         progress("Reading notebook sources...", 25)
     packed, _, _, chunks, titles = context_for(nb, "overview key themes main findings")
@@ -168,19 +178,24 @@ def build_guide(nb: str, *, ctx: Any = None, progress: Any = None) -> dict[str, 
     if progress:
         progress("Synthesizing Notebook Briefing...", 65)
     try:
-        llm = runtime.get_llm(ctx)
-        res = llm.complete_structured(
+        parsed, _ = runtime.complete_json(
             instructions=(
                 "Write a crisp 2 to 3 sentence Notebook Briefing overview of the sources, 3 to 6 short topic tags, "
                 "and 3 sharp, specific questions the user should ask next."
             ),
-            input=[{"type": "text", "text": packed}],
+            input_blocks=[{"type": "text", "text": packed}],
             json_schema=schema,
             schema_name="sourcebook.guide",
             purpose="sourcebook.guide",
+            task="sourcebook_ingest",
+            provider=nb_meta.get("provider") or None,
+            model=nb_meta.get("model") or None,
             temperature=0.2,
+            ctx=ctx,
         )
-        guide = res.parsed if isinstance(res.parsed, dict) else _extractive_guide(chunks, titles)
+        guide = parsed if isinstance(parsed, dict) else _extractive_guide(chunks, titles)
+    except runtime.ModelOverrideDeniedError:
+        raise
     except Exception:
         guide = _extractive_guide(chunks, titles)
     store.update_notebook(nb, guide=guide)
@@ -193,10 +208,15 @@ def make(
     params: Optional[dict[str, Any]] = None,
     *,
     source_ids: Optional[list[str]] = None,
+    provider: Optional[str] = None,
+    model: Optional[str] = None,
     ctx: Any = None,
     progress: Any = None,
 ) -> dict[str, Any]:
+    nb_meta = store.get_notebook(nb)
     params = dict(params or {})
+    eff_provider = provider if provider is not None else (nb_meta.get("provider") or "")
+    eff_model = model if model is not None else (nb_meta.get("model") or "")
     if progress:
         progress(f"Gathering sources for {kind}...", 20)
     packed, allowed, used_ids, _, _ = context_for(nb, params.get("focus") or "key themes and facts", source_ids)
@@ -205,13 +225,59 @@ def make(
         packed,
         allowed,
         params,
+        provider=eff_provider or None,
+        model=eff_model or None,
         ctx=ctx,
         progress=progress,
     )
+
+    audio_bytes: Optional[bytes] = None
+    if kind == "audio" and not params.get("skip_audio") and isinstance(spec.get("turns"), list):
+        if progress:
+            progress("Synthesizing 2-host neural podcast audio...", 88)
+        audio_bytes = audio.synthesize_dialogue_mp3(spec["turns"], language=str(params.get("language") or "English"))
+
     store.record_chunk_hits(nb, cites, surface="studio")
-    artifact = store.save_artifact(nb, kind, spec, params, source_ids=used_ids, grounding=grounding_info)
+    artifact = store.save_artifact(
+        nb,
+        kind,
+        spec,
+        params,
+        source_ids=used_ids,
+        grounding=grounding_info,
+        audio_bytes=audio_bytes,
+    )
     runtime.broadcast_event("notebook.changed", {"nb": nb, "what": "artifacts"})
     return artifact
+
+
+def audio_followup(nb: str, aid: str, question: str, *, ctx: Any = None) -> dict[str, Any]:
+    """Interactive 'Ask the Hosts' interrupt on an Audio Overview: returns a cited 2-host exchange and persists it."""
+    art = store.get_artifact(nb, aid)
+    if not art or art.get("kind") != "audio":
+        raise FileNotFoundError(f"audio overview {aid!r} not found")
+    q = (question or "").strip()
+    if not q:
+        raise ValueError("Follow-up question cannot be empty")
+    res = ask(nb, q, persona="default", length="short", persist=False, ctx=ctx)
+    clean_ans = ground.CITE_RE.sub("", res["answer"]).strip()
+    cites = res.get("citations") or []
+
+    spec = dict(art.get("spec") or {})
+    turns = list(spec.get("turns") or [])
+    base_idx = len(turns) + 1
+    new_turns = [
+        {"id": f"t_{base_idx}", "speaker": "Listener", "text": q, "cites": []},
+        {"id": f"t_{base_idx + 1}", "speaker": "Alex", "text": f"Great question. {clean_ans[:420]}", "cites": cites[:4]},
+    ]
+    turns.extend(new_turns)
+    spec["turns"] = turns
+    art["spec"] = spec
+
+    adir = store.artifact_dir(nb, aid)
+    store._write_json_atomic(adir / "artifact.json", art)
+    runtime.broadcast_event("notebook.changed", {"nb": nb, "what": "artifacts"})
+    return {"artifact": store.get_artifact(nb, aid), "added_turns": new_turns}
 
 
 def _extract_user_text(user_message: Any) -> str:
@@ -239,6 +305,12 @@ def register(ctx: Any) -> None:
             description="Structured generation for Reports, Mind Maps, Flashcards, Quizzes, Tables, Infographics, and Slide Decks.",
         )
         ctx.register_auxiliary_task(
+            "sourcebook_audio",
+            display_name="SourceBook Audio Overview",
+            description="Two-host podcast scripting for SourceBook Audio Overviews.",
+            inherit_from="sourcebook_studio",
+        )
+        ctx.register_auxiliary_task(
             "sourcebook_ingest",
             display_name="SourceBook Ingest",
             description="Fast source summaries, topic tags, and claim extraction.",
@@ -250,7 +322,7 @@ def register(ctx: Any) -> None:
         toolset="sourcebook",
         schema={
             "name": "sourcebook_list_notebooks",
-            "description": "List all SourceBook research notebooks with their IDs, titles, and source counts.",
+            "description": "List all SourceBook research notebooks with their IDs, titles, models, and source counts.",
             "parameters": {"type": "object", "properties": {}},
         },
         handler=lambda args, **kw: json.dumps(store.list_notebooks(), ensure_ascii=False),
@@ -261,7 +333,7 @@ def register(ctx: Any) -> None:
         toolset="sourcebook",
         schema={
             "name": "sourcebook_search",
-            "description": "Search a SourceBook notebook's enabled sources. Returns ranked chunks with IDs to cite using ::cite{nb=\"...\" chunk=\"...\"}.",
+            "description": "Hybrid semantic + BM25 search across a SourceBook notebook's enabled sources. Returns ranked chunks with IDs to cite using ::cite{nb=\"...\" chunk=\"...\"}.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -312,18 +384,20 @@ def register(ctx: Any) -> None:
         toolset="sourcebook",
         schema={
             "name": "sourcebook_studio",
-            "description": "Generate a Studio artifact (report, mindmap, flashcards, quiz, table, infographic, slides) from a SourceBook notebook.",
+            "description": "Generate a Studio artifact (report, audio, mindmap, flashcards, quiz, table, infographic, slides) from a SourceBook notebook.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "notebook": {"type": "string", "description": "Notebook ID (nb_...)"},
                     "kind": {
                         "type": "string",
-                        "enum": ["report", "mindmap", "flashcards", "quiz", "table", "infographic", "slides"],
+                        "enum": ["report", "audio", "mindmap", "flashcards", "quiz", "table", "infographic", "slides"],
                     },
                     "focus": {"type": "string", "description": "Topic or instructions to focus on"},
                     "template": {"type": "string", "description": "Optional report template (briefing, study_guide, faq, timeline, blog, exec_memo)"},
-                    "count": {"type": "integer", "description": "Optional card, question, or slide count"},
+                    "style": {"type": "string", "description": "Optional Audio Overview style (deep_dive, debate, brief, critique)"},
+                    "count": {"type": "integer", "description": "Optional card, question, turn, or slide count"},
+                    "language": {"type": "string", "description": "Output language (default English)"},
                 },
                 "required": ["notebook", "kind"],
             },
@@ -332,8 +406,36 @@ def register(ctx: Any) -> None:
             make(
                 args["notebook"],
                 args["kind"],
-                {k: args[k] for k in ("focus", "template", "count") if k in args and args[k] is not None},
+                {k: args[k] for k in ("focus", "template", "style", "count", "language") if k in args and args[k] is not None},
                 ctx=ctx,
+            ),
+            ensure_ascii=False,
+        ),
+    )
+
+    ctx.register_tool(
+        name="sourcebook_analyze_data",
+        toolset="sourcebook",
+        schema={
+            "name": "sourcebook_analyze_data",
+            "description": "Run exact statistical profiling (count, min, max, mean, median, p95, sum, chart series) on a CSV, TSV, JSON, or tabular source in a SourceBook notebook.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "notebook": {"type": "string", "description": "Notebook ID (nb_...)"},
+                    "source": {"type": "string", "description": "Source ID (s_...)"},
+                    "metric_col": {"type": "string", "description": "Optional numeric column to chart"},
+                    "label_col": {"type": "string", "description": "Optional category/label column"},
+                },
+                "required": ["notebook", "source"],
+            },
+        },
+        handler=lambda args, **kw: json.dumps(
+            analytics.analyze_source(
+                args["notebook"],
+                args["source"],
+                metric_col=args.get("metric_col"),
+                label_col=args.get("label_col"),
             ),
             ensure_ascii=False,
         ),
@@ -374,10 +476,12 @@ def register(ctx: Any) -> None:
             return (
                 "SourceBook commands:\n"
                 "  /sourcebook list\n"
-                "  /sourcebook use <nb_id>        bind this chat to a notebook\n"
-                "  /sourcebook unuse              unbind this chat\n"
-                "  /sourcebook status             show active binding\n"
+                "  /sourcebook use <nb_id>                 bind this chat to a notebook\n"
+                "  /sourcebook unuse                       unbind this chat\n"
+                "  /sourcebook status                      show active binding\n"
+                "  /sourcebook model <nb_id> <prov/model|auto>  pin a Hermes model to a notebook\n"
                 "  /sourcebook add <nb_id> <url|text>\n"
+                "  /sourcebook sync <nb_id> <local_path>   ingest/sync a local file or folder\n"
                 "  /sourcebook ask <nb_id> <question>\n"
                 "  /sourcebook make <nb_id> <kind> [focus]"
             )
@@ -386,7 +490,10 @@ def register(ctx: Any) -> None:
             nbs = store.list_notebooks()
             if not nbs:
                 return "No SourceBook notebooks yet. Open SourceBook in Hermes Desktop to create one."
-            return "\n".join(f"- `{n['id']}` **{n['title']}** ({n['source_count']} sources)" for n in nbs)
+            return "\n".join(
+                f"- `{n['id']}` **{n['title']}** ({n['source_count']} sources{', model: ' + n['model'] if n.get('model') else ''})"
+                for n in nbs
+            )
         if sub == "status":
             b = store.get_session_binding(session_id)
             if not b:
@@ -402,6 +509,17 @@ def register(ctx: Any) -> None:
             store.bind_session(session_id, nb_id)
             meta = store.get_notebook(nb_id)
             return f"Bound this session to `{meta['id']}` **{meta['title']}**."
+        if sub == "model" and len(parts) >= 3:
+            nb_id, spec_str = parts[1].strip(), parts[2].strip()
+            if spec_str.lower() in ("auto", "default", "none", "clear"):
+                store.update_notebook(nb_id, provider="", model="")
+                return f"Reset notebook `{nb_id}` to use your active Hermes model."
+            if "/" in spec_str and ":" not in spec_str.split("/", 1)[0]:
+                prov, mod = spec_str.split("/", 1)
+                store.update_notebook(nb_id, provider=prov.strip(), model=mod.strip())
+                return f"Pinned notebook `{nb_id}` to `{prov.strip()} / {mod.strip()}`."
+            store.update_notebook(nb_id, model=spec_str)
+            return f"Pinned notebook `{nb_id}` to model `{spec_str}`."
         if sub == "add" and len(parts) >= 3:
             nb_id, payload = parts[1].strip(), parts[2].strip()
             if payload.startswith(("http://", "https://")):
@@ -409,6 +527,10 @@ def register(ctx: Any) -> None:
             else:
                 src = store.add_source(nb_id, payload[:50], payload, kind="text")
             return f"Added source `{src['id']}` ({src['title']}, {src['chunk_count']} chunks)."
+        if sub == "sync" and len(parts) >= 3:
+            nb_id, lpath = parts[1].strip(), parts[2].strip()
+            res = ingest.ingest_local_path(nb_id, lpath, ctx=ctx)
+            return f"Synced {len(res['added'])} source(s) from `{res['root']}`."
         if sub == "ask" and len(parts) >= 3:
             res = ask(parts[1].strip(), parts[2].strip(), ctx=ctx)
             return res["answer"]
@@ -423,8 +545,8 @@ def register(ctx: Any) -> None:
     ctx.register_command(
         "sourcebook",
         handle_command,
-        description="Query, bind, or generate Studio artifacts from a SourceBook research notebook",
-        args_hint="list | use <nb> | ask <nb> <question> | make <nb> <kind>",
+        description="Query, bind, sync, select model, or generate Studio artifacts from a SourceBook research notebook",
+        args_hint="list | use <nb> | model <nb> <model> | sync <nb> <path> | ask <nb> <q> | make <nb> <kind>",
     )
 
     if hasattr(ctx, "register_rpc"):
@@ -464,13 +586,23 @@ def register(ctx: Any) -> None:
                 p["text"],
                 history=p.get("history") or [],
                 source_ids=p.get("source_ids"),
+                provider=p.get("provider"),
+                model=p.get("model"),
                 ctx=ctx,
             ),
         )
         _register_async_rpc(
             "studio.run",
             "studio.done",
-            lambda p: make(p["nb"], p["kind"], p.get("params") or {}, source_ids=p.get("source_ids"), ctx=ctx),
+            lambda p: make(
+                p["nb"],
+                p["kind"],
+                p.get("params") or {},
+                source_ids=p.get("source_ids"),
+                provider=p.get("provider"),
+                model=p.get("model"),
+                ctx=ctx,
+            ),
         )
 
     skill_dir = Path(__file__).parent / "skills" / "research-notebook"

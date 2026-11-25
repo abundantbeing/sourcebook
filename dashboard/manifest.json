@@ -1,7 +1,7 @@
 {
   "name": "sourcebook",
   "label": "SourceBook",
-  "description": "Source-grounded research notebooks, Claim Ledger, Coverage Map, and interactive 7-format Studio.",
+  "description": "Source-grounded research notebooks, hybrid search, Claim Ledger contradictions, universal Hermes model routing, and an 8-format Studio.",
   "icon": "BookOpen",
   "version": "0.1.0",
   "api": "plugin_api.py"

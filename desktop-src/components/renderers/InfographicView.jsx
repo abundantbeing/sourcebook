@@ -85,6 +85,14 @@ export function InfographicView({ artifact, onOpenChunk }) {
         </div>
       </div>
 
+      {spec.hero_image_url ? (
+        <img
+          src={spec.hero_image_url}
+          alt={spec.title || 'Infographic hero visual'}
+          style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--ui-stroke-secondary)' }}
+        />
+      ) : null}
+
       <div className="sb-svg-stage">
         <svg
           ref={svgRef}

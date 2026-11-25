@@ -23,7 +23,7 @@ function nextSm2(prev, quality) {
   }
 }
 
-export function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
+export function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStateSaved }) {
   const cards = artifact?.spec?.cards || []
   const [order, setOrder] = useState(() => cards.map((_, i) => i))
   const [cursor, setCursor] = useState(0)
@@ -58,13 +58,15 @@ export function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated 
     setShowHint(false)
     setCursor(c => (c + 1) % order.length)
     try {
-      const next = await api(`/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(artifact.id)}/state`, {
+      const savedState = await api(`/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(artifact.id)}/state`, {
         method: 'PATCH',
         body: { sm2: updated }
       })
-      onArtifactUpdated?.(next)
+      // Merge persisted state onto the full artifact object (PATCH /state returns only the state map)
+      onArtifactUpdated?.({ ...artifact, state: savedState && typeof savedState === 'object' ? savedState : { ...artifact.state, sm2: updated } })
+      onStateSaved?.()
     } catch {
-      // keep optimistic state
+      // keep optimistic SM-2 schedule in local state
     }
   }
 
@@ -89,6 +91,16 @@ export function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated 
     downloadTextFile(`${artifact.id || 'flashcards'}.csv`, csv, 'text/csv;charset=utf-8')
   }
 
+  function exportAnki() {
+    const lines = cards.map(c => {
+      const front = String(c.front || '').replace(/\t/g, ' ').replace(/\n/g, '<br>')
+      const back = String(c.back || '').replace(/\t/g, ' ').replace(/\n/g, '<br>')
+      const tags = (c.tags || []).map(t => String(t).replace(/\s+/g, '_')).join(' ')
+      return `${front}\t${back}\t${tags}`
+    })
+    downloadTextFile(`${artifact.id || 'flashcards'}-anki.tsv`, lines.join('\n'), 'text/tab-separated-values;charset=utf-8')
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -97,12 +109,15 @@ export function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated 
           <span>Due <strong className="sb-num">{due}</strong></span>
           <span>Mastered <strong className="sb-num">{mastered}</strong></span>
         </div>
-        <div style={{ display: 'flex', gap: 5 }}>
+        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
           <button type="button" className="sb-btn" onClick={shuffle}>
             <Icon name="Shuffle" size={12} /> Shuffle
           </button>
           <button type="button" className="sb-btn" onClick={exportCsv}>
             <Icon name="Download" size={12} /> CSV
+          </button>
+          <button type="button" className="sb-btn" onClick={exportAnki} title="Export tab-separated deck ready for Anki import">
+            <Icon name="Download" size={12} /> Anki TSV
           </button>
         </div>
       </div>

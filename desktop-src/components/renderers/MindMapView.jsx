@@ -73,6 +73,18 @@ export function MindMapView({ artifact, onOpenChunk }) {
     downloadTextFile(`${artifact.id || 'mindmap'}.svg`, svgText, 'image/svg+xml;charset=utf-8')
   }
 
+  function handleDownloadOpml() {
+    const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    const walk = node => {
+      const kids = (node.children || []).map(walk).join('')
+      return kids
+        ? `<outline text="${esc(node.label)}" _note="${esc(node.summary)}">${kids}</outline>`
+        : `<outline text="${esc(node.label)}" _note="${esc(node.summary)}" />`
+    }
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<opml version="2.0"><head><title>${esc(artifact?.spec?.title || 'Mind Map')}</title></head><body>${walk(root)}</body></opml>`
+    downloadTextFile(`${artifact.id || 'mindmap'}.opml`, xml, 'text/xml;charset=utf-8')
+  }
+
   const activeNode = selected ? graph.byId.get(selected) : graph.nodes.find(n => n.depth === 0)
 
   return (
@@ -89,12 +101,15 @@ export function MindMapView({ artifact, onOpenChunk }) {
             <Icon name="Plus" size={13} />
           </button>
         </div>
-        <div style={{ display: 'flex', gap: 5 }}>
+        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
           <button type="button" className="sb-btn" onClick={handleCopySvg}>
             <Icon name="Copy" size={12} /> Copy SVG
           </button>
           <button type="button" className="sb-btn" onClick={handleDownloadSvg}>
             <Icon name="Download" size={12} /> SVG
+          </button>
+          <button type="button" className="sb-btn" onClick={handleDownloadOpml} title="Export outline for XMind, MindNode, or FreeMind">
+            <Icon name="Download" size={12} /> OPML
           </button>
         </div>
       </div>

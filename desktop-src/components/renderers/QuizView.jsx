@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Icon } from '../../sdk.js'
+import { downloadTextFile } from '../../api.js'
 
 function isCorrectChoice(q, chosen) {
   if (chosen === undefined || chosen === null) return false
@@ -73,6 +74,24 @@ export function QuizView({ artifact, onOpenChunk }) {
           }}
         >
           <Icon name="RotateCcw" size={12} /> Reset
+        </button>
+        <button
+          type="button"
+          className="sb-btn"
+          onClick={() => {
+            const lines = [`# ${artifact?.spec?.title || 'Quiz'}`, '']
+            const keyLines = ['## Answer Key', '']
+            questions.forEach((q, i) => {
+              lines.push(`### ${i + 1}. ${q.prompt || ''}`)
+              ;(q.options || []).forEach((opt, oi) => lines.push(`- ${String.fromCharCode(65 + oi)}. ${opt}`))
+              lines.push('')
+              const ansLabel = typeof q.answer === 'number' && q.options?.[q.answer] ? `${String.fromCharCode(65 + q.answer)} (${q.options[q.answer]})` : String(q.answer)
+              keyLines.push(`${i + 1}. **${ansLabel}**: ${q.explanation || ''}`)
+            })
+            downloadTextFile(`${artifact.id || 'quiz'}-key.md`, [...lines, ...keyLines].join('\n'), 'text/markdown;charset=utf-8')
+          }}
+        >
+          <Icon name="Download" size={12} /> Answer Key .md
         </button>
       </div>
 

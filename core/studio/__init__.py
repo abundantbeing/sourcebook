@@ -337,30 +337,65 @@ def _extractive_studio(kind: str, context: str, allowed_ids: set[str], p: dict[s
         spec = {"deck": f"Flashcards: {focus[:48]}", "cards": cards}
     elif kind == "quiz":
         questions = []
-        for idx, f in enumerate(facts[: min(count, 8)]):
-            distractors = [other["sentence"][:110] for other in facts if other["chunk_id"] != f["chunk_id"]][:3]
-            while len(distractors) < 3:
-                distractors.append("This claim is not supported by the active notebook sources.")
-            correct = f["sentence"][:110]
-            opts = [correct, *distractors[:3]]
-            rotate = idx % 4
-            opts = opts[rotate:] + opts[:rotate]
-            ans_idx = opts.index(correct)
-            questions.append(
-                {
-                    "id": f"q_{idx + 1}",
-                    "type": "mcq",
-                    "prompt": f"According to {f['source_title']} ({f['heading']}), which statement is accurate?",
-                    "options": opts,
-                    "answer": ans_idx,
-                    "explanation": f["sentence"],
-                    "cites": [f["chunk_id"]],
-                }
-            )
+        # Interleave sources round-robin so quizzes test across the full corpus
+        ordered_q: list[dict[str, Any]] = []
+        q_buckets = [list(items) for items in sources_grouped.values()]
+        while any(q_buckets) and len(ordered_q) < min(count, 8):
+            for b in q_buckets:
+                if b and len(ordered_q) < min(count, 8):
+                    ordered_q.append(b.pop(0))
+        for idx, f in enumerate(ordered_q):
+            clean_src = re.sub(r"\.(md|markdown|txt|pdf|docx|csv|json)$", "", f["source_title"], flags=re.IGNORECASE)
+            if idx % 3 == 2:
+                questions.append(
+                    {
+                        "id": f"q_{idx + 1}",
+                        "type": "tf",
+                        "prompt": f"True or False ({clean_src}): {f['sentence']}",
+                        "options": ["True", "False"],
+                        "answer": 0,
+                        "explanation": f"Verified directly from {clean_src} under '{f['heading']}': {f['sentence']}",
+                        "cites": [f["chunk_id"]],
+                    }
+                )
+            else:
+                distractors = [
+                    _clip(other["sentence"], 115)
+                    for other in facts
+                    if other["chunk_id"] != f["chunk_id"] and other["sentence"] != f["sentence"]
+                ][:3]
+                while len(distractors) < 3:
+                    distractors.append("This claim is not supported by the active notebook sources.")
+                correct = _clip(f["sentence"], 115)
+                opts = [correct, *distractors[:3]]
+                rotate = idx % 4
+                opts = opts[rotate:] + opts[:rotate]
+                ans_idx = opts.index(correct)
+                questions.append(
+                    {
+                        "id": f"q_{idx + 1}",
+                        "type": "mcq",
+                        "prompt": f"According to {clean_src} ({f['heading']}), which statement is accurate?",
+                        "options": opts,
+                        "answer": ans_idx,
+                        "explanation": f["sentence"],
+                        "cites": [f["chunk_id"]],
+                    }
+                )
         spec = {"title": f"Quiz: {focus[:48]}", "questions": questions}
     elif kind == "table":
+        # Interleave sources round-robin and surface quantified findings near the top so
+        # multi-source evidence matrices immediately highlight diversity and hard numbers.
+        ordered_facts: list[dict[str, Any]] = []
+        buckets = [list(items) for items in sources_grouped.values()]
+        for b in buckets:
+            b.sort(key=lambda item: (0 if item["metric"] else 1))
+        while any(buckets) and len(ordered_facts) < 12:
+            for b in buckets:
+                if b and len(ordered_facts) < 12:
+                    ordered_facts.append(b.pop(0))
         rows = []
-        for idx, f in enumerate(facts[:10]):
+        for idx, f in enumerate(ordered_facts[:10]):
             rows.append(
                 {
                     "id": f"r_{idx + 1}",
@@ -384,23 +419,35 @@ def _extractive_studio(kind: str, context: str, allowed_ids: set[str], p: dict[s
             "rows": rows,
         }
     elif kind == "infographic":
-        metric_facts = [f for f in facts if f["metric"]]
+        def _metric_rank(item: dict[str, Any]) -> tuple[int, float]:
+            raw = str(item.get("metric") or "").strip()
+            if not raw:
+                return (2, 0.0)
+            m = re.match(r"(\d+(?:\.\d+)?)\s*(%)", raw)
+            if m:
+                return (0, -float(m.group(1)))
+            m2 = re.match(r"(\d+(?:\.\d+)?)", raw)
+            return (1, -float(m2.group(1)) if m2 else 0.0)
+
+        metric_facts = sorted([f for f in facts if f["metric"]], key=_metric_rank)
         chosen = (metric_facts + [f for f in facts if f not in metric_facts])[:6]
         layout = "stat-grid" if len(metric_facts) >= 2 else "process"
+        distinct_sources = len({f["source_title"] for f in chosen if f.get("source_title")}) or len(sources_grouped)
         blocks = []
         for idx, f in enumerate(chosen):
             blocks.append(
                 {
                     "id": f"b_{idx + 1}",
+                    "kind": "metric" if f["metric"] else "insight",
                     "heading": " ".join(f["heading"].split()[:6]) or f"Highlight {idx + 1}",
-                    "value": f["metric"] or f"0{idx + 1}",
+                    "value": f["metric"] or "",
                     "body": _clip(f["sentence"], 210),
                     "cites": [f["chunk_id"]],
                 }
             )
         spec = {
             "title": f"{focus[:56]}",
-            "subtitle": f"Synthesized from {len(sources_grouped)} active sources",
+            "subtitle": f"Synthesized from {distinct_sources} active sources",
             "layout": layout,
             "blocks": blocks,
         }
@@ -417,25 +464,39 @@ def _extractive_studio(kind: str, context: str, allowed_ids: set[str], p: dict[s
         ]
         for stitle, items in list(sources_grouped.items())[: max(2, count - 2)]:
             lead = items[0]
+            clean_stitle = re.sub(r"\.(md|markdown|txt|pdf|docx|csv|json)$", "", stitle, flags=re.IGNORECASE)
             has_stat = next((x for x in items if x["metric"]), None)
+            extra_bullets = [_clip(it["sentence"], 124) for it in items[1:5]]
             if has_stat and len(slides) % 2 == 1:
+                stat_bullets = [_clip(it["sentence"], 124) for it in items if it is not has_stat][:3]
                 slides.append(
                     {
                         "layout": "stat",
-                        "title": _clip(lead["sentence"], 86),
-                        "stat": {"value": has_stat["metric"], "label": has_stat["heading"]},
-                        "bullets": [_clip(it["sentence"], 108) for it in items[1:4]],
-                        "notes": f"Source: {stitle}. Highlight the measured figure before walking through supporting context.",
+                        "title": _clip(has_stat["sentence"], 96),
+                        "stat": {"value": has_stat["metric"], "label": f"{has_stat['heading']} ({clean_stitle})"},
+                        "bullets": stat_bullets,
+                        "notes": f"Source: {stitle}. Highlight the measured figure ({has_stat['metric']}) before walking through supporting context.",
                         "cites": sorted({it["chunk_id"] for it in items[:3]}),
+                    }
+                )
+            elif len(extra_bullets) == 0:
+                slides.append(
+                    {
+                        "layout": "quote",
+                        "title": lead["heading"] or clean_stitle,
+                        "body": lead["sentence"],
+                        "bullets": [],
+                        "notes": f"Key statement from {stitle}. Verify exact wording against the cited passage.",
+                        "cites": [lead["chunk_id"]],
                     }
                 )
             else:
                 slides.append(
                     {
-                        "layout": "bullets",
-                        "title": _clip(lead["sentence"], 86),
-                        "bullets": [_clip(it["sentence"], 112) for it in items[:4]],
-                        "notes": f"Drawn from {stitle}. Verify exact wording against the cited passages.",
+                        "layout": "two-col" if len(extra_bullets) >= 3 else "bullets",
+                        "title": _clip(lead["sentence"], 96),
+                        "bullets": extra_bullets[:4],
+                        "notes": f"Drawn from {stitle}. Every takeaway maps directly to its cited passage.",
                         "cites": sorted({it["chunk_id"] for it in items[:4]}),
                     }
                 )

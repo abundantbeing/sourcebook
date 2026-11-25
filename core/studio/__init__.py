@@ -1,4 +1,4 @@
-"""Studio generators, schema repair, citation verification, extractive fallback, and offline exporters."""
+"""Studio generators (8 formats including 2-Host Audio Overview), universal LLM JSON compatibility, citation verification, extractive fallback, and offline exporters."""
 
 from __future__ import annotations
 
@@ -35,10 +35,21 @@ _BUILTINS = [
         label="Study Guide",
         description="Structured Markdown report (Briefing, Study Guide, FAQ, Timeline, Blog, Exec Memo) with inline citations.",
         instructions=(
-            "Write a thorough {template} report in Markdown using headings, concise prose, and bullet takeaways. "
+            "Write a thorough {template} report in Markdown using headings, concise prose, tables or code blocks when helpful, and bullet takeaways. "
             "Cite every factual sentence inline with [[c:<chunk_id>]]."
         ),
         schema_file=None,
+    ),
+    StudioGenerator(
+        kind="audio",
+        label="Audio Overview",
+        description="Two-host spoken podcast discussion (Alex & Maya) with neural audio synthesis and synchronized cited transcript.",
+        instructions=(
+            "Write a crisp, engaging two-host spoken podcast script between 'Alex' (analytical host) and 'Maya' (curious questioner) "
+            "in the '{style}' style (deep_dive | debate | brief | critique). Produce {count} to 14 natural conversational turns "
+            "(2 to 3 spoken sentences per turn, no markdown formatting or stage directions). Every turn must cite supporting chunk ids in cites."
+        ),
+        schema_file="audio.json",
     ),
     StudioGenerator(
         kind="mindmap",
@@ -200,11 +211,11 @@ def _clip(text: str, limit: int) -> str:
 
 
 def _extractive_studio(kind: str, context: str, allowed_ids: set[str], p: dict[str, Any]) -> tuple[dict[str, Any], list[str], dict[str, Any]]:
-    """Deterministic local synthesis for all 7 Studio formats when no LLM provider is configured."""
+    """Deterministic local synthesis for all 8 Studio formats when no LLM provider is configured."""
     chunks = _parse_packed_chunks(context)
     facts = _extract_facts(chunks)
     focus = str(p.get("focus") or "Key Findings").strip()
-    count = max(3, min(12, int(p.get("count") or 6)))
+    count = max(3, min(14, int(p.get("count") or 6)))
     sources_grouped: dict[str, list[dict[str, Any]]] = {}
     for f in facts:
         sources_grouped.setdefault(f["source_title"], []).append(f)
@@ -226,7 +237,43 @@ def _extractive_studio(kind: str, context: str, allowed_ids: set[str], p: dict[s
         info["mode"] = "extractive"
         return {"title": f"{p.get('template', 'briefing').replace('_', ' ').title()}: {focus[:56]}", "markdown": clean}, cites, info
 
-    if kind == "mindmap":
+    if kind == "audio":
+        style = str(p.get("style") or "deep_dive")
+        turns: list[dict[str, Any]] = []
+        if facts:
+            turns.append({
+                "id": "t_1",
+                "speaker": "Alex",
+                "text": f"Welcome to your SourceBook Audio Overview on {focus}. We analyzed {len(sources_grouped)} active sources, and right away one finding stands out: {facts[0]['sentence']}",
+                "cites": [facts[0]["chunk_id"]],
+            })
+            for idx, f in enumerate(facts[1 : min(len(facts), max(6, count))], start=2):
+                speaker = "Maya" if idx % 2 == 0 else "Alex"
+                lead = (
+                    f"That ties directly into {f['source_title']}. Under {f['heading']}, it notes: "
+                    if speaker == "Maya"
+                    else f"And looking closely at {f['heading']}, the evidence adds another key piece: "
+                )
+                turns.append({
+                    "id": f"t_{idx}",
+                    "speaker": speaker,
+                    "text": f"{lead}{f['sentence']}",
+                    "cites": [f["chunk_id"]],
+                })
+            turns.append({
+                "id": f"t_{len(turns) + 1}",
+                "speaker": "Maya" if len(turns) % 2 == 1 else "Alex",
+                "text": "Every point we covered links straight back to its exact passage in your notebook. Click any citation or ask us a follow-up question below to go deeper.",
+                "cites": [facts[0]["chunk_id"]],
+            })
+        spec: dict[str, Any] = {
+            "title": f"Audio Overview: {focus[:48]}",
+            "subtitle": f"{style.replace('_', ' ').title()} across {len(sources_grouped)} sources",
+            "style": style if style in ("deep_dive", "debate", "brief", "critique") else "deep_dive",
+            "hosts": ["Alex", "Maya"],
+            "turns": turns,
+        }
+    elif kind == "mindmap":
         children = []
         for s_idx, (stitle, items) in enumerate(list(sources_grouped.items())[:5]):
             by_head: dict[str, list[dict[str, Any]]] = {}
@@ -263,7 +310,7 @@ def _extractive_studio(kind: str, context: str, allowed_ids: set[str], p: dict[s
                     "children": sub_nodes,
                 }
             )
-        spec: dict[str, Any] = {
+        spec = {
             "title": f"Concept Map: {focus[:48]}",
             "root": {
                 "id": "root",
@@ -290,7 +337,7 @@ def _extractive_studio(kind: str, context: str, allowed_ids: set[str], p: dict[s
         spec = {"deck": f"Flashcards: {focus[:48]}", "cards": cards}
     elif kind == "quiz":
         questions = []
-        for idx, f in enumerate(facts[: min(count, 6)]):
+        for idx, f in enumerate(facts[: min(count, 8)]):
             distractors = [other["sentence"][:110] for other in facts if other["chunk_id"] != f["chunk_id"]][:3]
             while len(distractors) < 3:
                 distractors.append("This claim is not supported by the active notebook sources.")
@@ -375,9 +422,9 @@ def _extractive_studio(kind: str, context: str, allowed_ids: set[str], p: dict[s
                 slides.append(
                     {
                         "layout": "stat",
-                        "title": lead["sentence"][:88],
+                        "title": _clip(lead["sentence"], 86),
                         "stat": {"value": has_stat["metric"], "label": has_stat["heading"]},
-                        "bullets": [it["sentence"][:110] for it in items[1:4]],
+                        "bullets": [_clip(it["sentence"], 108) for it in items[1:4]],
                         "notes": f"Source: {stitle}. Highlight the measured figure before walking through supporting context.",
                         "cites": sorted({it["chunk_id"] for it in items[:3]}),
                     }
@@ -386,8 +433,8 @@ def _extractive_studio(kind: str, context: str, allowed_ids: set[str], p: dict[s
                 slides.append(
                     {
                         "layout": "bullets",
-                        "title": lead["sentence"][:88],
-                        "bullets": [it["sentence"][:115] for it in items[:4]],
+                        "title": _clip(lead["sentence"], 86),
+                        "bullets": [_clip(it["sentence"], 112) for it in items[:4]],
                         "notes": f"Drawn from {stitle}. Verify exact wording against the cited passages.",
                         "cites": sorted({it["chunk_id"] for it in items[:4]}),
                     }
@@ -447,13 +494,16 @@ def run(
     allowed_ids: set[str],
     params: Optional[dict[str, Any]] = None,
     *,
+    provider: Optional[str] = None,
+    model: Optional[str] = None,
     ctx: Any = None,
-    progress: Optional[Callable[[str, Optional[int]], None]] = None,
+    progress: Optional[Callable[..., None]] = None,
 ) -> tuple[dict[str, Any], list[str], dict[str, Any]]:
-    """Run a Studio generator, validate/repair schema, verify citations, and return (spec, cites, grounding)."""
+    """Run a Studio generator across ANY Hermes model/provider with 3-tier JSON compatibility, citation verification, and extractive fallback."""
     gen = get_generator(kind)
     p = {
         "template": "briefing",
+        "style": "deep_dive",
         "count": 8,
         "focus": "the most important ideas",
         "audience": "general",
@@ -474,86 +524,82 @@ def run(
         return _extractive_studio(kind, context, allowed_ids, p)
 
     instructions = (gen.instructions + SHARED_RULES).format(**p)
-    llm = runtime.get_llm(ctx)
-    use_task = "sourcebook_studio" if runtime.get_live_context() is not None else None
+    aux_task = "sourcebook_audio" if kind == "audio" else "sourcebook_studio"
 
     if gen.schema_file is None and gen.schema is None:
         if progress:
             progress("Writing cited study guide...", 55)
-        kwargs: dict[str, Any] = {
-            "messages": [
-                {"role": "system", "content": instructions},
-                {"role": "user", "content": f"<sources>\n{context}\n</sources>"},
-            ],
-            "purpose": f"sourcebook.studio.{kind}",
-            "temperature": 0.25,
-        }
-        if use_task:
-            kwargs["task"] = use_task
         try:
-            res = llm.complete(**kwargs)
+            text_out, meta = runtime.complete_chat(
+                [
+                    {"role": "system", "content": instructions},
+                    {"role": "user", "content": f"<sources>\n{context}\n</sources>"},
+                ],
+                purpose=f"sourcebook.studio.{kind}",
+                task=aux_task,
+                provider=provider,
+                model=model,
+                temperature=0.25,
+                ctx=ctx,
+            )
+        except runtime.ModelOverrideDeniedError:
+            raise
         except Exception:
-            kwargs.pop("task", None)
-            try:
-                res = llm.complete(**kwargs)
-            except Exception:
-                return _extractive_studio(kind, context, allowed_ids, p)
-        clean, cites, grounding_info = ground.validate(res.text, allowed_ids)
+            return _extractive_studio(kind, context, allowed_ids, p)
+        clean, cites, grounding_info = ground.validate(text_out, allowed_ids)
+        grounding_info.update({k: v for k, v in meta.items() if v})
         return {"title": f"{p['template'].replace('_', ' ').title()}: {p['focus'][:60]}", "markdown": clean}, cites, grounding_info
 
     schema = gen.schema or json.loads((SCHEMAS_DIR / str(gen.schema_file)).read_text(encoding="utf-8"))
-    last_error = ""
     spec: Optional[dict[str, Any]] = None
+    model_meta: dict[str, str] = {}
+    last_error = ""
 
     for attempt in range(2):
         if progress:
             stage = f"Generating structured {gen.label.lower()}..." if attempt == 0 else f"Repairing {gen.label.lower()} JSON..."
             progress(stage, 55 if attempt == 0 else 72)
         prompt_instr = instructions if attempt == 0 else (
-            instructions + f"\n\nIMPORTANT: Your previous output failed validation ({last_error}). "
-            "Return ONLY valid JSON matching the exact schema."
+            instructions + f"\n\nIMPORTANT: Previous output failed ({last_error}). Return ONLY valid JSON matching the exact schema."
         )
-        kwargs = {
-            "instructions": prompt_instr,
-            "input": [{"type": "text", "text": f"<sources>\n{context}\n</sources>"}],
-            "json_schema": schema,
-            "schema_name": f"sourcebook.{kind}",
-            "purpose": f"sourcebook.studio.{kind}",
-            "temperature": 0.25 if attempt == 0 else 0.0,
-        }
-        if use_task:
-            kwargs["task"] = use_task
         try:
-            res = llm.complete_structured(**kwargs)
+            parsed, meta = runtime.complete_json(
+                instructions=prompt_instr,
+                input_blocks=[{"type": "text", "text": f"<sources>\n{context}\n</sources>"}],
+                json_schema=schema,
+                schema_name=f"sourcebook.{kind}",
+                purpose=f"sourcebook.studio.{kind}",
+                task=aux_task,
+                provider=provider,
+                model=model,
+                temperature=0.25 if attempt == 0 else 0.0,
+                ctx=ctx,
+            )
+            spec = parsed
+            model_meta = meta
+            break
+        except runtime.ModelOverrideDeniedError:
+            raise
         except ValueError as exc:
             last_error = str(exc)
             continue
-        except Exception as exc:
-            kwargs.pop("task", None)
-            try:
-                res = llm.complete_structured(**kwargs)
-            except ValueError as v_exc:
-                last_error = str(v_exc)
-                continue
-            except Exception:
-                # Provider unavailable (e.g. offline/no API key): fall back cleanly to local synthesis
-                return _extractive_studio(kind, context, allowed_ids, p)
-        if isinstance(res.parsed, dict):
-            spec = res.parsed
-            break
-        last_error = "Model response was not valid JSON"
+        except Exception:
+            # Provider unreachable / unconfigured: fall back cleanly to local extractive synthesis
+            return _extractive_studio(kind, context, allowed_ids, p)
 
     if spec is None:
-        raise ValueError(f"{kind}: model could not produce valid JSON ({last_error})")
+        return _extractive_studio(kind, context, allowed_ids, p)
 
     if progress:
-        progress("Verifying citations...", 82)
+        progress("Verifying citations...", 80)
     valid_cites = set()
     dropped_cites = set()
     spec = _filter_spec_cites(spec, allowed_ids, valid_cites, dropped_cites)
     _maybe_attach_images(kind, spec, p, ctx=ctx, progress=progress)
 
-    return spec, sorted(valid_cites), {"dropped": sorted(dropped_cites)}
+    grounding_info: dict[str, Any] = {"dropped": sorted(dropped_cites)}
+    grounding_info.update({k: v for k, v in model_meta.items() if v})
+    return spec, sorted(valid_cites), grounding_info
 
 
 def export_artifact(artifact: dict[str, Any], fmt: str) -> tuple[str, str, str]:
@@ -566,6 +612,15 @@ def export_artifact(artifact: dict[str, Any], fmt: str) -> tuple[str, str, str]:
     if kind == "report" or f == "md":
         if kind == "report":
             return f"{slug}.md", "text/markdown; charset=utf-8", str(spec.get("markdown") or "")
+        if kind == "audio":
+            lines = [f"# {spec.get('title') or 'Audio Overview'}", ""]
+            if spec.get("subtitle"):
+                lines.append(f"*{spec['subtitle']}*\n")
+            for t in spec.get("turns") or []:
+                cites = " ".join(f"`{c}`" for c in (t.get("cites") or []))
+                lines.append(f"**{t.get('speaker', 'Host')}:** {t.get('text', '')}" + (f" ({cites})" if cites else ""))
+                lines.append("")
+            return f"{slug}.md", "text/markdown; charset=utf-8", "\n".join(lines).strip()
         if kind == "table":
             cols = spec.get("columns") or []
             rows = spec.get("rows") or []

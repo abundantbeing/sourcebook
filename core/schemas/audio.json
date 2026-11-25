@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "properties": {
+    "title": { "type": "string" },
+    "subtitle": { "type": "string" },
+    "style": { "type": "string", "enum": ["deep_dive", "debate", "brief", "critique"] },
+    "hosts": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "turns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "speaker": { "type": "string" },
+          "text": { "type": "string" },
+          "cites": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["speaker", "text", "cites"]
+      }
+    }
+  },
+  "required": ["title", "turns"]
+}

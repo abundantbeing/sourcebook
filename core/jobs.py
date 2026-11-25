@@ -1,4 +1,4 @@
-"""Bounded background job runner with profile-preserving contextvars & global event progress."""
+"""Bounded background job runner with profile-preserving contextvars, progressive streaming deltas, & global events."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ def get_job(jid: str) -> dict[str, Any]:
 
 
 def spawn(
-    fn: Callable[[Callable[[str, Optional[int]], None]], Any],
+    fn: Callable[[Callable[..., None]], Any],
     *,
     nb: Optional[str] = None,
     kind: str = "task",
@@ -47,22 +47,28 @@ def spawn(
             "nb": nb,
             "kind": kind,
             "status": "running",
-            "stage": "Starting…",
+            "stage": "Starting...",
             "progress": 5,
+            "partial_text": "",
             "created": now,
             "updated": now,
         }
         _prune_locked()
 
-    def progress(stage: str, percent: Optional[int] = None) -> None:
+    def progress(stage: str, percent: Optional[int] = None, *, partial_text: Optional[str] = None) -> None:
         with _LOCK:
             rec = _JOBS.get(jid)
             if rec is not None:
                 rec["stage"] = stage
                 if percent is not None:
                     rec["progress"] = max(0, min(100, int(percent)))
+                if partial_text is not None:
+                    rec["partial_text"] = partial_text
                 rec["updated"] = time.time()
-        runtime.broadcast_event("job.progress", {"job": jid, "nb": nb, "kind": kind, "stage": stage, "progress": percent})
+        payload: dict[str, Any] = {"job": jid, "nb": nb, "kind": kind, "stage": stage, "progress": percent}
+        if partial_text is not None:
+            payload["partial_text"] = partial_text
+        runtime.broadcast_event("job.progress", payload)
 
     def runner() -> None:
         try:
@@ -76,7 +82,6 @@ def spawn(
                 _JOBS[jid].update(status="error", stage="Failed", error=err, updated=time.time())
             runtime.broadcast_event("job.error", {"job": jid, "nb": nb, "kind": kind, "error": err})
 
-    # Copy contextvars so `get_hermes_home()` / profile scope stays intact inside worker thread!
     ctx_copy = contextvars.copy_context()
     _EXECUTOR.submit(ctx_copy.run, runner)
     return {"job": jid}

@@ -217,9 +217,10 @@ def make(
     params = dict(params or {})
     eff_provider = provider if provider is not None else (nb_meta.get("provider") or "")
     eff_model = model if model is not None else (nb_meta.get("model") or "")
+    eff_source_ids = source_ids if source_ids is not None else params.get("source_ids")
     if progress:
         progress(f"Gathering sources for {kind}...", 20)
-    packed, allowed, used_ids, _, _ = context_for(nb, params.get("focus") or "key themes and facts", source_ids)
+    packed, allowed, used_ids, _, _ = context_for(nb, params.get("instructions") or params.get("focus") or "key themes and facts", eff_source_ids)
     spec, cites, grounding_info = studio.run(
         kind,
         packed,
@@ -230,6 +231,7 @@ def make(
         ctx=ctx,
         progress=progress,
     )
+    media_files = grounding_info.pop("_media_files", None)
 
     audio_bytes: Optional[bytes] = None
     if kind == "audio" and not params.get("skip_audio") and isinstance(spec.get("turns"), list):
@@ -246,9 +248,92 @@ def make(
         source_ids=used_ids,
         grounding=grounding_info,
         audio_bytes=audio_bytes,
+        media_files=media_files,
     )
     runtime.broadcast_event("notebook.changed", {"nb": nb, "what": "artifacts"})
     return artifact
+
+
+def outline_slides(
+    nb: str,
+    params: Optional[dict[str, Any]] = None,
+    *,
+    source_ids: Optional[list[str]] = None,
+    provider: Optional[str] = None,
+    model: Optional[str] = None,
+    ctx: Any = None,
+) -> dict[str, Any]:
+    nb_meta = store.get_notebook(nb)
+    params = dict(params or {})
+    eff_provider = provider if provider is not None else (nb_meta.get("provider") or "")
+    eff_model = model if model is not None else (nb_meta.get("model") or "")
+    eff_source_ids = source_ids if source_ids is not None else params.get("source_ids")
+    packed, allowed, used_ids, _, _ = context_for(nb, params.get("instructions") or params.get("focus") or "key themes and facts", eff_source_ids)
+    res = studio.outline_slides(
+        packed,
+        allowed,
+        params,
+        provider=eff_provider or None,
+        model=eff_model or None,
+        ctx=ctx,
+    )
+    res["source_ids"] = used_ids
+    return res
+
+
+def revise_artifact(
+    nb: str,
+    aid: str,
+    revision_prompt: str,
+    params_patch: Optional[dict[str, Any]] = None,
+    *,
+    source_ids: Optional[list[str]] = None,
+    provider: Optional[str] = None,
+    model: Optional[str] = None,
+    ctx: Any = None,
+    progress: Any = None,
+) -> dict[str, Any]:
+    existing = store.get_artifact(nb, aid)
+    if not existing:
+        raise FileNotFoundError(f"artifact {aid!r} not found")
+    kind = existing.get("kind", "slides")
+    nb_meta = store.get_notebook(nb)
+    merged_params = dict(existing.get("params") or {})
+    if params_patch:
+        merged_params.update(params_patch)
+    merged_params["revision_prompt"] = revision_prompt.strip()
+    merged_params["previous_spec"] = existing.get("spec") or {}
+    eff_source_ids = source_ids if source_ids is not None else (merged_params.get("source_ids") or existing.get("source_ids") or None)
+    eff_provider = provider if provider is not None else (nb_meta.get("provider") or "")
+    eff_model = model if model is not None else (nb_meta.get("model") or "")
+    if progress:
+        progress("Revising slide deck from sources...", 25)
+    packed, allowed, used_ids, _, _ = context_for(nb, revision_prompt or merged_params.get("focus") or existing.get("title") or "key themes", eff_source_ids)
+    spec, cites, grounding_info = studio.run(
+        kind,
+        packed,
+        allowed,
+        merged_params,
+        provider=eff_provider or None,
+        model=eff_model or None,
+        ctx=ctx,
+        progress=progress,
+    )
+    media_files = grounding_info.pop("_media_files", None)
+    # Strip transient previous_spec from saved params so artifact.json stays compact
+    merged_params.pop("previous_spec", None)
+    store.record_chunk_hits(nb, cites, surface="studio")
+    updated = store.update_artifact(
+        nb,
+        aid,
+        spec=spec,
+        params=merged_params,
+        source_ids=used_ids,
+        grounding=grounding_info,
+        media_files=media_files,
+    )
+    runtime.broadcast_event("notebook.changed", {"nb": nb, "what": "artifacts"})
+    return updated
 
 
 def audio_followup(nb: str, aid: str, question: str, *, ctx: Any = None) -> dict[str, Any]:

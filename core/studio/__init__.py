@@ -107,13 +107,25 @@ _BUILTINS = [
     StudioGenerator(
         kind="slides",
         label="Slide Deck",
-        description="Multi-layout 16:9 presentation with speaker notes, presenter mode, and offline HTML/Marp export.",
+        description="Multi-layout 16:9 presentation with Hermes ImageGen, outline review, speaker notes, presenter mode, and native PPTX/PDF/HTML export.",
         instructions=(
-            "Create a {count}-slide presentation deck starting with a 'title' slide and ending with a 'closing' slide. "
-            "Every content slide headline must be a complete-sentence claim (never a vague label) expressing ONE core idea per slide. "
-            "Lead with the strongest takeaway. Vary layouts across bullets, two-col, quote, stat, section, image-left. "
-            "Keep bullets tight (<= 4 bullets/slide, <= 14 words each), write rich speaker notes, include cites, "
-            "and add image_prompt only on 1 to 3 visual slides."
+            "Create a {count}-slide presentation deck in {language} starting with a 'title' slide and ending with a 'closing' slide.\n"
+            "Deck Format: {deck_format_desc}\n"
+            "Deck Purpose & Narrative Arc: {deck_purpose_desc}\n"
+            "Theme: {theme}\n"
+            "Custom User Direction / Prompt: {user_prompt}\n"
+            "{outline_directive}\n"
+            "{revision_directive}\n"
+            "PRESENTATION DESIGN CRAFT RULES (MANDATORY):\n"
+            "1. ACTION TITLES: Every content slide title MUST be a crisp complete-sentence insight or claim (never a vague label like 'Overview' or 'Performance').\n"
+            "2. ONE IDEA PER SLIDE: Focus every slide on one memorable point with generous whitespace.\n"
+            "3. STRICT LAYOUT DIVERSITY: Never use the exact same layout on two consecutive slides. Rotate intentionally across: "
+            "'title', 'stat' (single hero metric + 2-3 takeaways), 'bento' (3-4 modular pillar bullets), "
+            "'comparison' (2 side-by-side 'columns' objects with 'heading' and 'points'), "
+            "'timeline' (3-4 sequential 'steps' objects with 'label' and 'detail'), 'two-col', 'quote', 'image-left', 'image-full', and 'closing'.\n"
+            "4. VISUAL BIBLE & IMAGE DIRECTION: Write a cohesive 'visual_bible' string describing the deck's unified palette, lighting, and graphic aesthetic. "
+            "{image_directive}\n"
+            "5. SPEAKER NOTES & CITATIONS: Write natural presenter speaker notes on every slide and cite ONLY valid source chunk IDs in 'cites'."
         ),
         schema_file="slides.json",
     ),
@@ -210,8 +222,17 @@ def _clip(text: str, limit: int) -> str:
     return (cut or s[:limit]).rstrip() + "..."
 
 
-def _extractive_studio(kind: str, context: str, allowed_ids: set[str], p: dict[str, Any]) -> tuple[dict[str, Any], list[str], dict[str, Any]]:
+def _extractive_studio(
+    kind: str,
+    context: str,
+    allowed_ids: set[str],
+    p: dict[str, Any],
+    *,
+    ctx: Any = None,
+    progress: Any = None,
+) -> tuple[dict[str, Any], list[str], dict[str, Any]]:
     """Deterministic local synthesis for all 8 Studio formats when no LLM provider is configured."""
+    params = p
     chunks = _parse_packed_chunks(context)
     facts = _extract_facts(chunks)
     focus = str(p.get("focus") or "Key Findings").strip()
@@ -452,101 +473,350 @@ def _extractive_studio(kind: str, context: str, allowed_ids: set[str], p: dict[s
             "blocks": blocks,
         }
     elif kind == "slides":
-        slides: list[dict[str, Any]] = [
-            {
-                "layout": "title",
-                "title": focus[:72],
-                "body": f"Source-grounded deck synthesized from {len(sources_grouped)} active sources.",
-                "bullets": [],
-                "notes": "Introduce the notebook scope and the active source documents.",
-                "cites": [facts[0]["chunk_id"]] if facts else [],
-            }
-        ]
-        for stitle, items in list(sources_grouped.items())[: max(2, count - 2)]:
-            lead = items[0]
-            clean_stitle = re.sub(r"\.(md|markdown|txt|pdf|docx|csv|json)$", "", stitle, flags=re.IGNORECASE)
-            has_stat = next((x for x in items if x["metric"]), None)
-            extra_bullets = [_clip(it["sentence"], 124) for it in items[1:5]]
-            if has_stat and len(slides) % 2 == 1:
-                stat_bullets = [_clip(it["sentence"], 124) for it in items if it is not has_stat][:3]
-                slides.append(
-                    {
+        deck_format = str(params.get("deck_format") or "detailed").lower()
+        deck_purpose = str(params.get("deck_purpose") or "auto").lower()
+        theme = str(params.get("theme") or "editorial").lower()
+        image_mode = str(params.get("image_mode") or ("full_slide" if params.get("include_images") else "none")).lower()
+        approved_outline = params.get("approved_outline") if isinstance(params.get("approved_outline"), list) else None
+        user_prompt = str(params.get("instructions") or params.get("focus") or "").strip()
+        visual_bible = (
+            f"Cohesive {theme} widescreen 16:9 presentation aesthetic, crisp editorial hierarchy, "
+            f"high-contrast typography, clean architectural diagrams"
+            + (f", styled for: {user_prompt[:140]}" if user_prompt else "")
+        )
+
+        if approved_outline:
+            slides = []
+            for s_idx, item in enumerate(approved_outline):
+                if not isinstance(item, dict):
+                    continue
+                sl_layout = str(item.get("layout") or ("title" if s_idx == 0 else ("closing" if s_idx == len(approved_outline) - 1 else "bullets")))
+                sl_cites = [str(c) for c in (item.get("cites") or []) if str(c) in allowed_ids]
+                if not sl_cites and facts:
+                    sl_cites = [facts[s_idx % len(facts)]["chunk_id"]]
+                sl_obj: dict[str, Any] = {
+                    "id": str(item.get("id") or f"sl_{s_idx + 1}"),
+                    "layout": sl_layout,
+                    "title": str(item.get("title") or f"Slide {s_idx + 1}")[:120],
+                    "body": str(item.get("body") or ""),
+                    "bullets": [str(b) for b in (item.get("bullets") or []) if str(b).strip()][:5],
+                    "notes": str(item.get("notes") or f"Walk through {item.get('title') or 'this slide'} with direct source references."),
+                    "cites": sl_cites,
+                    "image_mode": image_mode if params.get("include_images") else "none",
+                }
+                if isinstance(item.get("stat"), dict) and item["stat"].get("value"):
+                    sl_obj["stat"] = item["stat"]
+                if isinstance(item.get("columns"), list) and item["columns"]:
+                    sl_obj["columns"] = item["columns"]
+                if isinstance(item.get("steps"), list) and item["steps"]:
+                    sl_obj["steps"] = item["steps"]
+                if item.get("image_prompt"):
+                    sl_obj["image_prompt"] = str(item["image_prompt"])
+                elif params.get("include_images"):
+                    sl_obj["image_prompt"] = _compose_slide_image_prompt(sl_obj, visual_bible, image_mode)
+                slides.append(sl_obj)
+        else:
+            max_bullets = 3 if deck_format == "presenter" else 4
+            bullet_cap = 90 if deck_format == "presenter" else 132
+            slides = [
+                {
+                    "id": "sl_1",
+                    "layout": "title",
+                    "title": (user_prompt[:76] if user_prompt and len(user_prompt) <= 84 else focus[:72]),
+                    "body": f"{deck_purpose.title() if deck_purpose != 'auto' else 'Source-grounded'} deck synthesized from {len(sources_grouped)} active sources.",
+                    "bullets": [],
+                    "notes": "Introduce the notebook scope, core thesis, and active source documents.",
+                    "cites": [facts[0]["chunk_id"]] if facts else [],
+                    "image_mode": image_mode if params.get("include_images") else "none",
+                }
+            ]
+            grouped_list = list(sources_grouped.items())
+            body_slots = max(2, count - 2)
+            last_layout = "title"
+
+            for g_idx, (stitle, items) in enumerate(grouped_list[:body_slots]):
+                lead = items[0]
+                clean_stitle = re.sub(r"\.(md|markdown|txt|pdf|docx|csv|json)$", "", stitle, flags=re.IGNORECASE)
+                has_stat = next((x for x in items if x["metric"]), None)
+                extra_bullets = [_clip(it["sentence"], bullet_cap) for it in items[1 : max_bullets + 1]]
+                sl_cites = sorted({it["chunk_id"] for it in items[:4]})
+
+                # Rotate across rich visual layouts — never repeat two identical layouts consecutively
+                if has_stat and last_layout != "stat":
+                    stat_bullets = [_clip(it["sentence"], bullet_cap) for it in items if it is not has_stat][:3]
+                    sl_obj = {
+                        "id": f"sl_{len(slides) + 1}",
                         "layout": "stat",
                         "title": _clip(has_stat["sentence"], 96),
                         "stat": {"value": has_stat["metric"], "label": f"{has_stat['heading']} ({clean_stitle})"},
                         "bullets": stat_bullets,
-                        "notes": f"Source: {stitle}. Highlight the measured figure ({has_stat['metric']}) before walking through supporting context.",
-                        "cites": sorted({it["chunk_id"] for it in items[:3]}),
+                        "notes": f"Source: {stitle}. Anchor the audience on {has_stat['metric']} before unpacking supporting evidence.",
+                        "cites": sl_cites,
                     }
-                )
-            elif len(extra_bullets) == 0:
-                slides.append(
-                    {
+                elif g_idx == 2 and len(extra_bullets) >= 2 and last_layout != "comparison":
+                    mid = max(1, len(extra_bullets) // 2)
+                    sl_obj = {
+                        "id": f"sl_{len(slides) + 1}",
+                        "layout": "comparison",
+                        "title": _clip(lead["sentence"], 96),
+                        "columns": [
+                            {"heading": f"Key Drivers ({clean_stitle})", "points": [lead["sentence"][:bullet_cap]] + extra_bullets[:mid]},
+                            {"heading": "Operational Implications", "points": extra_bullets[mid:] or [_clip(items[-1]["sentence"], bullet_cap)]},
+                        ],
+                        "bullets": [],
+                        "notes": f"Compare primary findings and operational implications drawn from {stitle}.",
+                        "cites": sl_cites,
+                    }
+                elif g_idx == 3 and len(items) >= 3 and last_layout != "timeline":
+                    sl_obj = {
+                        "id": f"sl_{len(slides) + 1}",
+                        "layout": "timeline",
+                        "title": _clip(lead["sentence"], 96),
+                        "steps": [
+                            {"label": _clip(it["heading"] or f"Phase {k + 1}", 36), "detail": _clip(it["sentence"], 108)}
+                            for k, it in enumerate(items[:4])
+                        ],
+                        "bullets": [],
+                        "notes": f"Walk sequentially through each mechanism documented in {stitle}.",
+                        "cites": sl_cites,
+                    }
+                elif len(extra_bullets) == 0 and last_layout != "quote":
+                    sl_obj = {
+                        "id": f"sl_{len(slides) + 1}",
                         "layout": "quote",
                         "title": lead["heading"] or clean_stitle,
                         "body": lead["sentence"],
                         "bullets": [],
-                        "notes": f"Key statement from {stitle}. Verify exact wording against the cited passage.",
+                        "notes": f"Key verbatim insight from {stitle}.",
                         "cites": [lead["chunk_id"]],
                     }
-                )
-            else:
-                slides.append(
-                    {
-                        "layout": "two-col" if len(extra_bullets) >= 3 else "bullets",
+                else:
+                    chosen = "bento" if (len(extra_bullets) >= 3 and last_layout != "bento") else ("two-col" if last_layout != "two-col" else "bullets")
+                    sl_obj = {
+                        "id": f"sl_{len(slides) + 1}",
+                        "layout": chosen,
                         "title": _clip(lead["sentence"], 96),
-                        "bullets": extra_bullets[:4],
+                        "bullets": extra_bullets[:max_bullets] or [_clip(lead["sentence"], bullet_cap)],
                         "notes": f"Drawn from {stitle}. Every takeaway maps directly to its cited passage.",
-                        "cites": sorted({it["chunk_id"] for it in items[:4]}),
+                        "cites": sl_cites,
                     }
-                )
-        slides.append(
-            {
-                "layout": "closing",
-                "title": "Every finding links back to a verifiable source passage.",
-                "bullets": [f"{st}: {len(its)} cited observations" for st, its in list(sources_grouped.items())[:4]],
-                "notes": "Open any citation in SourceBook to inspect the original passage.",
-                "cites": sorted({f["chunk_id"] for f in facts[:4]}),
-            }
-        )
-        spec = {"title": focus[:56], "slides": slides}
+                sl_obj["image_mode"] = image_mode if params.get("include_images") else "none"
+                last_layout = sl_obj["layout"]
+                slides.append(sl_obj)
+
+            slides.append(
+                {
+                    "id": f"sl_{len(slides) + 1}",
+                    "layout": "closing",
+                    "title": "Every finding links back to a verifiable source passage.",
+                    "bullets": [f"{st}: {len(its)} cited observations" for st, its in grouped_list[:4]],
+                    "notes": "Open any citation in SourceBook to inspect the original passage.",
+                    "cites": sorted({f["chunk_id"] for f in facts[:4]}),
+                    "image_mode": image_mode if params.get("include_images") else "none",
+                }
+            )
+
+        if params.get("include_images"):
+            for sl_obj in slides:
+                if not sl_obj.get("image_prompt"):
+                    sl_obj["image_prompt"] = _compose_slide_image_prompt(sl_obj, visual_bible, image_mode)
+
+        spec = {
+            "title": (user_prompt[:64] if user_prompt and len(user_prompt) <= 68 else focus[:56]),
+            "subtitle": f"{len(slides)} slides · {len(sources_grouped)} sources",
+            "theme": theme,
+            "deck_format": deck_format,
+            "deck_purpose": deck_purpose,
+            "visual_bible": visual_bible,
+            "slides": slides,
+        }
     else:
         raise ValueError(f"Unsupported Studio kind: {kind}")
 
     valid_cites: set[str] = set()
     dropped_cites: set[str] = set()
     spec = _filter_spec_cites(spec, allowed_ids, valid_cites, dropped_cites)
-    return spec, sorted(valid_cites), {"dropped": sorted(dropped_cites), "mode": "extractive"}
+    media_files, img_meta = _maybe_attach_images(kind, spec, params, ctx=ctx, progress=progress)
+    info: dict[str, Any] = {"dropped": sorted(dropped_cites), "mode": "extractive", **img_meta}
+    if media_files:
+        info["_media_files"] = media_files
+    return spec, sorted(valid_cites), info
 
 
-def _maybe_attach_images(kind: str, spec: dict[str, Any], params: dict[str, Any], *, ctx: Any = None, progress: Any = None) -> None:
-    if not params.get("include_images"):
-        return
-    max_imgs = min(
-        int(params.get("max_images", runtime.get_config("max_images_per_deck", 4)) or 4),
-        int(runtime.get_config("max_images_per_deck", 4) or 4),
+def _compose_slide_image_prompt(slide: dict[str, Any], visual_bible: str, image_mode: str) -> str:
+    title = str(slide.get("title") or "").strip()
+    layout = str(slide.get("layout") or "bullets")
+    bullets = [str(b) for b in (slide.get("bullets") or [])[:4]]
+    stat = slide.get("stat") if isinstance(slide.get("stat"), dict) else None
+    if image_mode == "full_slide":
+        parts = [
+            f"Widescreen 16:9 presentation slide design. Visual style: {visual_bible}.",
+            f"Layout archetype: {layout}. Headline: \"{title}\".",
+        ]
+        if stat and stat.get("value"):
+            parts.append(f"Hero metric spotlight: {stat['value']} ({stat.get('label', '')}).")
+        if bullets:
+            parts.append("Key visual callouts: " + " | ".join(b[:70] for b in bullets[:3]) + ".")
+        parts.append("Ultra-crisp editorial graphic design, clean typography, generous safe margins, balanced diagrams, zero watermarks or platform logos.")
+        return " ".join(parts)
+    return (
+        f"Editorial minimalist illustration and conceptual technical diagram for a presentation slide about: {title}. "
+        f"Style: {visual_bible}. Clean geometric forms, crisp lighting, NO embedded text, NO letters, NO watermarks."
     )
+
+
+def _maybe_attach_images(
+    kind: str,
+    spec: dict[str, Any],
+    params: dict[str, Any],
+    *,
+    ctx: Any = None,
+    progress: Any = None,
+) -> tuple[dict[str, bytes], dict[str, Any]]:
+    """Generate and locally cache Hermes ImageGen artwork for Slides / Infographics when enabled."""
+    media_files: dict[str, bytes] = {}
+    if not params.get("include_images"):
+        return media_files, {}
+    if not runtime.probe_capabilities(ctx).get("image_generate"):
+        return media_files, {"images_requested": True, "images_generated": 0, "image_notice": "No image generation provider configured in Hermes; rendered crisp native vector slides."}
+
+    cfg_cap = int(runtime.get_config("max_images_per_deck", 12) or 12)
+    req_cap = int(params.get("max_images", cfg_cap) or cfg_cap)
+    max_imgs = max(0, min(req_cap, max(cfg_cap, 16)))
     if max_imgs <= 0:
-        return
+        return media_files, {}
+
+    image_mode = str(params.get("image_mode") or "full_slide").lower()
+    visual_bible = str(spec.get("visual_bible") or "Sleek modern editorial presentation design, crisp lighting, clean geometric hierarchy")
+
     if kind == "infographic" and spec.get("hero_image_prompt"):
         if progress:
-            progress("Generating infographic hero illustration...", 85)
-        img = runtime.generate_image(str(spec["hero_image_prompt"]), "landscape", ctx=ctx)
-        if img:
-            spec["hero_image_url"] = img
-    elif kind == "slides" and isinstance(spec.get("slides"), list):
+            progress("Generating infographic hero illustration via Hermes ImageGen...", 85)
+        img_ref = runtime.generate_image(str(spec["hero_image_prompt"]), "landscape", ctx=ctx)
+        if img_ref:
+            fetched = runtime.fetch_image_bytes(img_ref)
+            if fetched:
+                raw, ext = fetched
+                fname = f"hero.{ext}"
+                media_files[fname] = raw
+                spec["hero_image_file"] = fname
+            spec["hero_image_url"] = img_ref
+            return media_files, {"images_requested": True, "images_generated": 1}
+        return media_files, {"images_requested": True, "images_generated": 0}
+
+    if kind == "slides" and isinstance(spec.get("slides"), list):
+        slides = spec["slides"]
+        targets = []
+        for s_idx, slide in enumerate(slides):
+            if image_mode == "full_slide":
+                targets.append((s_idx, slide))
+            elif slide.get("image_prompt") or slide.get("layout") in ("title", "image-left", "image-full", "section"):
+                targets.append((s_idx, slide))
+        targets = targets[:max_imgs]
         generated = 0
-        for slide in spec["slides"]:
-            if generated >= max_imgs:
-                break
-            prompt = slide.get("image_prompt")
-            if prompt:
-                if progress:
-                    progress(f"Generating slide illustration ({generated + 1}/{max_imgs})...", 80)
-                img = runtime.generate_image(str(prompt), "landscape", ctx=ctx)
-                if img:
-                    slide["image_url"] = img
-                    generated += 1
+        for t_i, (s_idx, slide) in enumerate(targets, start=1):
+            prompt = str(slide.get("image_prompt") or _compose_slide_image_prompt(slide, visual_bible, image_mode))
+            if progress:
+                pct = 74 + int(22 * (t_i / max(1, len(targets))))
+                progress(f"Generating slide artwork ({t_i}/{len(targets)}) via Hermes ImageGen...", pct)
+            img_ref = runtime.generate_image(prompt, "landscape", ctx=ctx)
+            if img_ref:
+                slide["image_url"] = img_ref
+                slide["image_mode"] = image_mode
+                if image_mode == "full_slide":
+                    slide["layout"] = "image-full"
+                fetched = runtime.fetch_image_bytes(img_ref)
+                if fetched:
+                    raw, ext = fetched
+                    fname = f"slide_{s_idx + 1:02d}.{ext}"
+                    media_files[fname] = raw
+                    slide["image_file"] = fname
+                generated += 1
+        return media_files, {"images_requested": True, "images_generated": generated, "image_mode": image_mode}
+    return media_files, {}
+
+
+def _build_slides_prompt_vars(p: dict[str, Any]) -> dict[str, Any]:
+    deck_format = str(p.get("deck_format") or "detailed").lower()
+    deck_purpose = str(p.get("deck_purpose") or "auto").lower()
+    image_mode = str(p.get("image_mode") or ("full_slide" if p.get("include_images") else "none")).lower()
+    user_prompt = str(p.get("instructions") or p.get("focus") or "the most important ideas").strip()
+
+    fmt_desc = (
+        "DETAILED DECK — comprehensive standalone slides with rich evidence bullets (up to 4 per slide, <=18 words each) and crisp body takeaways."
+        if deck_format == "detailed"
+        else "PRESENTER SLIDES — clean, minimal visual slides with short punchy talking points (max 3 per slide, <=11 words each); move rich explanations into speaker notes."
+    )
+    purpose_map = {
+        "pitch": "Startup Pitch Deck (Hook -> Problem -> Solution -> Product Proof -> Traction/Metrics -> Advantage -> Roadmap -> Closing Ask).",
+        "executive": "Executive Briefing (BLUF Cover -> Key Metric Spotlight -> Evidence Comparison -> Strategic Risks -> Action Plan -> Closing).",
+        "technical": "Technical Architecture Deck (Thesis -> System Design -> Benchmark Stat Spotlight -> Protocol Timeline -> Tradeoffs -> Production Closing).",
+        "editorial": "Editorial Keynote (Narrative Hook -> Core Insight -> Evidence Grid -> Pull Quote -> Synthesis -> Closing).",
+        "workshop": "Workshop / Teaching Deck (Objectives -> Core Mental Model -> Step-by-Step Timeline -> Applied Examples -> Summary Checklist).",
+    }
+    purpose_desc = purpose_map.get(deck_purpose, "Choose the clearest narrative arc for the source material (Hook -> Key Insights -> Proof/Metrics -> Comparisons/Timeline -> Closing).")
+
+    if p.get("include_images"):
+        if image_mode == "full_slide":
+            img_dir = (
+                "Hermes Image Generation is ON in FULL-SLIDE ART mode. On EVERY slide, set image_mode='full_slide' and write a richly art-directed 16:9 "
+                "'image_prompt' specifying the exact composition, diagrams/icons/visual metaphors, concise headline & key stat to render crisply, unified visual_bible palette, and zero third-party watermarks."
+            )
+        else:
+            img_dir = (
+                "Hermes Image Generation is ON in HYBRID VISUALS mode. On the title slide and 3-5 key visual slides, set image_mode='hybrid' and write text-free "
+                "editorial illustration / conceptual diagram 'image_prompt' strings ('no embedded text, clean ground matching theme') that pair beside editable typography."
+            )
+    else:
+        img_dir = (
+            "Image Generation is OFF. Set image_mode='none' and focus on ultra-clean structural diversity across stat, comparison, timeline, bento, two-col, and quote layouts."
+        )
+
+    outline_dir = ""
+    if isinstance(p.get("approved_outline"), list) and p["approved_outline"]:
+        outline_json = json.dumps(p["approved_outline"], ensure_ascii=False)[:8000]
+        outline_dir = f"FOLLOW THIS USER-APPROVED SLIDE OUTLINE CLOSELY (preserve slide count, order, titles, and layout choices):\n{outline_json}"
+
+    rev_dir = ""
+    if p.get("revision_prompt") and isinstance(p.get("previous_spec"), dict):
+        prev_json = json.dumps(p["previous_spec"], ensure_ascii=False)[:9000]
+        rev_dir = (
+            f"REVISE THIS EXISTING SLIDE DECK according to the user's feedback while keeping all facts strictly grounded in the sources.\n"
+            f"User revision request: {p['revision_prompt']}\nPrevious deck JSON:\n{prev_json}"
+        )
+
+    return {
+        "deck_format_desc": fmt_desc,
+        "deck_purpose_desc": purpose_desc,
+        "user_prompt": user_prompt,
+        "theme": str(p.get("theme") or "editorial"),
+        "image_directive": img_dir,
+        "outline_directive": outline_dir,
+        "revision_directive": rev_dir,
+    }
+
+
+def outline_slides(
+    context: str,
+    allowed_ids: set[str],
+    params: Optional[dict[str, Any]] = None,
+    *,
+    provider: Optional[str] = None,
+    model: Optional[str] = None,
+    ctx: Any = None,
+) -> dict[str, Any]:
+    """Generate a fast, editable slide-by-slide outline BEFORE committing to full deck + ImageGen."""
+    p = {**(params or {}), "include_images": False}
+    spec, cites, info = run(
+        "slides",
+        context,
+        allowed_ids,
+        p,
+        provider=provider,
+        model=model,
+        ctx=ctx,
+    )
+    return {"outline": spec, "citations": cites, "grounding": info}
 
 
 def run(
@@ -570,8 +840,13 @@ def run(
         "audience": "general",
         "length": "standard",
         "language": "English",
+        "deck_format": "detailed",
+        "deck_purpose": "auto",
+        "theme": "editorial",
         **(params or {}),
     }
+    if kind == "slides":
+        p.update(_build_slides_prompt_vars(p))
     if gen.custom_runner is not None:
         spec = gen.custom_runner(context=context, params=p, ctx=ctx)
         valid_cites: set[str] = set()
@@ -582,7 +857,7 @@ def run(
     if p.get("extractive") or not runtime.llm_available(ctx):
         if progress:
             progress(f"Synthesizing {gen.label.lower()} locally...", 65)
-        return _extractive_studio(kind, context, allowed_ids, p)
+        return _extractive_studio(kind, context, allowed_ids, p, ctx=ctx, progress=progress)
 
     instructions = (gen.instructions + SHARED_RULES).format(**p)
     aux_task = "sourcebook_audio" if kind == "audio" else "sourcebook_studio"
@@ -606,7 +881,7 @@ def run(
         except runtime.ModelOverrideDeniedError:
             raise
         except Exception:
-            return _extractive_studio(kind, context, allowed_ids, p)
+            return _extractive_studio(kind, context, allowed_ids, p, ctx=ctx, progress=progress)
         clean, cites, grounding_info = ground.validate(text_out, allowed_ids)
         grounding_info.update({k: v for k, v in meta.items() if v})
         return {"title": f"{p['template'].replace('_', ' ').title()}: {p['focus'][:60]}", "markdown": clean}, cites, grounding_info
@@ -645,21 +920,22 @@ def run(
             last_error = str(exc)
             continue
         except Exception:
-            # Provider unreachable / unconfigured: fall back cleanly to local extractive synthesis
-            return _extractive_studio(kind, context, allowed_ids, p)
+            return _extractive_studio(kind, context, allowed_ids, p, ctx=ctx, progress=progress)
 
     if spec is None:
-        return _extractive_studio(kind, context, allowed_ids, p)
+        return _extractive_studio(kind, context, allowed_ids, p, ctx=ctx, progress=progress)
 
     if progress:
-        progress("Verifying citations...", 80)
+        progress("Verifying citations...", 74)
     valid_cites = set()
     dropped_cites = set()
     spec = _filter_spec_cites(spec, allowed_ids, valid_cites, dropped_cites)
-    _maybe_attach_images(kind, spec, p, ctx=ctx, progress=progress)
+    media_files, img_meta = _maybe_attach_images(kind, spec, p, ctx=ctx, progress=progress)
 
-    grounding_info: dict[str, Any] = {"dropped": sorted(dropped_cites)}
+    grounding_info: dict[str, Any] = {"dropped": sorted(dropped_cites), **img_meta}
     grounding_info.update({k: v for k, v in model_meta.items() if v})
+    if media_files:
+        grounding_info["_media_files"] = media_files
     return spec, sorted(valid_cites), grounding_info
 
 
@@ -842,4 +1118,44 @@ document.addEventListener('keydown',e=>{{if(e.key==='ArrowRight'||e.key===' ')sh
     return f"{slug}.deck.html", "text/html; charset=utf-8", doc
 
 
-__all__ = ["list_generators", "register_generator", "get_generator", "run", "export_artifact"]
+def export_artifact_binary(
+    artifact: dict[str, Any],
+    fmt: str,
+    *,
+    media_dir: Optional[Path] = None,
+    theme: Optional[str] = None,
+) -> tuple[str, str, bytes]:
+    """Return (filename, media_type, binary_bytes) for native PowerPoint (.pptx) or PDF (.pdf) Slide Deck exports."""
+    from .. import slides_export
+
+    kind = artifact.get("kind", "artifact")
+    if kind != "slides":
+        raise ValueError(f"Binary {fmt!r} export is only supported for Slide Decks")
+    spec = artifact.get("spec") or {}
+    slug = (
+        "".join(c if c.isalnum() or c in "-_" else "-" for c in str(artifact.get("title") or "slide-deck").lower()).strip("-")[:56]
+        or "slide-deck"
+    )
+    f = (fmt or "pptx").lower().strip(".")
+    if f == "pptx":
+        raw = slides_export.build_pptx_bytes(spec, media_dir=media_dir, theme_override=theme)
+        return (
+            f"{slug}.pptx",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            raw,
+        )
+    if f == "pdf":
+        raw = slides_export.build_pdf_bytes(spec, media_dir=media_dir, theme_override=theme)
+        return f"{slug}.pdf", "application/pdf", raw
+    raise ValueError(f"Unsupported binary export format: {fmt}")
+
+
+__all__ = [
+    "list_generators",
+    "register_generator",
+    "get_generator",
+    "run",
+    "outline_slides",
+    "export_artifact",
+    "export_artifact_binary",
+]

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../sdk.js'
 import { api, pollJob } from '../api.js'
 import { StudyGuideView } from './renderers/StudyGuideView.jsx'
+import { AudioOverviewView } from './renderers/AudioOverviewView.jsx'
 import { FlashcardsView } from './renderers/FlashcardsView.jsx'
 import { QuizView } from './renderers/QuizView.jsx'
 import { MindMapView } from './renderers/MindMapView.jsx'
@@ -11,12 +12,13 @@ import { SlideDeckView } from './renderers/SlideDeckView.jsx'
 
 const STUDIO_FORMATS = [
   { kind: 'report', label: 'Study Guide', icon: 'FileText' },
+  { kind: 'audio', label: 'Audio Overview', icon: 'Headphones' },
   { kind: 'mindmap', label: 'Mind Map', icon: 'GitBranch' },
   { kind: 'flashcards', label: 'Flashcards', icon: 'Layers' },
   { kind: 'quiz', label: 'Quiz', icon: 'CheckSquare' },
   { kind: 'infographic', label: 'Infographic', icon: 'LayoutGrid' },
   { kind: 'table', label: 'Data Table', icon: 'Table' },
-  { kind: 'slides', label: 'Slide Deck', icon: 'Presentation', wide: true }
+  { kind: 'slides', label: 'Slide Deck', icon: 'Presentation' }
 ]
 
 const KIND_META = Object.fromEntries(STUDIO_FORMATS.map(f => [f.kind, f]))
@@ -25,6 +27,7 @@ export function StudioPanel({
   ctx,
   nbId,
   hasActiveSources,
+  capabilities,
   artifacts,
   selectedArtifactId,
   expanded,
@@ -39,6 +42,12 @@ export function StudioPanel({
   const [runningKind, setRunningKind] = useState('')
   const [stage, setStage] = useState('')
   const [focusPrompt, setFocusPrompt] = useState('')
+  const [showOpts, setShowOpts] = useState(false)
+  const [template, setTemplate] = useState('briefing')
+  const [audioStyle, setAudioStyle] = useState('deep_dive')
+  const [count, setCount] = useState(8)
+  const [language, setLanguage] = useState('English')
+  const [includeImages, setIncludeImages] = useState(false)
   const cancelPollRef = useRef(null)
 
   useEffect(() => {
@@ -67,17 +76,22 @@ export function StudioPanel({
     }
   }, [nbId, selectedArtifactId])
 
-  async function runGenerator(kind) {
+  async function runGenerator(kind, overrideParams) {
     if (!nbId || !hasActiveSources || runningKind) return
     setRunningKind(kind)
     setStage(`Generating ${KIND_META[kind]?.label || kind}...`)
+    const params = overrideParams || {
+      ...(focusPrompt.trim() ? { focus: focusPrompt.trim() } : {}),
+      template,
+      style: audioStyle,
+      count: Number(count) || 8,
+      language,
+      ...(includeImages && capabilities?.image_generate ? { include_images: true } : {})
+    }
     try {
       const { job } = await api(`/notebooks/${encodeURIComponent(nbId)}/studio`, {
         method: 'POST',
-        body: {
-          kind,
-          params: focusPrompt.trim() ? { focus: focusPrompt.trim() } : {}
-        }
+        body: { kind, params }
       })
       cancelPollRef.current?.()
       cancelPollRef.current = pollJob(
@@ -125,8 +139,25 @@ export function StudioPanel({
     switch (activeArt.kind) {
       case 'report':
         return <StudyGuideView artifact={activeArt} onOpenChunk={onOpenChunk} />
+      case 'audio':
+        return (
+          <AudioOverviewView
+            nbId={nbId}
+            artifact={activeArt}
+            onOpenChunk={onOpenChunk}
+            onArtifactUpdated={setActiveArt}
+          />
+        )
       case 'flashcards':
-        return <FlashcardsView nbId={nbId} artifact={activeArt} onOpenChunk={onOpenChunk} onArtifactUpdated={setActiveArt} />
+        return (
+          <FlashcardsView
+            nbId={nbId}
+            artifact={activeArt}
+            onOpenChunk={onOpenChunk}
+            onArtifactUpdated={setActiveArt}
+            onStateSaved={onRefresh}
+          />
+        )
       case 'quiz':
         return <QuizView artifact={activeArt} onOpenChunk={onOpenChunk} />
       case 'mindmap':
@@ -136,7 +167,7 @@ export function StudioPanel({
       case 'table':
         return <DataTableView artifact={activeArt} onOpenChunk={onOpenChunk} />
       case 'slides':
-        return <SlideDeckView artifact={activeArt} onOpenChunk={onOpenChunk} />
+        return <SlideDeckView nbId={nbId} artifact={activeArt} onOpenChunk={onOpenChunk} />
       default:
         return <pre className="sb-mono" style={{ fontSize: 11 }}>{JSON.stringify(activeArt.spec, null, 2)}</pre>
     }
@@ -161,13 +192,26 @@ export function StudioPanel({
               </button>
               <div style={{ minWidth: 0 }}>
                 <div className="sb-src-title" title={activeArt.title}>{activeArt.title}</div>
-                <div style={{ fontSize: 11, color: 'var(--ui-text-tertiary)' }}>
-                  {KIND_META[activeArt.kind]?.label || activeArt.kind}
-                  {activeArt.grounding?.mode === 'extractive' ? ' | Local extractive' : ''}
+                <div style={{ fontSize: 11, color: 'var(--ui-text-tertiary)', display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <span>{KIND_META[activeArt.kind]?.label || activeArt.kind}</span>
+                  {activeArt.grounding?.model ? <span>| {activeArt.grounding.model}</span> : null}
+                  {!activeArt.grounding?.model && activeArt.grounding?.mode === 'extractive' ? <span>| Local extractive</span> : null}
+                  {activeArt.stale ? <span className="sb-verdict" data-v="partial">Stale</span> : null}
                 </div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 4 }}>
+              {activeArt.stale ? (
+                <button
+                  type="button"
+                  className="sb-btn"
+                  disabled={Boolean(runningKind)}
+                  onClick={() => runGenerator(activeArt.kind, activeArt.params || {})}
+                  title="Underlying source changed: regenerate artifact from updated sources"
+                >
+                  <Icon name="RefreshCw" size={12} /> Refresh
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="sb-btn sb-btn-icon"
@@ -184,12 +228,23 @@ export function StudioPanel({
         <>
           <div className="sb-pane-head">
             <span className="sb-pane-title">Studio</span>
-            <span className="sb-num" style={{ fontSize: 11, color: 'var(--ui-text-tertiary)' }}>
-              {artifacts.length} saved
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button
+                type="button"
+                className="sb-btn sb-btn-ghost"
+                data-active={showOpts}
+                onClick={() => setShowOpts(v => !v)}
+                title="Configure report template, audio style, item count, language, and AI illustrations"
+              >
+                <Icon name="SlidersHorizontal" size={12} /> Options
+              </button>
+              <span className="sb-num" style={{ fontSize: 11, color: 'var(--ui-text-tertiary)' }}>
+                {artifacts.length}
+              </span>
+            </div>
           </div>
 
-          <div style={{ padding: '10px 12px 0' }}>
+          <div style={{ padding: '10px 12px 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
             <input
               className="sb-input"
               value={focusPrompt}
@@ -197,6 +252,63 @@ export function StudioPanel({
               placeholder="Optional focus topic for next artifact..."
               aria-label="Studio focus topic"
             />
+
+            {showOpts ? (
+              <div className="sb-ledger-row" style={{ gap: 7, padding: '8px 10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                  <label className="sb-field">
+                    <span className="sb-label" style={{ fontSize: 10.5 }}>Report template</span>
+                    <select className="sb-select" value={template} onChange={e => setTemplate(e.target.value)}>
+                      <option value="briefing">Briefing</option>
+                      <option value="study_guide">Study Guide</option>
+                      <option value="faq">FAQ</option>
+                      <option value="timeline">Timeline</option>
+                      <option value="blog">Blog Post</option>
+                      <option value="exec_memo">Exec Memo</option>
+                    </select>
+                  </label>
+                  <label className="sb-field">
+                    <span className="sb-label" style={{ fontSize: 10.5 }}>Audio style</span>
+                    <select className="sb-select" value={audioStyle} onChange={e => setAudioStyle(e.target.value)}>
+                      <option value="deep_dive">Deep Dive</option>
+                      <option value="debate">Debate</option>
+                      <option value="brief">Quick Brief</option>
+                      <option value="critique">Critique</option>
+                    </select>
+                  </label>
+                  <label className="sb-field">
+                    <span className="sb-label" style={{ fontSize: 10.5 }}>Items / slides</span>
+                    <select className="sb-select" value={count} onChange={e => setCount(Number(e.target.value))}>
+                      <option value={5}>5</option>
+                      <option value={8}>8</option>
+                      <option value={12}>12</option>
+                    </select>
+                  </label>
+                  <label className="sb-field">
+                    <span className="sb-label" style={{ fontSize: 10.5 }}>Language</span>
+                    <select className="sb-select" value={language} onChange={e => setLanguage(e.target.value)}>
+                      <option value="English">English</option>
+                      <option value="Spanish">Spanish</option>
+                      <option value="French">French</option>
+                      <option value="German">German</option>
+                      <option value="Japanese">Japanese</option>
+                      <option value="Portuguese">Portuguese</option>
+                    </select>
+                  </label>
+                </div>
+                {capabilities?.image_generate ? (
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11.5, color: 'var(--ui-text-secondary)', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      className="sb-checkbox"
+                      checked={includeImages}
+                      onChange={e => setIncludeImages(e.target.checked)}
+                    />
+                    Generate AI illustrations for Slides &amp; Infographics
+                  </label>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           <div className="sb-studio-grid">
@@ -204,7 +316,7 @@ export function StudioPanel({
               <button
                 key={fmt.kind}
                 type="button"
-                className={`sb-studio-tile${fmt.wide ? ' sb-studio-tile-wide' : ''}`}
+                className="sb-studio-tile"
                 disabled={!hasActiveSources || Boolean(runningKind)}
                 onClick={() => runGenerator(fmt.kind)}
               >
@@ -230,7 +342,7 @@ export function StudioPanel({
                 <Icon name="Layers" size={22} />
                 <div style={{ fontWeight: 600, color: 'var(--ui-text-secondary)' }}>No artifacts yet</div>
                 <div style={{ fontSize: 11.5 }}>
-                  Pick any format above to turn your active sources into an interactive artifact.
+                  Pick any format above to turn your active sources into an interactive artifact or Audio Overview.
                 </div>
               </div>
             ) : (
@@ -255,7 +367,10 @@ export function StudioPanel({
                       <Icon name={meta.icon} size={14} style={{ color: 'var(--ui-accent)', flexShrink: 0 }} />
                       <div style={{ minWidth: 0 }}>
                         <div className="sb-src-title" title={art.title}>{art.title}</div>
-                        <div style={{ fontSize: 11, color: 'var(--ui-text-tertiary)' }}>{meta.label}</div>
+                        <div style={{ fontSize: 11, color: 'var(--ui-text-tertiary)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <span>{meta.label}</span>
+                          {art.stale ? <span className="sb-verdict" data-v="partial">Stale</span> : null}
+                        </div>
                       </div>
                     </div>
                     <button

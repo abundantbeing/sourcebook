@@ -12,6 +12,7 @@ const KIND_ICONS = {
   url: 'Globe',
   youtube: 'PlayCircle',
   image: 'Image',
+  audio: 'Headphones',
   note: 'StickyNote'
 }
 
@@ -34,10 +35,15 @@ export function SidebarSources({
   const [tab, setTab] = useState('sources')
   const [dragOver, setDragOver] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [modal, setModal] = useState(null) // 'paste' | 'url' | 'note' | { editNote }
+  const [refreshingId, setRefreshingId] = useState('')
+  const [modal, setModal] = useState(null) // 'paste' | 'url' | 'folder' | 'discover' | 'note' | { editNote }
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [urlInput, setUrlInput] = useState('')
+  const [folderPath, setFolderPath] = useState('')
+  const [discoverQuery, setDiscoverQuery] = useState('')
+  const [discoverResults, setDiscoverResults] = useState([])
+  const [discoverChecked, setDiscoverChecked] = useState({})
   const fileRef = useRef(null)
 
   const covBySource = {}
@@ -133,6 +139,99 @@ export function SidebarSources({
     }
   }
 
+  async function submitFolder(e) {
+    e.preventDefault()
+    if (!folderPath.trim()) return
+    setBusy(true)
+    try {
+      const res = await api(`/notebooks/${encodeURIComponent(nbId)}/sources/sync-path`, {
+        method: 'POST',
+        body: { path: folderPath.trim(), max_files: 40 }
+      })
+      setModal(null)
+      setFolderPath('')
+      sdk.host?.notify?.({
+        kind: 'success',
+        title: 'SourceBook',
+        message: `Synced ${res?.added?.length || 0} source(s) from disk.`
+      })
+      await onRefresh()
+    } catch (err) {
+      onError?.(err.message || 'Could not sync local path.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function runDiscover(e) {
+    e.preventDefault()
+    if (!discoverQuery.trim()) return
+    setBusy(true)
+    try {
+      const res = await api(`/notebooks/${encodeURIComponent(nbId)}/discover`, {
+        method: 'POST',
+        body: { query: discoverQuery.trim(), limit: 8 }
+      })
+      const list = Array.isArray(res?.results) ? res.results : []
+      setDiscoverResults(list)
+      const initial = {}
+      list.slice(0, 3).forEach(r => { initial[r.url] = true })
+      setDiscoverChecked(initial)
+    } catch (err) {
+      onError?.(err.message || 'Web source discovery failed.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function importDiscovered() {
+    const selected = discoverResults.filter(r => discoverChecked[r.url])
+    if (!selected.length) return
+    setBusy(true)
+    let ok = 0
+    try {
+      for (const item of selected) {
+        try {
+          await api(`/notebooks/${encodeURIComponent(nbId)}/sources`, {
+            method: 'POST',
+            body: { url: item.url, title: item.title }
+          })
+          ok += 1
+        } catch {
+          // continue importing remaining checked sources
+        }
+      }
+      setModal(null)
+      setDiscoverResults([])
+      setDiscoverQuery('')
+      sdk.host?.notify?.({ kind: 'success', title: 'SourceBook', message: `Imported ${ok} discovered source(s).` })
+      await onRefresh()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleRefreshSource(e, src) {
+    e.stopPropagation()
+    if (refreshingId) return
+    setRefreshingId(src.id)
+    try {
+      const res = await api(`/notebooks/${encodeURIComponent(nbId)}/sources/${encodeURIComponent(src.id)}/refresh`, {
+        method: 'POST'
+      })
+      sdk.host?.notify?.({
+        kind: 'success',
+        title: 'SourceBook',
+        message: res?.changed ? `Updated "${src.title}" from origin.` : `"${src.title}" is already up to date.`
+      })
+      await onRefresh()
+    } catch (err) {
+      onError?.(err.message || 'Could not refresh source.')
+    } finally {
+      setRefreshingId('')
+    }
+  }
+
   async function submitNote(e) {
     e.preventDefault()
     if (!title.trim() && !body.trim()) return
@@ -141,7 +240,7 @@ export function SidebarSources({
       if (modal && typeof modal === 'object' && modal.id) {
         await api(`/notebooks/${encodeURIComponent(nbId)}/notes/${encodeURIComponent(modal.id)}`, {
           method: 'PATCH',
-          body: { title: title.trim() || 'Untitled note', markdown: body }
+          body: { title: title.trim() || 'Untitled note', markdown: body, resync_hashes: true }
         })
       } else {
         await api(`/notebooks/${encodeURIComponent(nbId)}/notes`, {
@@ -157,6 +256,18 @@ export function SidebarSources({
       onError?.(err.message || 'Could not save note.')
     } finally {
       setBusy(false)
+    }
+  }
+
+  async function resyncNote(note) {
+    try {
+      await api(`/notebooks/${encodeURIComponent(nbId)}/notes/${encodeURIComponent(note.id)}`, {
+        method: 'PATCH',
+        body: { resync_hashes: true }
+      })
+      await onRefresh()
+    } catch (err) {
+      onError?.(err.message || 'Could not mark note synced.')
     }
   }
 
@@ -259,18 +370,18 @@ export function SidebarSources({
               ref={fileRef}
               type="file"
               multiple
-              accept=".txt,.md,.markdown,.pdf,.docx,.csv,.tsv,.json,.html,.htm,.png,.jpg,.jpeg,.webp"
+              accept=".txt,.md,.markdown,.pdf,.docx,.csv,.tsv,.json,.html,.htm,.png,.jpg,.jpeg,.webp,.mp3,.wav,.m4a,.mp4,.webm,.py,.ts,.tsx,.js,.yaml,.yml"
               style={{ display: 'none' }}
               onChange={e => handleFiles(e.target.files)}
             />
-            <div className="sb-dropzone-actions">
+            <div className="sb-dropzone-actions" style={{ flexWrap: 'wrap' }}>
               <button
                 type="button"
                 className="sb-btn"
                 disabled={!nbId || busy}
                 onClick={() => fileRef.current?.click()}
               >
-                <Icon name="Upload" size={13} /> File
+                <Icon name="Upload" size={12} /> File
               </button>
               <button
                 type="button"
@@ -282,7 +393,32 @@ export function SidebarSources({
                   setModal('url')
                 }}
               >
-                <Icon name="Link" size={13} /> URL
+                <Icon name="Link" size={12} /> URL/YT
+              </button>
+              <button
+                type="button"
+                className="sb-btn"
+                disabled={!nbId || busy}
+                onClick={() => {
+                  setFolderPath('')
+                  setModal('folder')
+                }}
+                title="Sync a local folder, Obsidian vault, or Git repository"
+              >
+                <Icon name="FolderOpen" size={12} /> Folder
+              </button>
+              <button
+                type="button"
+                className="sb-btn"
+                disabled={!nbId || busy}
+                onClick={() => {
+                  setDiscoverQuery('')
+                  setDiscoverResults([])
+                  setModal('discover')
+                }}
+                title="Search the web and bulk-import sources"
+              >
+                <Icon name="Globe" size={12} /> Discover
               </button>
               <button
                 type="button"
@@ -294,11 +430,11 @@ export function SidebarSources({
                   setModal('paste')
                 }}
               >
-                <Icon name="FilePlus" size={13} /> Paste
+                <Icon name="FilePlus" size={12} /> Paste
               </button>
             </div>
             <div style={{ fontSize: 11, color: 'var(--ui-text-tertiary)', textAlign: 'center' }}>
-              {busy ? 'Indexing source...' : 'Drop PDF, DOCX, Markdown, CSV, or text'}
+              {busy ? 'Indexing source...' : 'Drop PDF, DOCX, Markdown, CSV, audio, or URLs'}
             </div>
           </div>
 
@@ -308,13 +444,14 @@ export function SidebarSources({
                 <Icon name="BookOpen" size={22} />
                 <div style={{ fontWeight: 600, color: 'var(--ui-text-secondary)' }}>No sources yet</div>
                 <div style={{ fontSize: 11.5 }}>
-                  Add documents, URLs, or pasted notes to start cited research.
+                  Add documents, YouTube videos, local folders, or discover web sources.
                 </div>
               </div>
             ) : (
               sources.map(src => {
                 const cov = covBySource[src.id]
                 const pct = cov && cov.total_chunks > 0 ? Math.round((cov.touched_chunks / cov.total_chunks) * 100) : 0
+                const canRefresh = Boolean(src.origin_path) || (typeof src.origin === 'string' && /^https?:\/\//i.test(src.origin))
                 return (
                   <div
                     key={src.id}
@@ -353,15 +490,28 @@ export function SidebarSources({
                         <div className="sb-src-bar-fill" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      className="sb-btn sb-btn-ghost sb-btn-icon sb-btn-danger"
-                      title="Remove source"
-                      aria-label={`Remove ${src.title}`}
-                      onClick={e => deleteSource(e, src)}
-                    >
-                      <Icon name="Trash2" size={13} />
-                    </button>
+                    <div style={{ display: 'flex', gap: 2 }} onClick={e => e.stopPropagation()}>
+                      {canRefresh ? (
+                        <button
+                          type="button"
+                          className="sb-btn sb-btn-ghost sb-btn-icon"
+                          title="Refresh source from disk or URL"
+                          disabled={refreshingId === src.id}
+                          onClick={e => handleRefreshSource(e, src)}
+                        >
+                          <Icon name="RefreshCw" size={12} />
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="sb-btn sb-btn-ghost sb-btn-icon sb-btn-danger"
+                        title="Remove source"
+                        aria-label={`Remove ${src.title}`}
+                        onClick={e => deleteSource(e, src)}
+                      >
+                        <Icon name="Trash2" size={13} />
+                      </button>
+                    </div>
                   </div>
                 )
               })
@@ -375,7 +525,7 @@ export function SidebarSources({
               <Icon name="StickyNote" size={22} />
               <div style={{ fontWeight: 600, color: 'var(--ui-text-secondary)' }}>No notes saved</div>
               <div style={{ fontSize: 11.5 }}>
-                Capture findings or save any cited chat reply as a reusable note.
+                Capture findings or save any cited chat reply as a reusable Living Note.
               </div>
               <button
                 type="button"
@@ -394,7 +544,7 @@ export function SidebarSources({
               <div
                 key={note.id}
                 className="sb-ledger-row"
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer', borderColor: note.stale ? 'var(--sb-warn)' : undefined }}
                 onClick={() => {
                   setTitle(note.title || '')
                   setBody(note.markdown || '')
@@ -405,7 +555,19 @@ export function SidebarSources({
                   <div className="sb-src-title" style={{ flex: 1 }} title={note.title}>
                     {note.title}
                   </div>
-                  <div style={{ display: 'flex', gap: 2 }} onClick={e => e.stopPropagation()}>
+                  <div style={{ display: 'flex', gap: 2, alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+                    {note.stale ? (
+                      <button
+                        type="button"
+                        className="sb-verdict"
+                        data-v="partial"
+                        style={{ border: 0, cursor: 'pointer' }}
+                        title="Cited source changed since this note was saved. Click to mark reviewed."
+                        onClick={() => resyncNote(note)}
+                      >
+                        Stale
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       className="sb-btn sb-btn-ghost sb-btn-icon"
@@ -488,20 +650,20 @@ export function SidebarSources({
         <div className="sb-modal-backdrop" onClick={() => setModal(null)}>
           <form className="sb-modal" onClick={e => e.stopPropagation()} onSubmit={submitUrl}>
             <div className="sb-modal-head">
-              <span>Add web page or article</span>
+              <span>Add web page or YouTube video</span>
               <button type="button" className="sb-btn sb-btn-ghost sb-btn-icon" onClick={() => setModal(null)}>
                 <Icon name="X" size={14} />
               </button>
             </div>
             <div className="sb-modal-body">
               <label className="sb-field">
-                <span className="sb-label">URL</span>
+                <span className="sb-label">Web or YouTube URL</span>
                 <input
                   className="sb-input"
                   type="url"
                   value={urlInput}
                   onChange={e => setUrlInput(e.target.value)}
-                  placeholder="https://example.com/article"
+                  placeholder="https://example.com/article or https://youtu.be/..."
                   required
                   autoFocus
                 />
@@ -512,7 +674,7 @@ export function SidebarSources({
                   className="sb-input"
                   value={title}
                   onChange={e => setTitle(e.target.value)}
-                  placeholder="Leave blank to use page title"
+                  placeholder="Leave blank to use page or video title"
                 />
               </label>
             </div>
@@ -523,6 +685,107 @@ export function SidebarSources({
               </button>
             </div>
           </form>
+        </div>
+      ) : null}
+
+      {modal === 'folder' ? (
+        <div className="sb-modal-backdrop" onClick={() => setModal(null)}>
+          <form className="sb-modal" onClick={e => e.stopPropagation()} onSubmit={submitFolder}>
+            <div className="sb-modal-head">
+              <span>Sync local file, folder, vault, or repo</span>
+              <button type="button" className="sb-btn sb-btn-ghost sb-btn-icon" onClick={() => setModal(null)}>
+                <Icon name="X" size={14} />
+              </button>
+            </div>
+            <div className="sb-modal-body">
+              <label className="sb-field">
+                <span className="sb-label">Absolute path on disk</span>
+                <input
+                  className="sb-input"
+                  value={folderPath}
+                  onChange={e => setFolderPath(e.target.value)}
+                  placeholder="/path/to/docs or Obsidian vault or repo folder"
+                  required
+                  autoFocus
+                />
+              </label>
+              <div style={{ fontSize: 11.5, color: 'var(--ui-text-tertiary)' }}>
+                Indexes up to 40 Markdown, code, PDF, DOCX, CSV, and JSON files (skipping .git and node_modules). Refresh any linked file later to flag stale notes and artifacts.
+              </div>
+            </div>
+            <div className="sb-modal-foot">
+              <button type="button" className="sb-btn" onClick={() => setModal(null)}>Cancel</button>
+              <button type="submit" className="sb-btn sb-btn-primary" disabled={busy || !folderPath.trim()}>
+                {busy ? 'Syncing...' : 'Sync path'}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+
+      {modal === 'discover' ? (
+        <div className="sb-modal-backdrop" onClick={() => setModal(null)}>
+          <div className="sb-modal" style={{ width: 'min(560px, 94vw)' }} onClick={e => e.stopPropagation()}>
+            <div className="sb-modal-head">
+              <span>Discover web sources</span>
+              <button type="button" className="sb-btn sb-btn-ghost sb-btn-icon" onClick={() => setModal(null)}>
+                <Icon name="X" size={14} />
+              </button>
+            </div>
+            <div className="sb-modal-body">
+              <form onSubmit={runDiscover} style={{ display: 'flex', gap: 6 }}>
+                <input
+                  className="sb-input"
+                  value={discoverQuery}
+                  onChange={e => setDiscoverQuery(e.target.value)}
+                  placeholder="Describe a topic to search for primary sources..."
+                  autoFocus
+                />
+                <button type="submit" className="sb-btn sb-btn-primary" disabled={busy || !discoverQuery.trim()}>
+                  {busy ? 'Searching...' : 'Search'}
+                </button>
+              </form>
+              {discoverResults.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 300, overflow: 'auto' }}>
+                  {discoverResults.map(item => (
+                    <label
+                      key={item.url}
+                      className="sb-ledger-row"
+                      style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, cursor: 'pointer' }}
+                    >
+                      <input
+                        type="checkbox"
+                        className="sb-checkbox"
+                        style={{ marginTop: 2 }}
+                        checked={Boolean(discoverChecked[item.url])}
+                        onChange={() => setDiscoverChecked(prev => ({ ...prev, [item.url]: !prev[item.url] }))}
+                      />
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div className="sb-src-title">{item.title}</div>
+                        <div className="sb-mono" style={{ fontSize: 10.5, color: 'var(--ui-accent)' }}>{item.domain}</div>
+                        {item.snippet ? (
+                          <div style={{ fontSize: 11.5, color: 'var(--ui-text-secondary)', marginTop: 2 }}>{item.snippet}</div>
+                        ) : null}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+            <div className="sb-modal-foot">
+              <button type="button" className="sb-btn" onClick={() => setModal(null)}>Close</button>
+              {discoverResults.length > 0 ? (
+                <button
+                  type="button"
+                  className="sb-btn sb-btn-primary"
+                  disabled={busy || !discoverResults.some(r => discoverChecked[r.url])}
+                  onClick={importDiscovered}
+                >
+                  {busy ? 'Importing...' : `Import selected (${discoverResults.filter(r => discoverChecked[r.url]).length})`}
+                </button>
+              ) : null}
+            </div>
+          </div>
         </div>
       ) : null}
 

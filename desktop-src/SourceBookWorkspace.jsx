@@ -24,8 +24,11 @@ export function SourceBookWorkspace({ ctx, externalState }) {
   const [notes, setNotes] = useState([])
   const [messages, setMessages] = useState([])
   const [claims, setClaims] = useState([])
+  const [contradictions, setContradictions] = useState(null)
   const [coverage, setCoverage] = useState(null)
   const [artifacts, setArtifacts] = useState([])
+  const [modelsInfo, setModelsInfo] = useState(null)
+  const [capabilities, setCapabilities] = useState(null)
 
   const [centerTab, setCenterTab] = useState('chat')
   const [selectedArtifactId, setSelectedArtifactId] = useState(null)
@@ -33,6 +36,9 @@ export function SourceBookWorkspace({ ctx, externalState }) {
   const [leftCollapsed, setLeftCollapsed] = useState(false)
   const [studioExpanded, setStudioExpanded] = useState(false)
   const [nbMenuOpen, setNbMenuOpen] = useState(false)
+  const [modelMenuOpen, setModelMenuOpen] = useState(false)
+  const [customProvider, setCustomProvider] = useState('')
+  const [customModel, setCustomModel] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
@@ -52,6 +58,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
       setNotes([])
       setMessages([])
       setClaims([])
+      setContradictions(null)
       setCoverage(null)
       setArtifacts([])
       return
@@ -60,12 +67,13 @@ export function SourceBookWorkspace({ ctx, externalState }) {
     const startScope = currentScopeKey()
     const startEpoch = currentEpoch()
     try {
-      const [nbMeta, srcList, noteList, msgList, claimList, covData, artList] = await Promise.all([
+      const [nbMeta, srcList, noteList, msgList, claimList, contraData, covData, artList] = await Promise.all([
         api(`/notebooks/${encodeURIComponent(targetNb)}`),
         api(`/notebooks/${encodeURIComponent(targetNb)}/sources`),
         api(`/notebooks/${encodeURIComponent(targetNb)}/notes`),
         api(`/notebooks/${encodeURIComponent(targetNb)}/messages`),
         api(`/notebooks/${encodeURIComponent(targetNb)}/claims`),
+        api(`/notebooks/${encodeURIComponent(targetNb)}/contradictions`).catch(() => ({ conflicts: [], consensus: [] })),
         api(`/notebooks/${encodeURIComponent(targetNb)}/coverage`),
         api(`/notebooks/${encodeURIComponent(targetNb)}/artifacts`)
       ])
@@ -75,6 +83,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
       setNotes(noteList || [])
       setMessages(msgList || [])
       setClaims(claimList || [])
+      setContradictions(contraData || { conflicts: [], consensus: [] })
       setCoverage(covData || null)
       setArtifacts(artList || [])
       setError('')
@@ -89,8 +98,14 @@ export function SourceBookWorkspace({ ctx, externalState }) {
     const startEpoch = currentEpoch()
     setLoading(true)
     try {
-      const list = await api('/notebooks')
+      const [list, mInfo, caps] = await Promise.all([
+        api('/notebooks'),
+        api('/models').catch(() => null),
+        api('/capabilities').catch(() => null)
+      ])
       if (currentScopeKey() !== startScope || currentEpoch() !== startEpoch) return
+      if (mInfo) setModelsInfo(mInfo)
+      if (caps) setCapabilities(caps)
       const rows = Array.isArray(list) ? list : []
       setNotebooks(rows)
       const saved = ctx?.storage?.get?.(storageKey, '') || ''
@@ -143,6 +158,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
         setSearchOpen(false)
         setCreateOpen(false)
         setNbMenuOpen(false)
+        setModelMenuOpen(false)
         setInspectorTarget(null)
       }
     })
@@ -165,11 +181,26 @@ export function SourceBookWorkspace({ ctx, externalState }) {
 
   async function selectNotebook(id) {
     setNbMenuOpen(false)
+    setModelMenuOpen(false)
     setNbId(id)
     setSelectedArtifactId(null)
     setInspectorTarget(null)
     ctx?.storage?.set?.(storageKey, id)
     await loadNotebookData(id)
+  }
+
+  async function patchNotebook(patch) {
+    if (!notebook?.id) return
+    try {
+      const updated = await api(`/notebooks/${encodeURIComponent(notebook.id)}`, {
+        method: 'PATCH',
+        body: patch
+      })
+      setNotebook(updated)
+      setError('')
+    } catch (err) {
+      setError(err.message || 'Could not update notebook settings.')
+    }
   }
 
   async function handleCreateNotebook(e) {
@@ -192,19 +223,6 @@ export function SourceBookWorkspace({ ctx, externalState }) {
       await loadNotebooks()
     } catch (err) {
       setError(err.message || 'Could not delete notebook.')
-    }
-  }
-
-  async function toggleStrict() {
-    if (!notebook?.id) return
-    try {
-      await api(`/notebooks/${encodeURIComponent(notebook.id)}`, {
-        method: 'PATCH',
-        body: { strict: !notebook.strict }
-      })
-      await loadNotebookData(notebook.id)
-    } catch (err) {
-      setError(err.message || 'Could not update grounding mode.')
     }
   }
 
@@ -242,6 +260,9 @@ export function SourceBookWorkspace({ ctx, externalState }) {
 
   const covPct = coverage?.total_chunks ? Math.round((coverage.touched_chunks / coverage.total_chunks) * 100) : 0
   const hasActiveSources = sources.some(s => s.enabled)
+  const activeModelLabel = notebook?.model
+    ? notebook.model
+    : (modelsInfo?.active?.model ? `Auto: ${modelsInfo.active.model}` : 'Auto (Hermes)')
 
   return (
     <div className="sb-root" style={{ position: 'relative' }}>
@@ -269,29 +290,17 @@ export function SourceBookWorkspace({ ctx, externalState }) {
             <button
               type="button"
               className="sb-nb-select"
-              onClick={() => setNbMenuOpen(v => !v)}
+              onClick={() => {
+                setModelMenuOpen(false)
+                setNbMenuOpen(v => !v)
+              }}
               aria-expanded={nbMenuOpen}
             >
               <span className="sb-nb-select-label">{notebook?.title || (loading ? 'Loading...' : 'Select notebook')}</span>
               <Icon name="ChevronDown" size={13} />
             </button>
             {nbMenuOpen ? (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 34,
-                  left: 0,
-                  width: 280,
-                  borderRadius: 10,
-                  border: '1px solid var(--ui-stroke-secondary)',
-                  background: 'var(--ui-bg-elevated, var(--ui-bg-primary))',
-                  padding: 6,
-                  zIndex: 40,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 3
-                }}
-              >
+              <div className="sb-model-menu" style={{ left: 0, right: 'auto', width: 280 }}>
                 {notebooks.map(nb => (
                   <div
                     key={nb.id}
@@ -353,6 +362,98 @@ export function SourceBookWorkspace({ ctx, externalState }) {
         <div className="sb-topbar-right">
           {notebook ? (
             <>
+              <div style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  className="sb-btn"
+                  data-active={Boolean(notebook.model)}
+                  onClick={() => {
+                    setNbMenuOpen(false)
+                    setCustomProvider(notebook.provider || '')
+                    setCustomModel(notebook.model || '')
+                    setModelMenuOpen(v => !v)
+                  }}
+                  title="Choose which Hermes model runs this notebook"
+                >
+                  <Icon name="Cpu" size={12} />
+                  <span style={{ maxWidth: 145, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {activeModelLabel}
+                  </span>
+                  <Icon name="ChevronDown" size={11} />
+                </button>
+                {modelMenuOpen ? (
+                  <div className="sb-model-menu">
+                    <div style={{ padding: '4px 8px', fontSize: 10.5, fontWeight: 650, color: 'var(--ui-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Notebook Model
+                    </div>
+                    <button
+                      type="button"
+                      className="sb-btn sb-btn-ghost"
+                      style={{ width: '100%', justifyContent: 'space-between' }}
+                      data-active={!notebook.model}
+                      onClick={async () => {
+                        await patchNotebook({ provider: '', model: '' })
+                        setModelMenuOpen(false)
+                      }}
+                    >
+                      <span>Auto (Active Hermes)</span>
+                      <span className="sb-mono" style={{ fontSize: 10.5, opacity: 0.7 }}>
+                        {modelsInfo?.active?.model || 'default'}
+                      </span>
+                    </button>
+                    {(modelsInfo?.options || []).filter(o => o.source !== 'active').slice(0, 10).map(opt => {
+                      const active = notebook.model === opt.model && (notebook.provider || '') === (opt.provider || '')
+                      return (
+                        <button
+                          key={`${opt.provider}:${opt.model}`}
+                          type="button"
+                          className="sb-btn sb-btn-ghost"
+                          style={{ width: '100%', justifyContent: 'space-between' }}
+                          data-active={active}
+                          onClick={async () => {
+                            await patchNotebook({ provider: opt.provider || '', model: opt.model })
+                            setModelMenuOpen(false)
+                          }}
+                        >
+                          <span className="sb-src-title">{opt.model}</span>
+                          {opt.provider ? <span className="sb-kind-tag">{opt.provider}</span> : null}
+                        </button>
+                      )
+                    })}
+                    <form
+                      style={{ borderTop: '1px solid var(--ui-stroke-tertiary)', marginTop: 4, padding: '8px 6px 4px', display: 'flex', flexDirection: 'column', gap: 6 }}
+                      onSubmit={async e => {
+                        e.preventDefault()
+                        await patchNotebook({ provider: customProvider.trim(), model: customModel.trim() })
+                        setModelMenuOpen(false)
+                      }}
+                    >
+                      <span style={{ fontSize: 10.5, color: 'var(--ui-text-tertiary)' }}>Custom provider / model ID</span>
+                      <input
+                        className="sb-input"
+                        value={customProvider}
+                        onChange={e => setCustomProvider(e.target.value)}
+                        placeholder="Provider (optional, e.g. ollama, openrouter)"
+                      />
+                      <input
+                        className="sb-input"
+                        value={customModel}
+                        onChange={e => setCustomModel(e.target.value)}
+                        placeholder="Model ID (e.g. gpt-5, qwen3:32b)"
+                      />
+                      <button type="submit" className="sb-btn sb-btn-primary" disabled={!customModel.trim()}>
+                        Apply model
+                      </button>
+                      {modelsInfo && !modelsInfo.override_ready ? (
+                        <div style={{ fontSize: 10.5, color: 'var(--ui-text-tertiary)', lineHeight: 1.4 }}>
+                          Note: To use explicit overrides, enable <span className="sb-mono">allow_model_override</span> in Hermes config (see Settings).
+                        </div>
+                      ) : null}
+                    </form>
+                  </div>
+                ) : null}
+              </div>
+
               <button
                 type="button"
                 className="sb-cov-meter"
@@ -370,7 +471,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
                 type="button"
                 className="sb-btn"
                 data-active={Boolean(notebook.strict)}
-                onClick={toggleStrict}
+                onClick={() => patchNotebook({ strict: !notebook.strict })}
                 title="Strict grounding refuses any claim unsupported by active sources"
               >
                 <Icon name="Lock" size={12} /> {notebook.strict ? 'Strict' : 'Grounded'}
@@ -408,8 +509,8 @@ export function SourceBookWorkspace({ ctx, externalState }) {
           <div style={{ fontSize: 16, fontWeight: 650, color: 'var(--ui-text-primary)' }}>
             Create your first research notebook
           </div>
-          <div style={{ maxWidth: 420, fontSize: 13 }}>
-            Collect PDFs, DOCX files, Markdown, CSV tables, and URLs in one workspace. Every answer cites exact passages and turns sources into interactive Studio artifacts.
+          <div style={{ maxWidth: 440, fontSize: 13 }}>
+            Collect PDFs, DOCX files, Markdown, CSV tables, YouTube videos, local folders, and web URLs in one workspace. Every answer cites exact passages and runs on any model configured in Hermes.
           </div>
           <button type="button" className="sb-btn sb-btn-primary" onClick={() => setCreateOpen(true)}>
             <Icon name="Plus" size={13} /> New notebook
@@ -438,9 +539,11 @@ export function SourceBookWorkspace({ ctx, externalState }) {
             sources={sources}
             messages={messages}
             claims={claims}
+            contradictions={contradictions}
             coverage={coverage}
             centerTab={centerTab}
             onChangeCenterTab={setCenterTab}
+            onPatchNotebook={patchNotebook}
             onOpenChunk={cid => setInspectorTarget({ sourceId: String(cid).split(':')[0], chunkId: cid })}
             onOpenSource={setInspectorTarget}
             onRefresh={() => loadNotebookData(nbId)}
@@ -451,6 +554,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
             ctx={ctx}
             nbId={nbId}
             hasActiveSources={hasActiveSources}
+            capabilities={capabilities}
             artifacts={artifacts}
             selectedArtifactId={selectedArtifactId}
             expanded={studioExpanded}
@@ -514,7 +618,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
                 className="sb-input"
                 value={searchQuery}
                 onChange={e => runCrossSearch(e.target.value)}
-                placeholder="Search passages across every notebook..."
+                placeholder="Hybrid semantic + keyword search across every notebook..."
                 autoFocus
               />
               {searchHits.length === 0 && searchQuery.trim() ? (
@@ -528,7 +632,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
                   onClick={async () => {
                     setSearchOpen(false)
                     if (hit.notebook_id !== nbId) await selectNotebook(hit.notebook_id)
-                    setInspectorTarget({ sourceId: hit.source_id, chunkId: hit.chunk_id })
+                    setInspectorTarget({ sourceId: hit.source_id, chunkId: hit.chunk_id, highlight: searchQuery.trim() })
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5 }}>

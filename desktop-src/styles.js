@@ -1010,6 +1010,93 @@ export const CSS = `
   gap: 10px;
 }
 
+.sb-select {
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-surface);
+  color: var(--ui-text-primary);
+  font: inherit;
+  font-size: 11.5px;
+  outline: none;
+  cursor: pointer;
+}
+.sb-select:focus {
+  border-color: var(--ui-accent);
+}
+
+.sb-model-menu {
+  position: absolute;
+  top: 34px;
+  right: 0;
+  width: 300px;
+  border-radius: 10px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-surface);
+  padding: 6px;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+}
+
+.sb-code-block {
+  border-radius: 8px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-bg);
+  overflow: hidden;
+  margin: 6px 0;
+}
+.sb-code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--ui-stroke-tertiary);
+  background: var(--sb-subtle);
+  font-size: 11px;
+  color: var(--ui-text-tertiary);
+}
+.sb-code-pre {
+  margin: 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--ui-text-primary);
+  background: var(--sb-bg);
+}
+.sb-inline-code {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-size: 0.9em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--sb-subtle);
+  border: 1px solid var(--ui-stroke-tertiary);
+}
+.sb-link {
+  color: var(--ui-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.sb-mark {
+  background: color-mix(in srgb, var(--ui-accent) 26%, transparent);
+  color: var(--ui-text-primary);
+  border-radius: 3px;
+  padding: 0 2px;
+}
+.sb-conflict-card {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--sb-warn) 45%, var(--ui-stroke-secondary));
+  background: color-mix(in srgb, var(--sb-warn) 6%, var(--sb-surface));
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
 /* SVG diagram frame */
 .sb-svg-stage {
   border: 1px solid var(--ui-stroke-secondary);

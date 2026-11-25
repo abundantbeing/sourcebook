@@ -1,75 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
 import { Icon, sdk } from '../sdk.js'
 import { api, copyText, pollJob } from '../api.js'
+import { MarkdownBody } from './MarkdownBody.jsx'
 
-const CITE_SPLIT_RE = /(\[\[c:[a-zA-Z0-9_-]+:\d+\]\])/g
-const CITE_EXTRACT_RE = /^\[\[c:([a-zA-Z0-9_-]+:\d+)\]\]$/
+const PERSONAS = [
+  { id: 'default', label: 'Default' },
+  { id: 'analyst', label: 'Analyst' },
+  { id: 'critic', label: 'Critic' },
+  { id: 'tutor', label: 'Tutor' },
+  { id: 'socratic', label: 'Socratic' }
+]
 
-function renderInlineCited(text, citeIndexMap, onOpenChunk) {
-  const renderSpan = line => {
-    const tokens = line.split(CITE_SPLIT_RE)
-    return tokens.map((tok, tIdx) => {
-      const m = CITE_EXTRACT_RE.exec(tok)
-      if (m) {
-        const cid = m[1]
-        const num = citeIndexMap.get(cid) || '?'
-        return (
-          <button
-            key={`${tIdx}-${cid}`}
-            type="button"
-            className="sb-cite"
-            title={`Inspect cited passage ${cid}`}
-            onClick={() => onOpenChunk(cid)}
-          >
-            {num}
-          </button>
-        )
-      }
-      const boldParts = tok.split(/(\*\*[^*]+\*\*)/g)
-      return boldParts.map((bp, bIdx) => {
-        if (bp.startsWith('**') && bp.endsWith('**') && bp.length > 4) {
-          return <strong key={`${tIdx}-${bIdx}`}>{bp.slice(2, -2)}</strong>
-        }
-        return bp
-      })
-    })
-  }
-
-  const lines = String(text || '').split('\n')
-  const out = []
-  let listBuf = []
-  const flushList = key => {
-    if (!listBuf.length) return
-    out.push(
-      <ul key={`ul-${key}`}>
-        {listBuf.map((item, i) => <li key={i}>{renderSpan(item)}</li>)}
-      </ul>
-    )
-    listBuf = []
-  }
-
-  lines.forEach((raw, idx) => {
-    const t = raw.trim()
-    if (!t) {
-      flushList(idx)
-      return
-    }
-    if (/^[-*+]\s+/.test(t)) {
-      listBuf.push(t.replace(/^[-*+]\s+/, ''))
-      return
-    }
-    flushList(idx)
-    if (t.startsWith('### ')) {
-      out.push(<h3 key={idx}>{renderSpan(t.slice(4))}</h3>)
-    } else if (t.startsWith('## ')) {
-      out.push(<h2 key={idx}>{renderSpan(t.slice(3))}</h2>)
-    } else {
-      out.push(<p key={idx}>{renderSpan(t)}</p>)
-    }
-  })
-  flushList('end')
-  return out
-}
+const LENGTHS = [
+  { id: 'short', label: 'Short' },
+  { id: 'standard', label: 'Standard' },
+  { id: 'long', label: 'Deep' }
+]
 
 export function ChatPanel({
   ctx,
@@ -77,9 +23,11 @@ export function ChatPanel({
   sources,
   messages,
   claims,
+  contradictions,
   coverage,
   centerTab,
   onChangeCenterTab,
+  onPatchNotebook,
   onOpenChunk,
   onOpenSource,
   onRefresh,
@@ -88,10 +36,12 @@ export function ChatPanel({
   const [input, setInput] = useState('')
   const [asking, setAsking] = useState(false)
   const [stage, setStage] = useState('')
+  const [partialText, setPartialText] = useState('')
   const [briefingBusy, setBriefingBusy] = useState(false)
   const [claimFilter, setClaimFilter] = useState('all')
   const endRef = useRef(null)
   const cancelPollRef = useRef(null)
+  const activeJobRef = useRef('')
 
   const enabledSources = sources.filter(s => s.enabled)
 
@@ -99,11 +49,24 @@ export function ChatPanel({
     return () => cancelPollRef.current?.()
   }, [])
 
+  // Subscribe to live job progress / streaming deltas over Hermes event stream
+  useEffect(() => {
+    if (!ctx?.onEvent) return undefined
+    return ctx.onEvent('plugin.sourcebook.job.progress', ev => {
+      const payload = ev?.payload || ev || {}
+      if (!activeJobRef.current || payload.job !== activeJobRef.current) return
+      if (payload.stage) setStage(payload.stage)
+      if (typeof payload.partial_text === 'string' && payload.partial_text) {
+        setPartialText(payload.partial_text)
+      }
+    })
+  }, [ctx])
+
   useEffect(() => {
     if (centerTab === 'chat' && endRef.current) {
       endRef.current.scrollIntoView({ block: 'end' })
     }
-  }, [messages.length, centerTab])
+  }, [messages.length, partialText, centerTab])
 
   async function sendQuestion(promptText) {
     const q = String(promptText ?? input).trim()
@@ -114,7 +77,8 @@ export function ChatPanel({
     }
     setInput('')
     setAsking(true)
-    setStage('Searching active sources...')
+    setStage('Searching active sources with hybrid retrieval...')
+    setPartialText('')
     onChangeCenterTab('chat')
     try {
       const { job } = await api(`/notebooks/${encodeURIComponent(notebook.id)}/ask`, {
@@ -122,28 +86,40 @@ export function ChatPanel({
         body: {
           text: q,
           history: messages.slice(-8).map(m => ({ role: m.role, content: m.content })),
+          persona: notebook.persona || 'default',
+          length: notebook.length || 'standard',
           strict: Boolean(notebook.strict)
         }
       })
+      activeJobRef.current = job
       cancelPollRef.current?.()
       cancelPollRef.current = pollJob(
         ctx,
         job,
-        j => setStage(j.stage || 'Working...'),
+        j => {
+          setStage(j.stage || 'Working...')
+          if (j.partial_text) setPartialText(j.partial_text)
+        },
         async () => {
+          activeJobRef.current = ''
           setAsking(false)
           setStage('')
+          setPartialText('')
           await onRefresh()
         },
         err => {
+          activeJobRef.current = ''
           setAsking(false)
           setStage('')
+          setPartialText('')
           onError?.(err.message || 'Could not answer question.')
         }
       )
     } catch (err) {
+      activeJobRef.current = ''
       setAsking(false)
       setStage('')
+      setPartialText('')
       onError?.(err.message || 'Could not start grounded query.')
     }
   }
@@ -202,6 +178,8 @@ export function ChatPanel({
     }
   }
 
+  const conflicts = contradictions?.conflicts || []
+  const consensus = contradictions?.consensus || []
   const supportedCount = claims.filter(c => c.verdict === 'supported').length
   const partialCount = claims.filter(c => c.verdict === 'partial').length
   const unsupportedCount = claims.filter(c => c.verdict === 'unsupported').length
@@ -231,7 +209,8 @@ export function ChatPanel({
             data-active={centerTab === 'claims'}
             onClick={() => onChangeCenterTab('claims')}
           >
-            <Icon name="ShieldCheck" size={12} /> Claim Ledger <span className="sb-num" style={{ opacity: 0.7 }}>{claims.length}</span>
+            <Icon name="ShieldCheck" size={12} /> Claim Ledger{' '}
+            <span className="sb-num" style={{ opacity: 0.7 }}>{claims.length + conflicts.length}</span>
           </button>
           <button
             type="button"
@@ -307,8 +286,8 @@ export function ChatPanel({
                 <div style={{ fontWeight: 650, fontSize: 14, color: 'var(--ui-text-primary)' }}>
                   Add sources to begin
                 </div>
-                <div style={{ maxWidth: 380, fontSize: 12.5 }}>
-                  Upload PDFs, DOCX files, Markdown, CSVs, or web URLs in the left rail. Every reply links inline citations back to the exact passage.
+                <div style={{ maxWidth: 400, fontSize: 12.5 }}>
+                  Upload PDFs, DOCX, Markdown, CSVs, audio, YouTube links, or sync a local folder in the left rail. Every reply links inline citations back to the exact passage.
                 </div>
               </div>
             ) : null}
@@ -329,7 +308,7 @@ export function ChatPanel({
 
               return (
                 <article key={msg.id} className="sb-msg sb-msg-assistant">
-                  <div className="sb-msg-body">{renderInlineCited(msg.content, citeIndex, onOpenChunk)}</div>
+                  <MarkdownBody text={msg.content} citeIndexMap={citeIndex} onOpenChunk={onOpenChunk} />
                   <div className="sb-msg-foot">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                       {typeof gr.score === 'number' ? (
@@ -350,7 +329,11 @@ export function ChatPanel({
                           <span className="sb-num">{unsup}</span> uncited
                         </span>
                       ) : null}
-                      {gr.mode === 'extractive' ? (
+                      {gr.model ? (
+                        <span className="sb-kind-tag" style={{ textTransform: 'none' }} title={`Answered by ${gr.provider ? `${gr.provider} / ` : ''}${gr.model}`}>
+                          {gr.model}
+                        </span>
+                      ) : gr.mode === 'extractive' ? (
                         <span className="sb-kind-tag" title="Generated locally from indexed chunks without an external model call">
                           Local extractive
                         </span>
@@ -379,8 +362,11 @@ export function ChatPanel({
 
             {asking ? (
               <div className="sb-msg sb-msg-assistant" aria-busy="true">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--ui-text-secondary)', fontSize: 12.5 }}>
-                  <Icon name="Search" size={14} /> {stage || 'Searching active sources...'}
+                {partialText ? (
+                  <MarkdownBody text={partialText} citeIndexMap={new Map()} onOpenChunk={onOpenChunk} />
+                ) : null}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--ui-text-secondary)', fontSize: 12 }}>
+                  <Icon name="Search" size={13} /> {stage || 'Searching active sources...'}
                 </div>
               </div>
             ) : null}
@@ -410,11 +396,32 @@ export function ChatPanel({
                   }
                 }}
               />
-              <div className="sb-composer-bar">
-                <span style={{ fontSize: 11.5, color: 'var(--ui-text-tertiary)' }}>
-                  <span className="sb-num">{enabledSources.length}</span> of <span className="sb-num">{sources.length}</span> sources active
-                  {notebook?.strict ? ' | Strict mode' : ''}
-                </span>
+              <div className="sb-composer-bar" style={{ flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 11.5, color: 'var(--ui-text-tertiary)' }}>
+                    <span className="sb-num">{enabledSources.length}</span>/{sources.length} active
+                  </span>
+                  {notebook ? (
+                    <>
+                      <select
+                        className="sb-select"
+                        aria-label="Response persona"
+                        value={notebook.persona || 'default'}
+                        onChange={e => onPatchNotebook?.({ persona: e.target.value })}
+                      >
+                        {PERSONAS.map(p => <option key={p.id} value={p.id}>Persona: {p.label}</option>)}
+                      </select>
+                      <select
+                        className="sb-select"
+                        aria-label="Response length"
+                        value={notebook.length || 'standard'}
+                        onChange={e => onPatchNotebook?.({ length: e.target.value })}
+                      >
+                        {LENGTHS.map(l => <option key={l.id} value={l.id}>Length: {l.label}</option>)}
+                      </select>
+                    </>
+                  ) : null}
+                </div>
                 <button
                   type="button"
                   className="sb-btn sb-btn-primary"
@@ -431,22 +438,79 @@ export function ChatPanel({
 
       {centerTab === 'claims' ? (
         <div className="sb-panel-pad sb-scroll" style={{ flex: 1 }}>
-          <div className="sb-kpi-strip">
+          <div className="sb-kpi-strip" style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' }}>
             <div className="sb-kpi">
-              <div className="sb-kpi-label">Verified claims</div>
+              <div className="sb-kpi-label">Verified</div>
               <div className="sb-kpi-val" style={{ color: 'var(--sb-ok)' }}>{supportedCount}</div>
             </div>
             <div className="sb-kpi">
-              <div className="sb-kpi-label">Partial overlap</div>
+              <div className="sb-kpi-label">Partial</div>
               <div className="sb-kpi-val" style={{ color: 'var(--sb-warn)' }}>{partialCount}</div>
             </div>
             <div className="sb-kpi">
-              <div className="sb-kpi-label">Uncited claims</div>
+              <div className="sb-kpi-label">Uncited</div>
               <div className="sb-kpi-val" style={{ color: unsupportedCount > 0 ? 'var(--sb-bad)' : 'var(--ui-text-primary)' }}>
                 {unsupportedCount}
               </div>
             </div>
+            <div className="sb-kpi">
+              <div className="sb-kpi-label">Conflicts</div>
+              <div className="sb-kpi-val" style={{ color: conflicts.length > 0 ? 'var(--sb-warn)' : 'var(--ui-text-primary)' }}>
+                {conflicts.length}
+              </div>
+            </div>
           </div>
+
+          {conflicts.length > 0 ? (
+            <section style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="sb-pane-title">Cross-Source Contradictions ({conflicts.length})</span>
+                <span style={{ fontSize: 11, color: 'var(--ui-text-tertiary)' }}>
+                  Detected automatically across active sources
+                </span>
+              </div>
+              {conflicts.map(cf => (
+                <article key={cf.id} className="sb-conflict-card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                    <strong style={{ fontSize: 12.5 }}>{cf.topic}</strong>
+                    <span className="sb-verdict" data-v="partial">{cf.kind} conflict</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--ui-text-secondary)' }}>{cf.summary}</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    {[cf.side_a, cf.side_b].map((side, idx) => (
+                      <div key={idx} className="sb-quote-box" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+                          <span className="sb-src-title" style={{ fontSize: 11.5 }}>{side.source_title}</span>
+                          <button
+                            type="button"
+                            className="sb-cite"
+                            onClick={() => onOpenSource?.({ sourceId: side.source_id, chunkId: side.chunk_id, highlight: side.value })}
+                            title={`Inspect ${side.chunk_id}`}
+                          >
+                            {idx === 0 ? 'A' : 'B'}
+                          </button>
+                        </div>
+                        <div className="sb-mono" style={{ fontSize: 11.5, color: 'var(--ui-accent)', fontWeight: 600 }}>
+                          {side.value}{side.date_ref ? ` (${side.date_ref})` : ''}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </section>
+          ) : null}
+
+          {consensus.length > 0 ? (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontSize: 11, color: 'var(--ui-text-tertiary)' }}>Multi-source consensus:</span>
+              {consensus.slice(0, 4).map((co, idx) => (
+                <span key={idx} className="sb-verdict" data-v="supported">
+                  {co.topic}: {co.value} ({co.sources.length} sources)
+                </span>
+              ))}
+            </div>
+          ) : null}
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <div className="sb-seg">
@@ -463,29 +527,39 @@ export function ChatPanel({
               ))}
             </div>
             <span style={{ fontSize: 11.5, color: 'var(--ui-text-tertiary)' }}>
-              Click any citation to verify the original passage
+              Click any citation to inspect highlighted evidence
             </span>
           </div>
 
           {filteredClaims.length === 0 ? (
             <div className="sb-empty">
               <Icon name="ShieldCheck" size={24} />
-              <div style={{ fontWeight: 600, color: 'var(--ui-text-secondary)' }}>No claims recorded yet</div>
+              <div style={{ fontWeight: 600, color: 'var(--ui-text-secondary)' }}>No chat claims recorded yet</div>
               <div style={{ fontSize: 12 }}>Ask a grounded question to populate the Claim Ledger with verifiable evidence.</div>
             </div>
           ) : (
             filteredClaims.map(cl => (
               <article key={cl.id} className="sb-ledger-row">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                  <span className="sb-verdict" data-v={cl.verdict}>
-                    {cl.verdict} {typeof cl.overlap === 'number' ? `(${Math.round(cl.overlap * 100)}%)` : ''}
-                  </span>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <span className="sb-verdict" data-v={cl.verdict}>
+                      {cl.verdict} {typeof cl.overlap === 'number' ? `(${Math.round(cl.overlap * 100)}%)` : ''}
+                    </span>
+                    {cl.numeric_mismatch ? (
+                      <span className="sb-verdict" data-v="unsupported">number mismatch</span>
+                    ) : null}
+                  </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     {cl.source_title ? (
                       <span style={{ fontSize: 11.5, color: 'var(--ui-text-tertiary)' }}>{cl.source_title}</span>
                     ) : null}
                     {(cl.citations || []).map(cid => (
-                      <button key={cid} type="button" className="sb-cite" onClick={() => onOpenChunk(cid)}>
+                      <button
+                        key={cid}
+                        type="button"
+                        className="sb-cite"
+                        onClick={() => onOpenSource?.({ sourceId: String(cid).split(':')[0], chunkId: cid, highlight: (cl.quote || '').slice(0, 48) })}
+                      >
                         {cid.split(':')[1] || cid}
                       </button>
                     ))}

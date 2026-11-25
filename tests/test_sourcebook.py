@@ -1,4 +1,4 @@
-"""Integration tests for SourceBook (store, FTS5, ingest, Claim Ledger, Studio, FastAPI, agent register)."""
+"""Integration tests for SourceBook (store, hybrid search, contradictions, ingest, Claim Ledger, Audio Overview, Studio, analytics, universal model routing, FastAPI, agent register)."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ import sys
 import time
 import zipfile
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -101,7 +102,106 @@ def test_fts5_handles_reserved_keywords_and_punctuation(isolated_data_dir: Path,
     assert isinstance(hits, list)
 
 
-def test_docx_csv_json_and_html_ingestion(isolated_data_dir: Path) -> None:
+def test_hybrid_semantic_search_matches_paraphrases_and_synonyms(isolated_data_dir: Path) -> None:
+    sourcebook = _load_sourcebook_pkg()
+    nb = sourcebook.store.create_notebook("Hybrid Search")
+    s1 = sourcebook.store.add_source(
+        nb["id"],
+        "Q3 Finance",
+        "# Q3 Bookings\n\nEnterprise bookings contracted sharply due to seasonal churn in Europe.",
+        kind="markdown",
+    )
+    sourcebook.store.add_source(
+        nb["id"],
+        "Gardening",
+        "# Tomatoes\n\nHeirloom tomatoes prefer full sun and well-drained compost soil.",
+        kind="markdown",
+    )
+    # Conceptual query with zero exact keyword match ("revenue" -> "bookings", "dropped" -> "contracted")
+    hits = sourcebook.store.search(nb["id"], "Why did revenue drop?", k=2)
+    assert hits
+    assert hits[0]["source_id"] == s1["id"]
+
+
+def test_cross_source_contradictions_and_consensus(isolated_data_dir: Path) -> None:
+    sourcebook = _load_sourcebook_pkg()
+    nb = sourcebook.store.create_notebook("Contradictions")
+    sourcebook.store.add_source(
+        nb["id"],
+        "Report 2024",
+        "Query latency is 18 ms under load in 2024. The engine supports streaming.",
+        kind="text",
+    )
+    sourcebook.store.add_source(
+        nb["id"],
+        "Audit 2026",
+        "Query latency is 42 ms under load in 2026. The engine does not support streaming.",
+        kind="text",
+    )
+    contra = sourcebook.store.find_contradictions(nb["id"])
+    assert contra["total_claims"] >= 2
+    assert any(c["kind"] == "numeric" for c in contra["conflicts"])
+
+
+def test_semantic_claim_ledger_flags_numeric_hallucination(isolated_data_dir: Path) -> None:
+    sourcebook = _load_sourcebook_pkg()
+    chunks_by_id = {
+        "s_abc123:0": {
+            "id": "s_abc123:0",
+            "source_id": "s_abc123",
+            "text": "Enterprise bookings contracted by 14% after the pricing migration.",
+        }
+    }
+    titles = {"s_abc123": "Q3 Memo"}
+    # Paraphrased claim with accurate number -> supported
+    good = sourcebook.ground.verify_claims(
+        "Enterprise revenue declined by 14% following the pricing migration [[c:s_abc123:0]].",
+        chunks_by_id,
+        titles,
+    )
+    assert good and good[0]["verdict"] == "supported"
+    assert good[0]["numeric_mismatch"] is False
+
+    # Claim with fabricated number -> flagged as partial + numeric_mismatch
+    bad = sourcebook.ground.verify_claims(
+        "Enterprise revenue declined by 88% following the pricing migration [[c:s_abc123:0]].",
+        chunks_by_id,
+        titles,
+    )
+    assert bad and bad[0]["verdict"] == "partial"
+    assert bad[0]["numeric_mismatch"] is True
+
+
+def test_local_folder_sync_refresh_and_staleness(isolated_data_dir: Path, tmp_path: Path) -> None:
+    sourcebook = _load_sourcebook_pkg()
+    nb = sourcebook.store.create_notebook("Sync Vault")
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    doc = vault / "spec.md"
+    doc.write_text("# Spec\n\nInitial cache limit is 256 MB.", encoding="utf-8")
+
+    synced = sourcebook.ingest.ingest_local_path(nb["id"], str(vault))
+    assert len(synced["added"]) == 1
+    src = synced["added"][0]
+
+    note = sourcebook.store.create_note(nb["id"], "Cache Note", "Cache is 256 MB.", citations=[f"{src['id']}:0"])
+    art = sourcebook.make(nb["id"], "report", {"focus": "Cache", "extractive": True})
+    assert sourcebook.store.list_notes(nb["id"])[0]["stale"] is False
+    assert sourcebook.store.list_artifacts(nb["id"])[0]["stale"] is False
+
+    # Mutate file on disk and refresh in place -> Living Note and Artifact become stale!
+    doc.write_text("# Spec\n\nUpdated cache limit is 512 MB.", encoding="utf-8")
+    refreshed = sourcebook.ingest.refresh_source(nb["id"], src["id"])
+    assert refreshed["changed"] is True
+    assert sourcebook.store.list_notes(nb["id"])[0]["stale"] is True
+    assert sourcebook.store.list_artifacts(nb["id"])[0]["stale"] is True
+
+    # Resyncing note hashes clears stale flag
+    sourcebook.store.update_note(nb["id"], note["id"], resync_hashes=True)
+    assert sourcebook.store.list_notes(nb["id"])[0]["stale"] is False
+
+
+def test_docx_csv_json_html_youtube_id_and_analytics(isolated_data_dir: Path) -> None:
     sourcebook = _load_sourcebook_pkg()
     nb = sourcebook.store.create_notebook("Formats")
 
@@ -117,8 +217,13 @@ def test_docx_csv_json_and_html_ingestion(isolated_data_dir: Path) -> None:
     docx_src = sourcebook.ingest.ingest_bytes(nb["id"], "report.docx", buf.getvalue())
     assert docx_src["kind"] == "docx"
 
-    csv_src = sourcebook.ingest.ingest_bytes(nb["id"], "metrics.csv", b"region,latency_ms,uptime\nus-east,14,99.95\neu-west,21,99.91\n")
+    csv_src = sourcebook.ingest.ingest_bytes(nb["id"], "metrics.csv", b"region,latency_ms,uptime\nus-east,14,99.95\neu-west,21,99.91\nap-south,28,99.88\n")
     assert csv_src["kind"] == "csv"
+
+    prof = sourcebook.analytics.analyze_source(nb["id"], csv_src["id"])
+    assert prof["row_count"] == 3
+    assert "latency_ms" in prof["numeric_columns"]
+    assert prof["chart"] and len(prof["chart"]["series"]) == 3
 
     json_src = sourcebook.ingest.ingest_bytes(nb["id"], "nodes.json", json.dumps([{"node": "alpha", "rps": 4200}]).encode())
     assert json_src["kind"] == "json"
@@ -127,6 +232,39 @@ def test_docx_csv_json_and_html_ingestion(isolated_data_dir: Path) -> None:
     assert title == "Doc"
     assert "Grounded text." in md
     assert "bad()" not in md
+
+    assert sourcebook.ingest.extract_youtube_id("https://www.youtube.com/watch?v=dQw4w9WgXcQ") == "dQw4w9WgXcQ"
+    assert sourcebook.ingest.extract_youtube_id("https://youtu.be/dQw4w9WgXcQ?t=42") == "dQw4w9WgXcQ"
+
+
+def test_universal_any_model_json_fallback_and_trust_gating(isolated_data_dir: Path) -> None:
+    sourcebook = _load_sourcebook_pkg()
+    runtime = sourcebook.runtime
+
+    # Simulate a provider (e.g. Claude / Ollama) that rejects json_schema & json_mode and returns fenced JSON via plain complete()
+    class PlainTextOnlyLlm:
+        def complete_structured(self, **kw: Any) -> Any:
+            raise RuntimeError("json_schema response_format unsupported on this provider")
+
+        def complete(self, **kw: Any) -> Any:
+            return SimpleNamespace(
+                text='Here is your result:\n```json\n{"overview": "Works on every model.", "suggested_questions": ["What next?"]}\n```',
+                provider="ollama",
+                model="qwen3:32b",
+            )
+
+    fake_ctx = SimpleNamespace(llm=PlainTextOnlyLlm())
+    parsed, meta = runtime.complete_json(
+        instructions="Summarize",
+        input_blocks=[{"type": "text", "text": "hello"}],
+        json_schema={"type": "object", "properties": {"overview": {"type": "string"}}},
+        schema_name="test.schema",
+        purpose="test",
+        ctx=fake_ctx,
+    )
+    assert parsed["overview"] == "Works on every model."
+    assert meta["provider"] == "ollama"
+    assert meta["model"] == "qwen3:32b"
 
 
 def test_claim_ledger_and_extractive_chat(isolated_data_dir: Path) -> None:
@@ -149,7 +287,7 @@ def test_claim_ledger_and_extractive_chat(isolated_data_dir: Path) -> None:
     assert src["id"] in res["source_ids"]
 
 
-def test_extractive_studio_all_seven_kinds_and_exports(isolated_data_dir: Path) -> None:
+def test_extractive_studio_all_eight_kinds_audio_followup_and_exports(isolated_data_dir: Path) -> None:
     sourcebook = _load_sourcebook_pkg()
     nb = sourcebook.store.create_notebook("Studio Deck")
     sourcebook.store.add_source(
@@ -158,24 +296,29 @@ def test_extractive_studio_all_seven_kinds_and_exports(isolated_data_dir: Path) 
         "# Architecture\n\nHermes Desktop loads plugins inside an explicit SDK surface with zero app markup patching.\n\n## Latency\n\nLocal FTS5 queries finish in 6ms on 400 indexed chunks and support 99.2% recall on exact phrase lookups.",
         kind="markdown",
     )
-    for kind in ("report", "mindmap", "flashcards", "quiz", "table", "infographic", "slides"):
-        art = sourcebook.make(nb["id"], kind, {"focus": "Hermes plugin architecture", "extractive": True})
+    for kind in ("report", "audio", "mindmap", "flashcards", "quiz", "table", "infographic", "slides"):
+        art = sourcebook.make(nb["id"], kind, {"focus": "Hermes plugin architecture", "extractive": True, "skip_audio": True})
         assert art["kind"] == kind
         assert art["spec"]
         fname, mtype, body = sourcebook.studio.export_artifact(art, "md")
         assert fname and mtype and body
 
-    # Verify specialized exports
     arts = {a["kind"]: sourcebook.store.get_artifact(nb["id"], a["id"]) for a in sourcebook.store.list_artifacts(nb["id"])}
     assert sourcebook.studio.export_artifact(arts["table"], "csv")[0].endswith(".csv")
     assert sourcebook.studio.export_artifact(arts["flashcards"], "anki")[0].endswith(".tsv")
     assert sourcebook.studio.export_artifact(arts["mindmap"], "opml")[0].endswith(".opml")
     assert sourcebook.studio.export_artifact(arts["slides"], "html")[0].endswith(".deck.html")
 
+    # Verify interactive Audio Overview "Ask the Hosts" follow-up appends turns cleanly
+    before_turns = len(arts["audio"]["spec"]["turns"])
+    fu = sourcebook.audio_followup(nb["id"], arts["audio"]["id"], "What is the FTS5 latency?")
+    assert len(fu["artifact"]["spec"]["turns"]) == before_turns + 2
+
 
 def test_register_matches_plugin_yaml_and_pre_llm_call(isolated_data_dir: Path) -> None:
     sourcebook = _load_sourcebook_pkg()
     manifest = yaml.safe_load((REPO_ROOT / "plugin.yaml").read_text(encoding="utf-8"))
+    assert manifest["version"] == "0.1.0"
 
     class FakeCtx:
         def __init__(self) -> None:
@@ -211,6 +354,7 @@ def test_register_matches_plugin_yaml_and_pre_llm_call(isolated_data_dir: Path) 
     assert sorted(ctx.hooks.keys()) == sorted(manifest["provides_hooks"])
     assert "sourcebook" in ctx.commands
     assert "sourcebook_chat" in ctx.aux_tasks
+    assert "sourcebook_audio" in ctx.aux_tasks
 
     nb = sourcebook.store.create_notebook("Bound Session")
     sourcebook.store.add_source(nb["id"], "Notes", "Quantum error correction uses surface codes with logical error rates below 1%.", kind="text")
@@ -218,6 +362,11 @@ def test_register_matches_plugin_yaml_and_pre_llm_call(isolated_data_dir: Path) 
     sourcebook.store.bind_session("sess_bound", nb["id"])
     injected = ctx.hooks["pre_llm_call"](session_id="sess_bound", user_message="surface codes")
     assert injected is not None and "surface codes" in injected["context"]
+
+    # Slash command model pin
+    msg = ctx.commands["sourcebook"](f"model {nb['id']} ollama/qwen3:32b")
+    assert "qwen3:32b" in msg
+    assert sourcebook.store.get_notebook(nb["id"])["model"] == "qwen3:32b"
 
 
 def test_dashboard_plugin_api_routes(isolated_data_dir: Path) -> None:
@@ -233,19 +382,29 @@ def test_dashboard_plugin_api_routes(isolated_data_dir: Path) -> None:
     app.include_router(api_mod.router, prefix="/api/plugins/sourcebook")
     client = TestClient(app)
 
-    assert client.get("/api/plugins/sourcebook/ping").json()["ok"] is True
+    ping = client.get("/api/plugins/sourcebook/ping").json()
+    assert ping["ok"] is True
+    assert ping["version"] == "0.1.0"
+    assert "active" in client.get("/api/plugins/sourcebook/models").json()
+
     nb = client.post("/api/plugins/sourcebook/notebooks", json={"title": "API Test"}).json()
 
     up = client.post(
         f"/api/plugins/sourcebook/notebooks/{nb['id']}/sources/upload",
-        files={"file": ("notes.md", b"# Caching\n\nContent-addressed caching cuts rebuild time by 74%.", "text/markdown")},
+        files={"file": ("notes.csv", b"region,latency_ms\nus-east,18\neu-west,42\n", "text/csv")},
     )
     assert up.status_code == 200
-    assert up.json()["chunk_count"] >= 1
+    src_id = up.json()["id"]
+
+    prof = client.post(f"/api/plugins/sourcebook/notebooks/{nb['id']}/sources/{src_id}/analyze").json()
+    assert prof["row_count"] == 2
+
+    contra = client.get(f"/api/plugins/sourcebook/notebooks/{nb['id']}/contradictions").json()
+    assert "conflicts" in contra
 
     ask_job = client.post(
         f"/api/plugins/sourcebook/notebooks/{nb['id']}/ask",
-        json={"text": "How much does caching cut rebuild time?", "extractive": True},
+        json={"text": "What is the us-east latency?", "extractive": True},
     ).json()["job"]
     for _ in range(40):
         st = client.get(f"/api/plugins/sourcebook/jobs/{ask_job}").json()

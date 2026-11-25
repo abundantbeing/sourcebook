@@ -47,6 +47,7 @@ store = sourcebook.store
 ingest = sourcebook.ingest
 studio = sourcebook.studio
 runtime = sourcebook.runtime
+analytics = sourcebook.analytics
 
 _jobs_spec = importlib.util.spec_from_file_location(
     f"{sourcebook.__name__}.core.jobs", Path(__file__).resolve().parents[1] / "core" / "jobs.py"
@@ -62,6 +63,8 @@ router = APIRouter()
 def _http_err(exc: Exception) -> HTTPException:
     if isinstance(exc, FileNotFoundError):
         return HTTPException(status_code=404, detail=str(exc))
+    if isinstance(exc, PermissionError):
+        return HTTPException(status_code=403, detail=str(exc))
     if isinstance(exc, ValueError):
         return HTTPException(status_code=400, detail=str(exc))
     return HTTPException(status_code=500, detail=str(exc))
@@ -75,6 +78,11 @@ async def ping() -> dict[str, Any]:
 @router.get("/capabilities")
 async def capabilities() -> dict[str, Any]:
     return runtime.probe_capabilities()
+
+
+@router.get("/models")
+async def models() -> dict[str, Any]:
+    return runtime.list_available_models()
 
 
 @router.get("/studio/kinds")
@@ -102,6 +110,8 @@ class PatchNotebookBody(BaseModel):
     persona: Optional[str] = None
     length: Optional[str] = None
     strict: Optional[bool] = None
+    provider: Optional[str] = None
+    model: Optional[str] = None
 
 
 @router.get("/notebooks")
@@ -157,6 +167,21 @@ class PatchSourceBody(BaseModel):
     title: Optional[str] = None
 
 
+class SyncPathBody(BaseModel):
+    path: str
+    max_files: int = 40
+
+
+class DiscoverBody(BaseModel):
+    query: str
+    limit: int = 8
+
+
+class AnalyzeSourceBody(BaseModel):
+    metric_col: Optional[str] = None
+    label_col: Optional[str] = None
+
+
 @router.get("/notebooks/{nb}/sources")
 async def list_sources(nb: str) -> list[dict[str, Any]]:
     try:
@@ -186,9 +211,29 @@ async def add_source(nb: str, body: NewSourceBody) -> dict[str, Any]:
         raise _http_err(exc)
 
 
+@router.post("/notebooks/{nb}/sources/sync-path")
+async def sync_local_path(nb: str, body: SyncPathBody) -> dict[str, Any]:
+    try:
+        res = ingest.ingest_local_path(nb, body.path, max_files=max(1, min(100, body.max_files)))
+        runtime.broadcast_event("notebook.changed", {"nb": nb, "what": "sources"})
+        return res
+    except Exception as exc:
+        raise _http_err(exc)
+
+
+@router.post("/notebooks/{nb}/discover")
+async def discover_sources(nb: str, body: DiscoverBody) -> dict[str, Any]:
+    try:
+        store.get_notebook(nb)
+        results = ingest.discover_web_sources(body.query, limit=body.limit)
+        return {"query": body.query, "results": results}
+    except Exception as exc:
+        raise _http_err(exc)
+
+
 @router.post("/notebooks/{nb}/sources/upload")
 async def upload_source(nb: str, file: UploadFile = File(...)) -> dict[str, Any]:
-    """Stream-bounded multipart file upload supporting PDF, DOCX, CSV, JSON, TXT, Markdown, HTML, and Images."""
+    """Stream-bounded multipart file upload supporting PDF, DOCX, CSV, JSON, TXT, Markdown, HTML, Audio/Video, and Images."""
     try:
         chunks_buf = bytearray()
         while True:
@@ -221,6 +266,29 @@ async def patch_source(nb: str, src: str, body: PatchSourceBody) -> dict[str, An
         out = store.set_source(nb, src, **{k: v for k, v in body.model_dump().items() if v is not None})
         runtime.broadcast_event("notebook.changed", {"nb": nb, "what": "sources"})
         return out
+    except Exception as exc:
+        raise _http_err(exc)
+
+
+@router.post("/notebooks/{nb}/sources/{src}/refresh")
+async def refresh_source(nb: str, src: str) -> dict[str, Any]:
+    try:
+        out = ingest.refresh_source(nb, src)
+        runtime.broadcast_event("notebook.changed", {"nb": nb, "what": "sources"})
+        return out
+    except Exception as exc:
+        raise _http_err(exc)
+
+
+@router.post("/notebooks/{nb}/sources/{src}/analyze")
+async def analyze_source_data(nb: str, src: str, body: Optional[AnalyzeSourceBody] = None) -> dict[str, Any]:
+    try:
+        return analytics.analyze_source(
+            nb,
+            src,
+            metric_col=body.metric_col if body else None,
+            label_col=body.label_col if body else None,
+        )
     except Exception as exc:
         raise _http_err(exc)
 
@@ -275,6 +343,14 @@ async def list_claims(nb: str) -> list[dict[str, Any]]:
         raise _http_err(exc)
 
 
+@router.get("/notebooks/{nb}/contradictions")
+async def list_contradictions(nb: str) -> dict[str, Any]:
+    try:
+        return store.find_contradictions(nb)
+    except Exception as exc:
+        raise _http_err(exc)
+
+
 class NewNoteBody(BaseModel):
     title: str
     markdown: str = ""
@@ -288,6 +364,7 @@ class PatchNoteBody(BaseModel):
     markdown: Optional[str] = None
     pinned: Optional[bool] = None
     citations: Optional[list[str]] = None
+    resync_hashes: Optional[bool] = None
 
 
 @router.get("/notebooks/{nb}/notes")
@@ -373,6 +450,8 @@ class AskBody(BaseModel):
     persona: Optional[str] = None
     length: Optional[str] = None
     strict: Optional[bool] = None
+    provider: Optional[str] = None
+    model: Optional[str] = None
     extractive: bool = False
 
 
@@ -391,6 +470,8 @@ async def ask_notebook(nb: str, body: AskBody) -> dict[str, Any]:
             persona=body.persona,
             length=body.length,
             strict=body.strict,
+            provider=body.provider,
+            model=body.model,
             extractive=body.extractive,
             progress=progress,
         ),
@@ -425,6 +506,49 @@ async def get_artifact(nb: str, aid: str) -> dict[str, Any]:
         return art
     except HTTPException:
         raise
+    except Exception as exc:
+        raise _http_err(exc)
+
+
+@router.get("/notebooks/{nb}/artifacts/{aid}/audio")
+async def get_artifact_audio(nb: str, aid: str) -> Response:
+    try:
+        p = store.get_artifact_audio_path(nb, aid)
+        if not p:
+            raise HTTPException(status_code=404, detail="audio file not available for this artifact")
+        return Response(
+            content=p.read_bytes(),
+            media_type="audio/mpeg",
+            headers={"Content-Disposition": f'inline; filename="{aid}.mp3"'},
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise _http_err(exc)
+
+
+@router.get("/notebooks/{nb}/artifacts/{aid}/audio-data")
+async def get_artifact_audio_data(nb: str, aid: str) -> dict[str, Any]:
+    import base64
+
+    try:
+        p = store.get_artifact_audio_path(nb, aid)
+        if not p:
+            return {"available": False, "mime": "audio/mpeg", "b64": ""}
+        raw = p.read_bytes()
+        return {"available": True, "mime": "audio/mpeg", "bytes": len(raw), "b64": base64.b64encode(raw).decode("ascii")}
+    except Exception as exc:
+        raise _http_err(exc)
+
+
+class AudioFollowupBody(BaseModel):
+    question: str
+
+
+@router.post("/notebooks/{nb}/artifacts/{aid}/followup")
+async def audio_followup(nb: str, aid: str, body: AudioFollowupBody) -> dict[str, Any]:
+    try:
+        return sourcebook.audio_followup(nb, aid, body.question)
     except Exception as exc:
         raise _http_err(exc)
 
@@ -468,10 +592,26 @@ async def export_artifact(nb: str, aid: str, fmt: str = Query("md")) -> Response
         raise _http_err(exc)
 
 
+@router.get("/notebooks/{nb}/artifacts/{aid}/export-payload")
+async def export_artifact_payload(nb: str, aid: str, fmt: str = Query("md")) -> dict[str, str]:
+    try:
+        art = store.get_artifact(nb, aid)
+        if not art:
+            raise HTTPException(status_code=404, detail="artifact not found")
+        filename, media_type, content = studio.export_artifact(art, fmt)
+        return {"filename": filename, "media_type": media_type, "content": content}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise _http_err(exc)
+
+
 class StudioRunBody(BaseModel):
     kind: str
     params: dict[str, Any] = Field(default_factory=dict)
     source_ids: Optional[list[str]] = None
+    provider: Optional[str] = None
+    model: Optional[str] = None
 
 
 @router.post("/notebooks/{nb}/studio")
@@ -489,6 +629,8 @@ async def run_studio(nb: str, body: StudioRunBody) -> dict[str, Any]:
             body.kind,
             body.params,
             source_ids=body.source_ids,
+            provider=body.provider,
+            model=body.model,
             progress=progress,
         ),
         nb=nb,

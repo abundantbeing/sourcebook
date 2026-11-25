@@ -2620,9 +2620,12 @@ var CSS = `
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 5px 10px;
-  border-radius: 8px;
-  background: rgba(9, 13, 22, 0.72);
+  padding: 2px 4px;
+  background: transparent;
+  pointer-events: none;
+}
+.sb-sl-full-art-bar > * {
+  pointer-events: auto;
 }
 
 @media (max-width: 1040px) {

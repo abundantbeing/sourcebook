@@ -2,7 +2,11 @@
   "type": "object",
   "properties": {
     "title": { "type": "string" },
-    "theme": { "type": "string", "enum": ["hermes", "paper", "noir", "bold"] },
+    "subtitle": { "type": "string" },
+    "theme": { "type": "string", "enum": ["editorial", "keynote", "midnight", "paper", "hermes", "noir", "bold"] },
+    "deck_format": { "type": "string", "enum": ["detailed", "presenter"] },
+    "deck_purpose": { "type": "string" },
+    "visual_bible": { "type": "string" },
     "slides": {
       "type": "array",
       "items": {
@@ -11,7 +15,7 @@
           "id": { "type": "string" },
           "layout": {
             "type": "string",
-            "enum": ["title", "bullets", "two-col", "quote", "stat", "image-left", "image-full", "section", "closing"]
+            "enum": ["title", "bullets", "two-col", "bento", "comparison", "timeline", "quote", "stat", "image-left", "image-full", "section", "closing"]
           },
           "title": { "type": "string" },
           "bullets": { "type": "array", "items": { "type": "string" } },
@@ -23,9 +27,30 @@
               "label": { "type": "string" }
             }
           },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "heading": { "type": "string" },
+                "points": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": { "type": "string" },
+                "detail": { "type": "string" }
+              }
+            }
+          },
           "notes": { "type": "string" },
           "cites": { "type": "array", "items": { "type": "string" } },
-          "image_prompt": { "type": "string" }
+          "image_prompt": { "type": "string" },
+          "image_mode": { "type": "string", "enum": ["full_slide", "hybrid", "none"] }
         },
         "required": ["id", "layout", "title", "cites"]
       }

@@ -36,8 +36,8 @@ config_schema:
     description: Maximum packed source context size before switching from full-notebook stuffing to hybrid semantic + BM25 retrieval.
   max_images_per_deck:
     type: integer
-    default: 4
-    description: Maximum number of generated images allowed per Slide Deck run when image generation is enabled.
+    default: 12
+    description: Maximum number of Hermes-generated images allowed per Slide Deck run when Image Generation is enabled.
   strict_grounding:
     type: boolean
     default: false

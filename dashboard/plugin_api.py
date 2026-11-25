@@ -574,18 +574,157 @@ async def patch_artifact_state(nb: str, aid: str, body: dict[str, Any]) -> dict[
         raise _http_err(exc)
 
 
-@router.get("/notebooks/{nb}/artifacts/{aid}/export")
-async def export_artifact(nb: str, aid: str, fmt: str = Query("md")) -> Response:
+class PatchArtifactBody(BaseModel):
+    title: Optional[str] = None
+    theme: Optional[str] = None
+
+
+@router.patch("/notebooks/{nb}/artifacts/{aid}")
+async def patch_artifact(nb: str, aid: str, body: PatchArtifactBody) -> dict[str, Any]:
     try:
         art = store.get_artifact(nb, aid)
         if not art:
             raise HTTPException(status_code=404, detail="artifact not found")
+        spec_patch = None
+        if body.theme and isinstance(art.get("spec"), dict):
+            spec_patch = dict(art["spec"])
+            spec_patch["theme"] = body.theme
+        updated = store.update_artifact(nb, aid, title=body.title, spec=spec_patch)
+        runtime.broadcast_event("notebook.changed", {"nb": nb, "what": "artifacts"})
+        return updated
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise _http_err(exc)
+
+
+@router.get("/notebooks/{nb}/artifacts/{aid}/media/{fname}")
+async def get_artifact_media(nb: str, aid: str, fname: str) -> Response:
+    try:
+        p = store.get_artifact_media_path(nb, aid, fname)
+        if not p:
+            raise HTTPException(status_code=404, detail="media file not found")
+        raw = p.read_bytes()
+        mime = "image/jpeg" if raw.startswith(b"\xff\xd8\xff") else "image/png"
+        return Response(content=raw, media_type=mime)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise _http_err(exc)
+
+
+@router.get("/notebooks/{nb}/artifacts/{aid}/media-data/{fname}")
+async def get_artifact_media_data(nb: str, aid: str, fname: str) -> dict[str, Any]:
+    import base64
+
+    try:
+        p = store.get_artifact_media_path(nb, aid, fname)
+        if not p:
+            return {"available": False, "mime": "image/png", "b64": ""}
+        raw = p.read_bytes()
+        mime = "image/jpeg" if raw.startswith(b"\xff\xd8\xff") else "image/png"
+        return {"available": True, "mime": mime, "bytes": len(raw), "b64": base64.b64encode(raw).decode("ascii")}
+    except Exception as exc:
+        raise _http_err(exc)
+
+
+class ReviseArtifactBody(BaseModel):
+    prompt: str
+    params: dict[str, Any] = Field(default_factory=dict)
+    source_ids: Optional[list[str]] = None
+    provider: Optional[str] = None
+    model: Optional[str] = None
+
+
+@router.post("/notebooks/{nb}/artifacts/{aid}/revise")
+async def revise_artifact_route(nb: str, aid: str, body: ReviseArtifactBody) -> dict[str, Any]:
+    try:
+        if not store.get_artifact(nb, aid):
+            raise HTTPException(status_code=404, detail="artifact not found")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise _http_err(exc)
+    return jobs.spawn(
+        lambda progress: sourcebook.revise_artifact(
+            nb,
+            aid,
+            body.prompt,
+            body.params,
+            source_ids=body.source_ids,
+            provider=body.provider,
+            model=body.model,
+            progress=progress,
+        ),
+        nb=nb,
+        kind="revise",
+    )
+
+
+class OutlineSlidesBody(BaseModel):
+    params: dict[str, Any] = Field(default_factory=dict)
+    source_ids: Optional[list[str]] = None
+    provider: Optional[str] = None
+    model: Optional[str] = None
+
+
+@router.post("/notebooks/{nb}/slides/outline")
+async def outline_slides_route(nb: str, body: OutlineSlidesBody) -> dict[str, Any]:
+    try:
+        store.get_notebook(nb)
+        return sourcebook.outline_slides(
+            nb,
+            body.params,
+            source_ids=body.source_ids,
+            provider=body.provider,
+            model=body.model,
+        )
+    except Exception as exc:
+        raise _http_err(exc)
+
+
+@router.get("/notebooks/{nb}/artifacts/{aid}/export")
+async def export_artifact(nb: str, aid: str, fmt: str = Query("md"), theme: Optional[str] = Query(None)) -> Response:
+    try:
+        art = store.get_artifact(nb, aid)
+        if not art:
+            raise HTTPException(status_code=404, detail="artifact not found")
+        if fmt.lower() in ("pptx", "pdf") and art.get("kind") == "slides":
+            media_dir = store.get_artifact_media_dir(nb, aid)
+            filename, media_type, raw = studio.export_artifact_binary(art, fmt, media_dir=media_dir, theme=theme)
+            return Response(
+                content=raw,
+                media_type=media_type,
+                headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+            )
         filename, media_type, content = studio.export_artifact(art, fmt)
         return Response(
             content=content,
             media_type=media_type,
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise _http_err(exc)
+
+
+@router.get("/notebooks/{nb}/artifacts/{aid}/export-binary")
+async def export_artifact_binary_route(nb: str, aid: str, fmt: str = Query("pptx"), theme: Optional[str] = Query(None)) -> dict[str, Any]:
+    import base64
+
+    try:
+        art = store.get_artifact(nb, aid)
+        if not art:
+            raise HTTPException(status_code=404, detail="artifact not found")
+        media_dir = store.get_artifact_media_dir(nb, aid)
+        filename, media_type, raw = studio.export_artifact_binary(art, fmt, media_dir=media_dir, theme=theme)
+        return {
+            "filename": filename,
+            "media_type": media_type,
+            "bytes": len(raw),
+            "b64": base64.b64encode(raw).decode("ascii"),
+        }
     except HTTPException:
         raise
     except Exception as exc:

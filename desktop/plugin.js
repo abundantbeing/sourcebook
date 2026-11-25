@@ -125,6 +125,27 @@ var LOCAL_GLYPHS = {
   ] }),
   ChevronRight: /* @__PURE__ */ jsx("path", { d: "m9 18 6-6-6-6" }),
   ChevronDown: /* @__PURE__ */ jsx("path", { d: "m6 9 6 6 6-6" }),
+  ChevronUp: /* @__PURE__ */ jsx("path", { d: "m18 15-6-6-6 6" }),
+  Check: /* @__PURE__ */ jsx("path", { d: "M20 6 9 17l-5-5" }),
+  MoreVertical: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("circle", { cx: "12", cy: "5", r: "1.4" }),
+    /* @__PURE__ */ jsx("circle", { cx: "12", cy: "12", r: "1.4" }),
+    /* @__PURE__ */ jsx("circle", { cx: "12", cy: "19", r: "1.4" })
+  ] }),
+  Edit3: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "M12 20h9" }),
+    /* @__PURE__ */ jsx("path", { d: "M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z" })
+  ] }),
+  Info: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("circle", { cx: "12", cy: "12", r: "10" }),
+    /* @__PURE__ */ jsx("path", { d: "M12 16v-4" }),
+    /* @__PURE__ */ jsx("path", { d: "M12 8h.01" })
+  ] }),
+  Code: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("polyline", { points: "16 18 22 12 16 6" }),
+    /* @__PURE__ */ jsx("polyline", { points: "8 6 2 12 8 18" })
+  ] }),
+  Sparkles: /* @__PURE__ */ jsx(Fragment, { children: /* @__PURE__ */ jsx("path", { d: "m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" }) }),
   FileJson: /* @__PURE__ */ jsxs(Fragment, { children: [
     /* @__PURE__ */ jsx("path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" }),
     /* @__PURE__ */ jsx("path", { d: "M14 2v4a2 2 0 0 0 2 2h4" }),
@@ -258,6 +279,32 @@ function downloadTextFile(filename, content, mime = "text/plain;charset=utf-8") 
   } else {
     URL.revokeObjectURL(url);
   }
+}
+function downloadBinaryBase64(filename, b64, mime = "application/octet-stream") {
+  const raw = atob(String(b64 || ""));
+  const bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+  const blob = new Blob([bytes], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  if (activeCtx && typeof activeCtx.setTimeout === "function") {
+    activeCtx.setTimeout(() => URL.revokeObjectURL(url), 1200);
+  } else {
+    URL.revokeObjectURL(url);
+  }
+}
+async function loadArtifactMediaDataUrl(nbId, aid, fname) {
+  if (!nbId || !aid || !fname) return null;
+  const res = await api(
+    `/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(aid)}/media-data/${encodeURIComponent(fname)}`
+  );
+  if (res?.available && res.b64) {
+    return `data:${res.mime || "image/png"};base64,${res.b64}`;
+  }
+  return null;
 }
 function resolveCssColor(expr, scopeEl) {
   const fallback = "#6b7280";
@@ -397,7 +444,7 @@ function downloadSvgAsPng(svgEl, filename, scale = 2) {
 }
 
 // desktop-src/SourceBookWorkspace.jsx
-import { useCallback, useEffect as useEffect9, useMemo as useMemo4, useRef as useRef9, useState as useState12 } from "react";
+import { useCallback, useEffect as useEffect10, useMemo as useMemo4, useRef as useRef9, useState as useState13 } from "react";
 
 // desktop-src/styles.js
 import { jsx as jsx2 } from "react/jsx-runtime";
@@ -2329,6 +2376,253 @@ var CSS = `
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+/* Customize Slide Deck Modal, Outline Editor, More Action Menu & Rich Layouts */
+.sb-modal-wide {
+  width: min(720px, 94vw);
+}
+.sb-sd-format-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.sb-sd-format-card {
+  text-align: left;
+  padding: 13px 15px;
+  border-radius: 11px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-bg);
+  color: var(--ui-text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+  cursor: pointer;
+  transition: border-color 140ms var(--sb-ease), background-color 140ms var(--sb-ease);
+}
+.sb-sd-format-card:hover {
+  border-color: var(--ui-accent);
+}
+.sb-sd-format-card[data-active="true"] {
+  border-color: var(--ui-accent);
+  background: color-mix(in srgb, var(--ui-accent) 14%, var(--sb-bg));
+  color: var(--ui-text-primary);
+}
+.sb-sd-format-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--ui-text-primary);
+}
+.sb-sd-radio {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--ui-stroke-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+.sb-sd-radio[data-checked="true"] {
+  border-color: var(--ui-accent);
+  background: var(--ui-accent);
+}
+.sb-sd-controls-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+  align-items: end;
+}
+.sb-sd-source-picker {
+  max-height: 165px;
+  overflow-y: auto;
+  padding: 9px 11px;
+  border-radius: 9px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.sb-sd-source-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ui-text-primary);
+}
+.sb-sd-source-row:hover {
+  background: var(--sb-hover);
+}
+.sb-sd-toggle-card {
+  padding: 11px 13px;
+  border-radius: 10px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.sb-switch {
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid var(--ui-stroke-primary);
+  background: var(--sb-subtle);
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 140ms var(--sb-ease), border-color 140ms var(--sb-ease);
+}
+.sb-switch[data-checked="true"] {
+  background: var(--ui-accent);
+  border-color: var(--ui-accent);
+}
+.sb-switch-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #fff;
+  transform: translateX(0);
+  transition: transform 140ms var(--sb-ease);
+}
+.sb-switch[data-checked="true"] .sb-switch-thumb {
+  transform: translateX(16px);
+}
+.sb-outline-row {
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.sb-art-menu {
+  position: absolute;
+  z-index: 60;
+  min-width: 228px;
+  padding: 5px;
+  border-radius: 10px;
+  border: 1px solid var(--ui-stroke-primary);
+  background: var(--sb-surface);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sb-art-menu-item {
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  border-radius: 7px;
+  border: 0;
+  background: transparent;
+  color: var(--ui-text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  transition: background-color 100ms var(--sb-ease);
+}
+.sb-art-menu-item:hover {
+  background: var(--sb-hover);
+}
+.sb-art-menu-danger {
+  color: var(--sb-bad);
+}
+.sb-art-menu-sep {
+  height: 1px;
+  background: var(--ui-stroke-tertiary);
+  margin: 3px 6px;
+}
+.sb-sl-comparison {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.sb-sl-comp-col {
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--ui-stroke-secondary);
+  border-top-width: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sb-sl-timeline {
+  display: grid;
+  gap: 12px;
+}
+.sb-sl-step-card {
+  padding: 13px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--ui-stroke-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sb-sl-step-pill {
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.sb-sl-hybrid-split {
+  display: grid;
+  grid-template-columns: 1.12fr 0.88fr;
+  gap: 22px;
+  align-items: center;
+  height: 100%;
+}
+.sb-sl-hybrid-art {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--ui-stroke-secondary);
+}
+.sb-sl-full-art {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+}
+.sb-sl-art-overlay {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 46px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(9, 13, 22, 0.86);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+}
+.sb-sl-full-art-bar {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(9, 13, 22, 0.72);
 }
 
 @media (max-width: 1040px) {
@@ -4347,10 +4641,490 @@ function ChatPanel({
 }
 
 // desktop-src/components/StudioPanel.jsx
-import { useEffect as useEffect8, useRef as useRef8, useState as useState11 } from "react";
+import { useEffect as useEffect9, useRef as useRef8, useState as useState12 } from "react";
+
+// desktop-src/components/SlideDeckModal.jsx
+import { useEffect as useEffect4, useState as useState4 } from "react";
+import { Fragment as Fragment4, jsx as jsx8, jsxs as jsxs6 } from "react/jsx-runtime";
+var DECK_PURPOSES = [
+  { id: "auto", label: "Auto" },
+  { id: "pitch", label: "Pitch Deck" },
+  { id: "executive", label: "Executive Brief" },
+  { id: "technical", label: "Technical" },
+  { id: "editorial", label: "Keynote" },
+  { id: "workshop", label: "Workshop" }
+];
+var DECK_LENGTHS = [
+  { id: "short", label: "Short", count: 6 },
+  { id: "default", label: "Default", count: 10 },
+  { id: "extended", label: "Extended", count: 14 }
+];
+var DECK_THEMES = [
+  { id: "keynote", label: "Keynote" },
+  { id: "editorial", label: "Editorial" },
+  { id: "midnight", label: "Midnight" },
+  { id: "paper", label: "Paper" }
+];
+var LANGUAGES = ["English", "Spanish", "French", "German", "Japanese", "Portuguese", "Chinese", "Korean", "Italian"];
+var SLIDE_LAYOUTS = ["title", "stat", "bento", "comparison", "timeline", "two-col", "bullets", "quote", "image-left", "image-full", "closing"];
+function SlideDeckModal({
+  open,
+  nbId,
+  sources,
+  capabilities,
+  initialFocus,
+  initialArtifact,
+  mode = "create",
+  onClose,
+  onGenerate,
+  onRevise
+}) {
+  const enabledSources = (sources || []).filter((s) => s.enabled !== false);
+  const [deckFormat, setDeckFormat] = useState4("detailed");
+  const [deckPurpose, setDeckPurpose] = useState4("auto");
+  const [theme, setTheme] = useState4("keynote");
+  const [language, setLanguage] = useState4("English");
+  const [lengthKey, setLengthKey] = useState4("default");
+  const [selectedSourceIds, setSelectedSourceIds] = useState4([]);
+  const [sourcePickerOpen, setSourcePickerOpen] = useState4(false);
+  const [instructions, setInstructions] = useState4("");
+  const [useImageGen, setUseImageGen] = useState4(false);
+  const [imageMode, setImageMode] = useState4("full_slide");
+  const [reviewOutline, setReviewOutline] = useState4(false);
+  const [step, setStep] = useState4("config");
+  const [loadingOutline, setLoadingOutline] = useState4(false);
+  const [outlineSlides, setOutlineSlides] = useState4([]);
+  const [outlineTitle, setOutlineTitle] = useState4("");
+  const [outlineError, setOutlineError] = useState4("");
+  useEffect4(() => {
+    if (!open) return;
+    setStep("config");
+    setOutlineError("");
+    setSourcePickerOpen(false);
+    const p = initialArtifact?.params || {};
+    setDeckFormat(p.deck_format || "detailed");
+    setDeckPurpose(p.deck_purpose || "auto");
+    setTheme(initialArtifact?.spec?.theme || p.theme || "keynote");
+    setLanguage(p.language || "English");
+    const cnt = Number(p.count) || 10;
+    setLengthKey(cnt <= 6 ? "short" : cnt >= 13 ? "extended" : "default");
+    setInstructions(mode === "revise" ? "" : p.instructions || initialFocus || "");
+    const hasImgCap = Boolean(capabilities?.image_generate);
+    setUseImageGen(p.include_images !== void 0 ? Boolean(p.include_images) : hasImgCap);
+    setImageMode(p.image_mode || "full_slide");
+    setReviewOutline(false);
+    const baseSrcIds = Array.isArray(initialArtifact?.source_ids) && initialArtifact.source_ids.length > 0 ? initialArtifact.source_ids : enabledSources.map((s) => s.id);
+    setSelectedSourceIds(baseSrcIds);
+  }, [open, nbId, mode, initialArtifact?.id]);
+  if (!open) return null;
+  const lengthObj = DECK_LENGTHS.find((l) => l.id === lengthKey) || DECK_LENGTHS[1];
+  const hasImgGen = Boolean(capabilities?.image_generate);
+  const imgProviderLabel = [capabilities?.image_gen_provider, capabilities?.image_gen_model].filter(Boolean).join(" \xB7 ");
+  function toggleSource(sid) {
+    setSelectedSourceIds((prev) => prev.includes(sid) ? prev.filter((id) => id !== sid) : [...prev, sid]);
+  }
+  function buildParams(extra = {}) {
+    const cleanPrompt = instructions.trim();
+    return {
+      deck_format: deckFormat,
+      deck_purpose: deckPurpose,
+      theme,
+      language,
+      count: lengthObj.count,
+      focus: cleanPrompt || initialFocus || "Executive presentation",
+      instructions: cleanPrompt,
+      include_images: Boolean(useImageGen),
+      image_mode: useImageGen ? imageMode : "none",
+      max_images: useImageGen ? imageMode === "full_slide" ? lengthObj.count : Math.min(5, lengthObj.count) : 0,
+      source_ids: selectedSourceIds.length > 0 ? selectedSourceIds : enabledSources.map((s) => s.id),
+      ...extra
+    };
+  }
+  async function handlePrimaryAction() {
+    if (mode === "revise") {
+      if (!instructions.trim()) {
+        setOutlineError("Describe what you would like to revise in this slide deck.");
+        return;
+      }
+      onRevise?.(initialArtifact.id, instructions.trim(), buildParams());
+      onClose?.();
+      return;
+    }
+    if (reviewOutline && step === "config") {
+      setLoadingOutline(true);
+      setOutlineError("");
+      try {
+        const params2 = buildParams();
+        const res = await api(`/notebooks/${encodeURIComponent(nbId)}/slides/outline`, {
+          method: "POST",
+          body: { params: params2, source_ids: params2.source_ids }
+        });
+        const slides = res?.outline?.slides || [];
+        setOutlineTitle(res?.outline?.title || params2.focus);
+        setOutlineSlides(slides);
+        setStep("outline");
+      } catch (err) {
+        setOutlineError(err.message || "Could not draft slide outline.");
+      } finally {
+        setLoadingOutline(false);
+      }
+      return;
+    }
+    const params = buildParams(
+      step === "outline" && outlineSlides.length > 0 ? { approved_outline: outlineSlides, count: outlineSlides.length, focus: outlineTitle || instructions.trim() || "Slide Deck" } : {}
+    );
+    onGenerate?.(params);
+    onClose?.();
+  }
+  function updateOutlineSlide(index, patch) {
+    setOutlineSlides((prev) => prev.map((sl, i) => i === index ? { ...sl, ...patch } : sl));
+  }
+  function moveOutlineSlide(index, delta) {
+    setOutlineSlides((prev) => {
+      const next = [...prev];
+      const target = index + delta;
+      if (target < 0 || target >= next.length) return prev;
+      const [item] = next.splice(index, 1);
+      next.splice(target, 0, item);
+      return next;
+    });
+  }
+  function removeOutlineSlide(index) {
+    setOutlineSlides((prev) => prev.filter((_, i) => i !== index));
+  }
+  function addOutlineSlide() {
+    setOutlineSlides((prev) => [
+      ...prev,
+      {
+        id: `sl_${prev.length + 1}`,
+        layout: "two-col",
+        title: "New supporting slide takeaway",
+        bullets: ["Key grounded point from sources"],
+        notes: "",
+        cites: []
+      }
+    ]);
+  }
+  return /* @__PURE__ */ jsx8("div", { className: "sb-modal-backdrop", onClick: onClose, role: "dialog", "aria-modal": "true", "aria-label": "Customize Slide Deck", children: /* @__PURE__ */ jsxs6("div", { className: "sb-modal sb-modal-wide", onClick: (e) => e.stopPropagation(), children: [
+    /* @__PURE__ */ jsxs6("div", { className: "sb-modal-head", children: [
+      /* @__PURE__ */ jsxs6("div", { style: { display: "flex", alignItems: "center", gap: 9 }, children: [
+        /* @__PURE__ */ jsx8(Icon, { name: "Presentation", size: 16, style: { color: "var(--ui-accent)" } }),
+        /* @__PURE__ */ jsx8("span", { children: mode === "revise" ? `Revise Slide Deck: ${initialArtifact?.title || ""}` : step === "outline" ? "Review & Edit Slide Outline" : "Customize Slide Deck" })
+      ] }),
+      /* @__PURE__ */ jsx8("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: onClose, "aria-label": "Close", children: /* @__PURE__ */ jsx8(Icon, { name: "X", size: 14 }) })
+    ] }),
+    /* @__PURE__ */ jsxs6("div", { className: "sb-modal-body sb-scroll", style: { maxHeight: "72vh" }, children: [
+      outlineError ? /* @__PURE__ */ jsx8("div", { className: "sb-error-bar", style: { borderRadius: 8 }, children: /* @__PURE__ */ jsx8("span", { children: outlineError }) }) : null,
+      step === "outline" ? /* @__PURE__ */ jsxs6("div", { style: { display: "flex", flexDirection: "column", gap: 10 }, children: [
+        /* @__PURE__ */ jsxs6("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
+          /* @__PURE__ */ jsx8(
+            "input",
+            {
+              className: "sb-input",
+              value: outlineTitle,
+              onChange: (e) => setOutlineTitle(e.target.value),
+              placeholder: "Slide deck title",
+              style: { fontWeight: 650 }
+            }
+          ),
+          /* @__PURE__ */ jsxs6("button", { type: "button", className: "sb-btn", onClick: addOutlineSlide, children: [
+            /* @__PURE__ */ jsx8(Icon, { name: "Plus", size: 12 }),
+            " Add slide"
+          ] })
+        ] }),
+        outlineSlides.map((sl, i) => /* @__PURE__ */ jsxs6("div", { className: "sb-outline-row", children: [
+          /* @__PURE__ */ jsxs6("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
+            /* @__PURE__ */ jsxs6("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
+              /* @__PURE__ */ jsx8("span", { className: "sb-mono", style: { fontSize: 11, fontWeight: 700, color: "var(--ui-accent)" }, children: String(i + 1).padStart(2, "0") }),
+              /* @__PURE__ */ jsx8(
+                "select",
+                {
+                  className: "sb-select",
+                  value: sl.layout || "bullets",
+                  onChange: (e) => updateOutlineSlide(i, { layout: e.target.value }),
+                  style: { padding: "2px 6px", fontSize: 11 },
+                  children: SLIDE_LAYOUTS.map((l) => /* @__PURE__ */ jsx8("option", { value: l, children: l }, l))
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxs6("div", { style: { display: "flex", gap: 3 }, children: [
+              /* @__PURE__ */ jsx8("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", disabled: i === 0, onClick: () => moveOutlineSlide(i, -1), title: "Move up", children: /* @__PURE__ */ jsx8(Icon, { name: "ChevronUp", size: 12 }) }),
+              /* @__PURE__ */ jsx8("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", disabled: i === outlineSlides.length - 1, onClick: () => moveOutlineSlide(i, 1), title: "Move down", children: /* @__PURE__ */ jsx8(Icon, { name: "ChevronDown", size: 12 }) }),
+              /* @__PURE__ */ jsx8("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon sb-btn-danger", disabled: outlineSlides.length <= 2, onClick: () => removeOutlineSlide(i), title: "Remove slide", children: /* @__PURE__ */ jsx8(Icon, { name: "Trash2", size: 12 }) })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsx8(
+            "input",
+            {
+              className: "sb-input",
+              value: sl.title || "",
+              onChange: (e) => updateOutlineSlide(i, { title: e.target.value }),
+              placeholder: "Action title",
+              style: { fontWeight: 600, fontSize: 12.5 }
+            }
+          ),
+          /* @__PURE__ */ jsx8(
+            "textarea",
+            {
+              className: "sb-textarea",
+              rows: 2,
+              value: (sl.bullets || []).join("\n"),
+              onChange: (e) => updateOutlineSlide(i, { bullets: e.target.value.split("\n").map((x) => x.trim()).filter(Boolean) }),
+              placeholder: "Key talking points (one per line)",
+              style: { fontSize: 11.5 }
+            }
+          ),
+          useImageGen ? /* @__PURE__ */ jsx8(
+            "input",
+            {
+              className: "sb-input",
+              value: sl.image_prompt || "",
+              onChange: (e) => updateOutlineSlide(i, { image_prompt: e.target.value }),
+              placeholder: "Optional art direction / visual prompt for this slide...",
+              style: { fontSize: 11 }
+            }
+          ) : null
+        ] }, sl.id || i))
+      ] }) : /* @__PURE__ */ jsxs6(Fragment4, { children: [
+        /* @__PURE__ */ jsxs6("div", { children: [
+          /* @__PURE__ */ jsx8("div", { className: "sb-label", style: { marginBottom: 7 }, children: "Format" }),
+          /* @__PURE__ */ jsxs6("div", { className: "sb-sd-format-grid", children: [
+            /* @__PURE__ */ jsxs6(
+              "button",
+              {
+                type: "button",
+                className: "sb-sd-format-card",
+                "data-active": deckFormat === "detailed",
+                onClick: () => setDeckFormat("detailed"),
+                children: [
+                  /* @__PURE__ */ jsxs6("div", { className: "sb-sd-format-head", children: [
+                    /* @__PURE__ */ jsx8("strong", { children: "Detailed Deck" }),
+                    /* @__PURE__ */ jsx8("span", { className: "sb-sd-radio", "data-checked": deckFormat === "detailed", children: deckFormat === "detailed" ? /* @__PURE__ */ jsx8(Icon, { name: "Check", size: 11 }) : null })
+                  ] }),
+                  /* @__PURE__ */ jsx8("span", { children: "A comprehensive deck with full text, evidence cards, and details, ready for reading on its own." })
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxs6(
+              "button",
+              {
+                type: "button",
+                className: "sb-sd-format-card",
+                "data-active": deckFormat === "presenter",
+                onClick: () => setDeckFormat("presenter"),
+                children: [
+                  /* @__PURE__ */ jsxs6("div", { className: "sb-sd-format-head", children: [
+                    /* @__PURE__ */ jsx8("strong", { children: "Presenter Slides" }),
+                    /* @__PURE__ */ jsx8("span", { className: "sb-sd-radio", "data-checked": deckFormat === "presenter", children: deckFormat === "presenter" ? /* @__PURE__ */ jsx8(Icon, { name: "Check", size: 11 }) : null })
+                  ] }),
+                  /* @__PURE__ */ jsx8("span", { children: "Clean, high-impact visual slides with concise talking points and rich speaker notes." })
+                ]
+              }
+            )
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxs6("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }, children: [
+          /* @__PURE__ */ jsxs6("div", { children: [
+            /* @__PURE__ */ jsx8("div", { className: "sb-label", style: { marginBottom: 6 }, children: "Deck style & purpose" }),
+            /* @__PURE__ */ jsx8("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" }, children: DECK_PURPOSES.map((p) => /* @__PURE__ */ jsx8(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn",
+                "data-active": deckPurpose === p.id,
+                onClick: () => setDeckPurpose(p.id),
+                style: { padding: "4px 10px", fontSize: 11.5 },
+                children: p.label
+              },
+              p.id
+            )) })
+          ] }),
+          /* @__PURE__ */ jsxs6("label", { className: "sb-field", style: { minWidth: 132 }, children: [
+            /* @__PURE__ */ jsx8("span", { className: "sb-label", children: "Theme" }),
+            /* @__PURE__ */ jsx8("select", { className: "sb-select", value: theme, onChange: (e) => setTheme(e.target.value), children: DECK_THEMES.map((t) => /* @__PURE__ */ jsx8("option", { value: t.id, children: t.label }, t.id)) })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxs6("div", { className: "sb-sd-controls-row", children: [
+          /* @__PURE__ */ jsxs6("label", { className: "sb-field", children: [
+            /* @__PURE__ */ jsx8("span", { className: "sb-label", children: "Choose language" }),
+            /* @__PURE__ */ jsx8("select", { className: "sb-select", value: language, onChange: (e) => setLanguage(e.target.value), children: LANGUAGES.map((lang) => /* @__PURE__ */ jsx8("option", { value: lang, children: lang }, lang)) })
+          ] }),
+          /* @__PURE__ */ jsxs6("div", { className: "sb-field", children: [
+            /* @__PURE__ */ jsx8("span", { className: "sb-label", children: "Length" }),
+            /* @__PURE__ */ jsx8("div", { className: "sb-seg", children: DECK_LENGTHS.map((l) => /* @__PURE__ */ jsxs6(
+              "button",
+              {
+                type: "button",
+                className: "sb-seg-btn",
+                "data-active": lengthKey === l.id,
+                onClick: () => setLengthKey(l.id),
+                children: [
+                  l.label,
+                  " (",
+                  l.count,
+                  ")"
+                ]
+              },
+              l.id
+            )) })
+          ] }),
+          /* @__PURE__ */ jsxs6("div", { className: "sb-field", style: { position: "relative" }, children: [
+            /* @__PURE__ */ jsx8("span", { className: "sb-label", children: "Sources" }),
+            /* @__PURE__ */ jsxs6(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn",
+                onClick: () => setSourcePickerOpen((v) => !v),
+                style: { justifyContent: "space-between", width: "100%" },
+                children: [
+                  /* @__PURE__ */ jsxs6("span", { children: [
+                    selectedSourceIds.length,
+                    " of ",
+                    (sources || []).length,
+                    " source",
+                    (sources || []).length === 1 ? "" : "s"
+                  ] }),
+                  /* @__PURE__ */ jsx8(Icon, { name: "ChevronDown", size: 12 })
+                ]
+              }
+            )
+          ] })
+        ] }),
+        sourcePickerOpen ? /* @__PURE__ */ jsxs6("div", { className: "sb-sd-source-picker sb-scroll", children: [
+          /* @__PURE__ */ jsxs6("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }, children: [
+            /* @__PURE__ */ jsx8("span", { className: "sb-label", children: "Select sources for this slide deck" }),
+            /* @__PURE__ */ jsxs6("div", { style: { display: "flex", gap: 6 }, children: [
+              /* @__PURE__ */ jsx8("button", { type: "button", className: "sb-btn sb-btn-ghost", style: { padding: "2px 7px", fontSize: 11 }, onClick: () => setSelectedSourceIds((sources || []).map((s) => s.id)), children: "All" }),
+              /* @__PURE__ */ jsx8("button", { type: "button", className: "sb-btn sb-btn-ghost", style: { padding: "2px 7px", fontSize: 11 }, onClick: () => setSelectedSourceIds(enabledSources.map((s) => s.id)), children: "Active only" })
+            ] })
+          ] }),
+          (sources || []).map((src) => {
+            const checked = selectedSourceIds.includes(src.id);
+            return /* @__PURE__ */ jsxs6("label", { className: "sb-sd-source-row", children: [
+              /* @__PURE__ */ jsx8(
+                "input",
+                {
+                  type: "checkbox",
+                  className: "sb-checkbox",
+                  checked,
+                  onChange: () => toggleSource(src.id)
+                }
+              ),
+              /* @__PURE__ */ jsx8("span", { className: "sb-src-title", style: { flex: 1 }, children: src.title }),
+              /* @__PURE__ */ jsxs6("span", { className: "sb-mono", style: { fontSize: 10.5, color: "var(--ui-text-tertiary)" }, children: [
+                src.chunk_count || 0,
+                " ch"
+              ] })
+            ] }, src.id);
+          })
+        ] }) : null,
+        /* @__PURE__ */ jsxs6("label", { className: "sb-field", children: [
+          /* @__PURE__ */ jsx8("span", { className: "sb-label", children: mode === "revise" ? "Describe how you want to revise this deck" : "Describe the slide deck you want to create" }),
+          /* @__PURE__ */ jsx8(
+            "textarea",
+            {
+              className: "sb-textarea",
+              rows: 3,
+              value: instructions,
+              onChange: (e) => setInstructions(e.target.value),
+              placeholder: mode === "revise" ? 'Example: "Make slide 3 punchier with a bold metric callout, add a comparison slide for option A vs B, and tighten speaker notes for investors."' : 'Add a high-level outline, or guide the audience, visual aesthetic, and focus: "Create an investor pitch deck in a dark blueprint aesthetic with architecture diagrams and crisp KPI callouts."'
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs6("div", { className: "sb-sd-toggle-card", children: [
+          /* @__PURE__ */ jsxs6("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }, children: [
+            /* @__PURE__ */ jsxs6("div", { style: { display: "flex", flexDirection: "column", gap: 2 }, children: [
+              /* @__PURE__ */ jsxs6("div", { style: { display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, fontWeight: 650, color: "var(--ui-text-primary)" }, children: [
+                /* @__PURE__ */ jsx8(Icon, { name: "Sparkles", size: 13, style: { color: "var(--ui-accent)" } }),
+                /* @__PURE__ */ jsx8("span", { children: "Use Hermes Image Generation" }),
+                /* @__PURE__ */ jsx8("span", { className: "sb-kind-tag", style: { fontSize: 10 }, children: hasImgGen ? imgProviderLabel || "Hermes ImageGen Ready" : "Optional" })
+              ] }),
+              /* @__PURE__ */ jsx8("span", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: useImageGen ? hasImgGen ? "Uses whatever image model is configured in your Hermes agent to generate custom visuals." : "No imagegen provider detected in Hermes yet; will craft high-craft native vector slides until configured." : "Crafts crisp editable native vector & data-viz slides (Stat Spotlight, Comparison, Timeline, Bento) for PowerPoint & PDF." })
+            ] }),
+            /* @__PURE__ */ jsx8(
+              "button",
+              {
+                type: "button",
+                role: "switch",
+                "aria-checked": useImageGen,
+                className: "sb-switch",
+                "data-checked": useImageGen,
+                onClick: () => setUseImageGen((v) => !v),
+                children: /* @__PURE__ */ jsx8("span", { className: "sb-switch-thumb" })
+              }
+            )
+          ] }),
+          useImageGen ? /* @__PURE__ */ jsxs6("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, paddingTop: 8, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
+            /* @__PURE__ */ jsx8("span", { style: { fontSize: 11.5, color: "var(--ui-text-secondary)" }, children: "Visual rendering mode" }),
+            /* @__PURE__ */ jsxs6("div", { className: "sb-seg", children: [
+              /* @__PURE__ */ jsx8(
+                "button",
+                {
+                  type: "button",
+                  className: "sb-seg-btn",
+                  "data-active": imageMode === "full_slide",
+                  onClick: () => setImageMode("full_slide"),
+                  children: "Full-Slide Art"
+                }
+              ),
+              /* @__PURE__ */ jsx8(
+                "button",
+                {
+                  type: "button",
+                  className: "sb-seg-btn",
+                  "data-active": imageMode === "hybrid",
+                  onClick: () => setImageMode("hybrid"),
+                  children: "Hybrid (Editable Text + Art)"
+                }
+              )
+            ] })
+          ] }) : null
+        ] }),
+        mode !== "revise" ? /* @__PURE__ */ jsx8("div", { className: "sb-sd-toggle-card", children: /* @__PURE__ */ jsxs6("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }, children: [
+          /* @__PURE__ */ jsxs6("div", { style: { display: "flex", flexDirection: "column", gap: 2 }, children: [
+            /* @__PURE__ */ jsx8("strong", { style: { fontSize: 12.5, color: "var(--ui-text-primary)" }, children: "Review slide outline" }),
+            /* @__PURE__ */ jsx8("span", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: "Preview, edit, and reorder the slide outline before generating artwork and finalizing the deck." })
+          ] }),
+          /* @__PURE__ */ jsx8(
+            "button",
+            {
+              type: "button",
+              role: "switch",
+              "aria-checked": reviewOutline,
+              className: "sb-switch",
+              "data-checked": reviewOutline,
+              onClick: () => setReviewOutline((v) => !v),
+              children: /* @__PURE__ */ jsx8("span", { className: "sb-switch-thumb" })
+            }
+          )
+        ] }) }) : null
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxs6("div", { className: "sb-modal-foot", children: [
+      step === "outline" ? /* @__PURE__ */ jsxs6("button", { type: "button", className: "sb-btn", onClick: () => setStep("config"), children: [
+        /* @__PURE__ */ jsx8(Icon, { name: "ArrowLeft", size: 12 }),
+        " Back to settings"
+      ] }) : /* @__PURE__ */ jsx8("button", { type: "button", className: "sb-btn", onClick: onClose, children: "Cancel" }),
+      /* @__PURE__ */ jsx8(
+        "button",
+        {
+          type: "button",
+          className: "sb-btn sb-btn-primary",
+          disabled: loadingOutline || selectedSourceIds.length === 0,
+          onClick: handlePrimaryAction,
+          children: loadingOutline ? /* @__PURE__ */ jsxs6(Fragment4, { children: [
+            /* @__PURE__ */ jsx8(HermesSpinner, { size: 12 }),
+            " Drafting outline..."
+          ] }) : mode === "revise" ? "Revise deck" : reviewOutline && step === "config" ? "Review outline" : "Generate now"
+        }
+      )
+    ] })
+  ] }) });
+}
 
 // desktop-src/components/renderers/StudyGuideView.jsx
-import { jsx as jsx8, jsxs as jsxs6 } from "react/jsx-runtime";
+import { jsx as jsx9, jsxs as jsxs7 } from "react/jsx-runtime";
 function StudyGuideView({ artifact, onOpenChunk }) {
   const md = String(artifact?.spec?.markdown || "");
   const citeOrder = [];
@@ -4362,32 +5136,32 @@ function StudyGuideView({ artifact, onOpenChunk }) {
     }
     return _m;
   });
-  return /* @__PURE__ */ jsxs6("div", { style: { display: "flex", flexDirection: "column", gap: 12 }, children: [
-    /* @__PURE__ */ jsxs6("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" }, children: [
-      /* @__PURE__ */ jsxs6("button", { type: "button", className: "sb-btn", onClick: () => copyText(md), children: [
-        /* @__PURE__ */ jsx8(Icon, { name: "Copy", size: 12 }),
+  return /* @__PURE__ */ jsxs7("div", { style: { display: "flex", flexDirection: "column", gap: 12 }, children: [
+    /* @__PURE__ */ jsxs7("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" }, children: [
+      /* @__PURE__ */ jsxs7("button", { type: "button", className: "sb-btn", onClick: () => copyText(md), children: [
+        /* @__PURE__ */ jsx9(Icon, { name: "Copy", size: 12 }),
         " Copy Markdown"
       ] }),
-      /* @__PURE__ */ jsxs6(
+      /* @__PURE__ */ jsxs7(
         "button",
         {
           type: "button",
           className: "sb-btn",
           onClick: () => downloadTextFile(`${artifact.id || "study-guide"}.md`, md, "text/markdown;charset=utf-8"),
           children: [
-            /* @__PURE__ */ jsx8(Icon, { name: "Download", size: 12 }),
+            /* @__PURE__ */ jsx9(Icon, { name: "Download", size: 12 }),
             " Download .md"
           ]
         }
       )
     ] }),
-    /* @__PURE__ */ jsx8(MarkdownBody, { text: md, citeIndexMap: citeMap, onOpenChunk })
+    /* @__PURE__ */ jsx9(MarkdownBody, { text: md, citeIndexMap: citeMap, onOpenChunk })
   ] });
 }
 
 // desktop-src/components/renderers/AudioOverviewView.jsx
-import { useEffect as useEffect4, useRef as useRef5, useState as useState4 } from "react";
-import { jsx as jsx9, jsxs as jsxs7 } from "react/jsx-runtime";
+import { useEffect as useEffect5, useRef as useRef5, useState as useState5 } from "react";
+import { jsx as jsx10, jsxs as jsxs8 } from "react/jsx-runtime";
 function b64ToBlobUrl(b64, mime = "audio/mpeg") {
   const bin = atob(b64);
   const arr = new Uint8Array(bin.length);
@@ -4398,19 +5172,19 @@ function b64ToBlobUrl(b64, mime = "audio/mpeg") {
 function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
   const spec = artifact?.spec || {};
   const turns = spec.turns || [];
-  const [audioUrl, setAudioUrl] = useState4("");
-  const [audioBlob, setAudioBlob] = useState4(null);
-  const [loadingAudio, setLoadingAudio] = useState4(false);
-  const [audioPlaying, setAudioPlaying] = useState4(false);
-  const [rate, setRate] = useState4(1);
-  const [speakingIdx, setSpeakingIdx] = useState4(-1);
-  const [question, setQuestion] = useState4("");
-  const [asking, setAsking] = useState4(false);
+  const [audioUrl, setAudioUrl] = useState5("");
+  const [audioBlob, setAudioBlob] = useState5(null);
+  const [loadingAudio, setLoadingAudio] = useState5(false);
+  const [audioPlaying, setAudioPlaying] = useState5(false);
+  const [rate, setRate] = useState5(1);
+  const [speakingIdx, setSpeakingIdx] = useState5(-1);
+  const [question, setQuestion] = useState5("");
+  const [asking, setAsking] = useState5(false);
   const audioRef = useRef5(null);
   const stopSpeakRef = useRef5(false);
   const canBrowserSpeak = typeof window !== "undefined" && typeof window.speechSynthesis !== "undefined";
   const isActivelyPlaying = audioPlaying || speakingIdx >= 0;
-  useEffect4(() => {
+  useEffect5(() => {
     stopSpeech();
     let alive = true;
     let createdUrl = "";
@@ -4435,7 +5209,7 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
       if (createdUrl) URL.revokeObjectURL(createdUrl);
     };
   }, [nbId, artifact?.id, artifact?.has_audio]);
-  useEffect4(() => {
+  useEffect5(() => {
     if (audioRef.current) {
       audioRef.current.playbackRate = rate;
     }
@@ -4517,42 +5291,42 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
       setAsking(false);
     }
   }
-  return /* @__PURE__ */ jsxs7("div", { style: { display: "flex", flexDirection: "column", gap: 12 }, children: [
-    /* @__PURE__ */ jsxs7("div", { className: "sb-inf-toolbar", children: [
-      /* @__PURE__ */ jsxs7("div", { style: { display: "flex", alignItems: "center", gap: 8 }, children: [
-        /* @__PURE__ */ jsx9("span", { className: "sb-kind-tag", children: (spec.style || "deep_dive").replace("_", " ") }),
-        /* @__PURE__ */ jsxs7("span", { style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: [
+  return /* @__PURE__ */ jsxs8("div", { style: { display: "flex", flexDirection: "column", gap: 12 }, children: [
+    /* @__PURE__ */ jsxs8("div", { className: "sb-inf-toolbar", children: [
+      /* @__PURE__ */ jsxs8("div", { style: { display: "flex", alignItems: "center", gap: 8 }, children: [
+        /* @__PURE__ */ jsx10("span", { className: "sb-kind-tag", children: (spec.style || "deep_dive").replace("_", " ") }),
+        /* @__PURE__ */ jsxs8("span", { style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: [
           (spec.hosts || ["Alex", "Maya"]).join(" & "),
           " \xB7 ",
-          /* @__PURE__ */ jsx9("span", { className: "sb-mono", children: turns.length }),
+          /* @__PURE__ */ jsx10("span", { className: "sb-mono", children: turns.length }),
           " turns"
         ] })
       ] }),
-      /* @__PURE__ */ jsxs7("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" }, children: [
-        /* @__PURE__ */ jsxs7("button", { type: "button", className: "sb-btn", onClick: () => copyText(toMarkdown()), children: [
-          /* @__PURE__ */ jsx9(Icon, { name: "Copy", size: 12 }),
+      /* @__PURE__ */ jsxs8("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" }, children: [
+        /* @__PURE__ */ jsxs8("button", { type: "button", className: "sb-btn", onClick: () => copyText(toMarkdown()), children: [
+          /* @__PURE__ */ jsx10(Icon, { name: "Copy", size: 12 }),
           " Script"
         ] }),
-        /* @__PURE__ */ jsxs7(
+        /* @__PURE__ */ jsxs8(
           "button",
           {
             type: "button",
             className: "sb-btn",
             onClick: () => downloadTextFile(`${artifact.id || "audio-overview"}.md`, toMarkdown(), "text/markdown;charset=utf-8"),
             children: [
-              /* @__PURE__ */ jsx9(Icon, { name: "Download", size: 12 }),
+              /* @__PURE__ */ jsx10(Icon, { name: "Download", size: 12 }),
               " .md"
             ]
           }
         ),
-        audioBlob ? /* @__PURE__ */ jsxs7("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: downloadMp3, children: [
-          /* @__PURE__ */ jsx9(Icon, { name: "Download", size: 12 }),
+        audioBlob ? /* @__PURE__ */ jsxs8("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: downloadMp3, children: [
+          /* @__PURE__ */ jsx10(Icon, { name: "Download", size: 12 }),
           " MP3"
         ] }) : null
       ] })
     ] }),
-    /* @__PURE__ */ jsxs7("div", { className: "sb-audio-stage", children: [
-      /* @__PURE__ */ jsx9(
+    /* @__PURE__ */ jsxs8("div", { className: "sb-audio-stage", children: [
+      /* @__PURE__ */ jsx10(
         DitherCanvas,
         {
           variant: "wave",
@@ -4565,7 +5339,7 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
           style: { width: "100%", height: 64, display: "block", borderRadius: 7 }
         }
       ),
-      audioUrl ? /* @__PURE__ */ jsx9(
+      audioUrl ? /* @__PURE__ */ jsx10(
         "audio",
         {
           ref: audioRef,
@@ -4576,22 +5350,22 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
           onEnded: () => setAudioPlaying(false),
           style: { width: "100%", height: 36 }
         }
-      ) : /* @__PURE__ */ jsxs7("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }, children: [
-        /* @__PURE__ */ jsxs7("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", display: "flex", alignItems: "center", gap: 8 }, children: [
-          /* @__PURE__ */ jsx9(Icon, { name: "Headphones", size: 14, style: { color: "var(--ui-accent)" } }),
-          /* @__PURE__ */ jsx9("span", { children: loadingAudio ? "Loading podcast audio..." : "Listen instantly with dual desktop voices or configure Hermes TTS (ElevenLabs, OpenAI, Gemini, Piper) for MP3 downloads." })
+      ) : /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }, children: [
+        /* @__PURE__ */ jsxs8("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", display: "flex", alignItems: "center", gap: 8 }, children: [
+          /* @__PURE__ */ jsx10(Icon, { name: "Headphones", size: 14, style: { color: "var(--ui-accent)" } }),
+          /* @__PURE__ */ jsx10("span", { children: loadingAudio ? "Loading podcast audio..." : "Listen instantly with dual desktop voices or configure Hermes TTS (ElevenLabs, OpenAI, Gemini, Piper) for MP3 downloads." })
         ] }),
-        canBrowserSpeak && turns.length > 0 ? speakingIdx >= 0 ? /* @__PURE__ */ jsxs7("button", { type: "button", className: "sb-btn", onClick: stopSpeech, children: [
-          /* @__PURE__ */ jsx9(Icon, { name: "X", size: 12 }),
+        canBrowserSpeak && turns.length > 0 ? speakingIdx >= 0 ? /* @__PURE__ */ jsxs8("button", { type: "button", className: "sb-btn", onClick: stopSpeech, children: [
+          /* @__PURE__ */ jsx10(Icon, { name: "X", size: 12 }),
           " Stop"
-        ] }) : /* @__PURE__ */ jsxs7("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => playBrowserSpeech(0), children: [
-          /* @__PURE__ */ jsx9(Icon, { name: "Play", size: 12 }),
+        ] }) : /* @__PURE__ */ jsxs8("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => playBrowserSpeech(0), children: [
+          /* @__PURE__ */ jsx10(Icon, { name: "Play", size: 12 }),
           " Listen aloud"
         ] }) : null
       ] }),
-      /* @__PURE__ */ jsxs7("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6, paddingTop: 4, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
-        /* @__PURE__ */ jsx9("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Playback speed" }),
-        /* @__PURE__ */ jsx9("div", { className: "sb-seg", children: [0.75, 1, 1.25, 1.5, 2].map((v) => /* @__PURE__ */ jsxs7(
+      /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6, paddingTop: 4, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
+        /* @__PURE__ */ jsx10("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Playback speed" }),
+        /* @__PURE__ */ jsx10("div", { className: "sb-seg", children: [0.75, 1, 1.25, 1.5, 2].map((v) => /* @__PURE__ */ jsxs8(
           "button",
           {
             type: "button",
@@ -4607,13 +5381,13 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
         )) })
       ] })
     ] }),
-    /* @__PURE__ */ jsx9("div", { style: { display: "flex", flexDirection: "column", gap: 8 }, children: turns.map((t, idx) => {
+    /* @__PURE__ */ jsx10("div", { style: { display: "flex", flexDirection: "column", gap: 8 }, children: turns.map((t, idx) => {
       const sp = String(t.speaker || "Host");
       const isHostB = sp.toLowerCase() === "maya" || sp.toLowerCase() === "host b";
       const isListener = sp.toLowerCase() === "listener";
       const isSpeaking = speakingIdx === idx;
       const accent = isListener ? "#10b981" : isHostB ? "#f59e0b" : "var(--ui-accent)";
-      return /* @__PURE__ */ jsxs7(
+      return /* @__PURE__ */ jsxs8(
         "article",
         {
           className: "sb-ledger-row",
@@ -4622,9 +5396,9 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
             background: isSpeaking ? "var(--sb-accent-soft)" : void 0
           },
           children: [
-            /* @__PURE__ */ jsxs7("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
-              /* @__PURE__ */ jsxs7("div", { style: { display: "flex", alignItems: "center", gap: 7 }, children: [
-                /* @__PURE__ */ jsx9(
+            /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
+              /* @__PURE__ */ jsxs8("div", { style: { display: "flex", alignItems: "center", gap: 7 }, children: [
+                /* @__PURE__ */ jsx10(
                   "span",
                   {
                     className: "sb-mono",
@@ -4644,19 +5418,19 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
                     children: sp.slice(0, 1).toUpperCase()
                   }
                 ),
-                /* @__PURE__ */ jsx9("span", { style: { fontSize: 12, fontWeight: 650, color: "var(--ui-text-primary)" }, children: sp }),
-                isSpeaking ? /* @__PURE__ */ jsx9("span", { className: "sb-kind-tag", style: { color: accent }, children: "Speaking" }) : null
+                /* @__PURE__ */ jsx10("span", { style: { fontSize: 12, fontWeight: 650, color: "var(--ui-text-primary)" }, children: sp }),
+                isSpeaking ? /* @__PURE__ */ jsx10("span", { className: "sb-kind-tag", style: { color: accent }, children: "Speaking" }) : null
               ] }),
-              /* @__PURE__ */ jsx9("div", { style: { display: "flex", gap: 4 }, children: (t.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx9("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: cIdx + 1 }, cid)) })
+              /* @__PURE__ */ jsx10("div", { style: { display: "flex", gap: 4 }, children: (t.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx10("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: cIdx + 1 }, cid)) })
             ] }),
-            /* @__PURE__ */ jsx9("div", { style: { fontSize: 12.5, lineHeight: 1.58, color: "var(--ui-text-secondary)" }, children: t.text })
+            /* @__PURE__ */ jsx10("div", { style: { fontSize: 12.5, lineHeight: 1.58, color: "var(--ui-text-secondary)" }, children: t.text })
           ]
         },
         t.id || idx
       );
     }) }),
-    /* @__PURE__ */ jsxs7("form", { onSubmit: askHosts, style: { display: "flex", gap: 6, marginTop: 4 }, children: [
-      /* @__PURE__ */ jsx9(
+    /* @__PURE__ */ jsxs8("form", { onSubmit: askHosts, style: { display: "flex", gap: 6, marginTop: 4 }, children: [
+      /* @__PURE__ */ jsx10(
         "input",
         {
           className: "sb-input",
@@ -4666,14 +5440,14 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
           disabled: asking
         }
       ),
-      /* @__PURE__ */ jsx9("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: asking || !question.trim(), children: asking ? "Asking..." : "Ask Hosts" })
+      /* @__PURE__ */ jsx10("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: asking || !question.trim(), children: asking ? "Asking..." : "Ask Hosts" })
     ] })
   ] });
 }
 
 // desktop-src/components/renderers/FlashcardsView.jsx
-import { useEffect as useEffect5, useState as useState5 } from "react";
-import { Fragment as Fragment4, jsx as jsx10, jsxs as jsxs8 } from "react/jsx-runtime";
+import { useEffect as useEffect6, useState as useState6 } from "react";
+import { Fragment as Fragment5, jsx as jsx11, jsxs as jsxs9 } from "react/jsx-runtime";
 function nextSm2(prev, quality) {
   const ease = Math.max(1.3, (prev?.ease ?? 2.5) + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
   let reps = prev?.reps ?? 0;
@@ -4702,14 +5476,14 @@ function fmtInterval(days) {
 }
 function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStateSaved }) {
   const cards = artifact?.spec?.cards || [];
-  const [order, setOrder] = useState5(() => cards.map((_, i) => i));
-  const [cursor, setCursor] = useState5(0);
-  const [flipped, setFlipped] = useState5(false);
-  const [showHint, setShowHint] = useState5(false);
-  const [viewMode, setViewMode] = useState5("deck");
-  const [sessionReviewed, setSessionReviewed] = useState5(0);
-  const [sm2, setSm2] = useState5(() => artifact?.state?.sm2 || {});
-  useEffect5(() => {
+  const [order, setOrder] = useState6(() => cards.map((_, i) => i));
+  const [cursor, setCursor] = useState6(0);
+  const [flipped, setFlipped] = useState6(false);
+  const [showHint, setShowHint] = useState6(false);
+  const [viewMode, setViewMode] = useState6("deck");
+  const [sessionReviewed, setSessionReviewed] = useState6(0);
+  const [sm2, setSm2] = useState6(() => artifact?.state?.sm2 || {});
+  useEffect6(() => {
     setOrder(cards.map((_, i) => i));
     setCursor(0);
     setFlipped(false);
@@ -4719,7 +5493,7 @@ function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStat
     setSm2(artifact?.state?.sm2 || {});
   }, [artifact?.id]);
   if (!cards.length) {
-    return /* @__PURE__ */ jsx10("div", { className: "sb-empty", children: "No flashcards in this deck." });
+    return /* @__PURE__ */ jsx11("div", { className: "sb-empty", children: "No flashcards in this deck." });
   }
   const card = cards[order[cursor] ?? 0] || cards[0];
   const cardId = card.id || String(order[cursor] ?? 0);
@@ -4784,65 +5558,65 @@ function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStat
     });
     downloadTextFile(`${artifact.id || "flashcards"}-anki.tsv`, lines.join("\n"), "text/tab-separated-values;charset=utf-8");
   }
-  return /* @__PURE__ */ jsxs8("div", { style: { display: "flex", flexDirection: "column", gap: 12 }, children: [
-    /* @__PURE__ */ jsxs8("div", { className: "sb-dt-kpis", children: [
-      /* @__PURE__ */ jsxs8("div", { className: "sb-dt-kpi", children: [
-        /* @__PURE__ */ jsx10("div", { className: "sb-dt-kpi-lbl", children: "Deck" }),
-        /* @__PURE__ */ jsxs8("div", { className: "sb-dt-kpi-val sb-mono", children: [
+  return /* @__PURE__ */ jsxs9("div", { style: { display: "flex", flexDirection: "column", gap: 12 }, children: [
+    /* @__PURE__ */ jsxs9("div", { className: "sb-dt-kpis", children: [
+      /* @__PURE__ */ jsxs9("div", { className: "sb-dt-kpi", children: [
+        /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-lbl", children: "Deck" }),
+        /* @__PURE__ */ jsxs9("div", { className: "sb-dt-kpi-val sb-mono", children: [
           cursor + 1,
           " / ",
           cards.length
         ] })
       ] }),
-      /* @__PURE__ */ jsxs8("div", { className: "sb-dt-kpi", children: [
-        /* @__PURE__ */ jsx10("div", { className: "sb-dt-kpi-lbl", children: "Due Now" }),
-        /* @__PURE__ */ jsx10("div", { className: "sb-dt-kpi-val sb-mono", style: { color: due > 0 ? "#f59e0b" : "#10b981" }, children: due })
+      /* @__PURE__ */ jsxs9("div", { className: "sb-dt-kpi", children: [
+        /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-lbl", children: "Due Now" }),
+        /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-val sb-mono", style: { color: due > 0 ? "#f59e0b" : "#10b981" }, children: due })
       ] }),
-      /* @__PURE__ */ jsxs8("div", { className: "sb-dt-kpi", children: [
-        /* @__PURE__ */ jsx10("div", { className: "sb-dt-kpi-lbl", children: "Mastered" }),
-        /* @__PURE__ */ jsx10("div", { className: "sb-dt-kpi-val sb-mono", style: { color: "#10b981" }, children: mastered })
+      /* @__PURE__ */ jsxs9("div", { className: "sb-dt-kpi", children: [
+        /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-lbl", children: "Mastered" }),
+        /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-val sb-mono", style: { color: "#10b981" }, children: mastered })
       ] }),
-      /* @__PURE__ */ jsxs8("div", { className: "sb-dt-kpi", children: [
-        /* @__PURE__ */ jsx10("div", { className: "sb-dt-kpi-lbl", children: "Session" }),
-        /* @__PURE__ */ jsx10("div", { className: "sb-dt-kpi-val sb-mono", style: { color: "var(--ui-accent)" }, children: sessionReviewed })
+      /* @__PURE__ */ jsxs9("div", { className: "sb-dt-kpi", children: [
+        /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-lbl", children: "Session" }),
+        /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-val sb-mono", style: { color: "var(--ui-accent)" }, children: sessionReviewed })
       ] })
     ] }),
-    /* @__PURE__ */ jsxs8("div", { className: "sb-inf-toolbar", children: [
-      /* @__PURE__ */ jsxs8("div", { className: "sb-seg", role: "group", "aria-label": "Flashcard mode", children: [
-        /* @__PURE__ */ jsxs8("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "deck", onClick: () => setViewMode("deck"), children: [
-          /* @__PURE__ */ jsx10(Icon, { name: "Layers", size: 12 }),
+    /* @__PURE__ */ jsxs9("div", { className: "sb-inf-toolbar", children: [
+      /* @__PURE__ */ jsxs9("div", { className: "sb-seg", role: "group", "aria-label": "Flashcard mode", children: [
+        /* @__PURE__ */ jsxs9("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "deck", onClick: () => setViewMode("deck"), children: [
+          /* @__PURE__ */ jsx11(Icon, { name: "Layers", size: 12 }),
           " Study Deck"
         ] }),
-        /* @__PURE__ */ jsxs8("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "browse", onClick: () => setViewMode("browse"), children: [
-          /* @__PURE__ */ jsx10(Icon, { name: "LayoutGrid", size: 12 }),
+        /* @__PURE__ */ jsxs9("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "browse", onClick: () => setViewMode("browse"), children: [
+          /* @__PURE__ */ jsx11(Icon, { name: "LayoutGrid", size: 12 }),
           " Browse All (",
           cards.length,
           ")"
         ] })
       ] }),
-      /* @__PURE__ */ jsxs8("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" }, children: [
-        /* @__PURE__ */ jsxs8("button", { type: "button", className: "sb-btn", onClick: shuffle, children: [
-          /* @__PURE__ */ jsx10(Icon, { name: "Shuffle", size: 12 }),
+      /* @__PURE__ */ jsxs9("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" }, children: [
+        /* @__PURE__ */ jsxs9("button", { type: "button", className: "sb-btn", onClick: shuffle, children: [
+          /* @__PURE__ */ jsx11(Icon, { name: "Shuffle", size: 12 }),
           " Shuffle"
         ] }),
-        /* @__PURE__ */ jsxs8("button", { type: "button", className: "sb-btn", onClick: exportCsv, children: [
-          /* @__PURE__ */ jsx10(Icon, { name: "Download", size: 12 }),
+        /* @__PURE__ */ jsxs9("button", { type: "button", className: "sb-btn", onClick: exportCsv, children: [
+          /* @__PURE__ */ jsx11(Icon, { name: "Download", size: 12 }),
           " CSV"
         ] }),
-        /* @__PURE__ */ jsxs8("button", { type: "button", className: "sb-btn", onClick: exportAnki, title: "Export tab-separated deck ready for Anki import", children: [
-          /* @__PURE__ */ jsx10(Icon, { name: "Download", size: 12 }),
+        /* @__PURE__ */ jsxs9("button", { type: "button", className: "sb-btn", onClick: exportAnki, title: "Export tab-separated deck ready for Anki import", children: [
+          /* @__PURE__ */ jsx11(Icon, { name: "Download", size: 12 }),
           " Anki TSV"
         ] })
       ] })
     ] }),
-    /* @__PURE__ */ jsxs8("div", { className: "sb-fc-mastery-bar", title: `Mastered ${mastered} | Learning ${learning} | New/Due ${Math.max(0, cards.length - mastered - learning)}`, children: [
-      /* @__PURE__ */ jsx10("div", { style: { width: `${masteredPct}%`, background: "#10b981" } }),
-      /* @__PURE__ */ jsx10("div", { style: { width: `${learningPct}%`, background: "var(--ui-accent)" } })
+    /* @__PURE__ */ jsxs9("div", { className: "sb-fc-mastery-bar", title: `Mastered ${mastered} | Learning ${learning} | New/Due ${Math.max(0, cards.length - mastered - learning)}`, children: [
+      /* @__PURE__ */ jsx11("div", { style: { width: `${masteredPct}%`, background: "#10b981" } }),
+      /* @__PURE__ */ jsx11("div", { style: { width: `${learningPct}%`, background: "var(--ui-accent)" } })
     ] }),
-    viewMode === "browse" ? /* @__PURE__ */ jsx10("div", { className: "sb-dt-cards-grid", children: cards.map((c, cIdx) => {
+    viewMode === "browse" ? /* @__PURE__ */ jsx11("div", { className: "sb-dt-cards-grid", children: cards.map((c, cIdx) => {
       const st = sm2[c.id || String(cIdx)];
       const status = (st?.reps || 0) >= 2 ? "Mastered" : (st?.reps || 0) === 1 ? "Learning" : "Due";
-      return /* @__PURE__ */ jsxs8(
+      return /* @__PURE__ */ jsxs9(
         "div",
         {
           className: "sb-dt-card",
@@ -4854,24 +5628,24 @@ function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStat
             setViewMode("deck");
           },
           children: [
-            /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }, children: [
-              /* @__PURE__ */ jsxs8("span", { className: "sb-mono", style: { fontSize: 10.5, color: "var(--ui-text-tertiary)" }, children: [
+            /* @__PURE__ */ jsxs9("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }, children: [
+              /* @__PURE__ */ jsxs9("span", { className: "sb-mono", style: { fontSize: 10.5, color: "var(--ui-text-tertiary)" }, children: [
                 "CARD 0",
                 cIdx + 1
               ] }),
-              /* @__PURE__ */ jsx10("span", { className: "sb-verdict", "data-v": status === "Mastered" ? "supported" : status === "Learning" ? "partial" : void 0, style: { fontSize: 10 }, children: status })
+              /* @__PURE__ */ jsx11("span", { className: "sb-verdict", "data-v": status === "Mastered" ? "supported" : status === "Learning" ? "partial" : void 0, style: { fontSize: 10 }, children: status })
             ] }),
-            /* @__PURE__ */ jsx10("div", { style: { fontWeight: 650, fontSize: 13, color: "var(--ui-text-primary)", lineHeight: 1.4 }, children: c.front }),
-            /* @__PURE__ */ jsx10("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", lineHeight: 1.5, paddingTop: 6, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: c.back })
+            /* @__PURE__ */ jsx11("div", { style: { fontWeight: 650, fontSize: 13, color: "var(--ui-text-primary)", lineHeight: 1.4 }, children: c.front }),
+            /* @__PURE__ */ jsx11("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", lineHeight: 1.5, paddingTop: 6, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: c.back })
           ]
         },
         c.id || cIdx
       );
-    }) }) : /* @__PURE__ */ jsxs8(Fragment4, { children: [
-      /* @__PURE__ */ jsxs8("div", { className: "sb-fc-stack", children: [
-        /* @__PURE__ */ jsx10("div", { className: "sb-fc-layer sb-fc-layer-2", "aria-hidden": "true" }),
-        /* @__PURE__ */ jsx10("div", { className: "sb-fc-layer sb-fc-layer-1", "aria-hidden": "true" }),
-        /* @__PURE__ */ jsxs8(
+    }) }) : /* @__PURE__ */ jsxs9(Fragment5, { children: [
+      /* @__PURE__ */ jsxs9("div", { className: "sb-fc-stack", children: [
+        /* @__PURE__ */ jsx11("div", { className: "sb-fc-layer sb-fc-layer-2", "aria-hidden": "true" }),
+        /* @__PURE__ */ jsx11("div", { className: "sb-fc-layer sb-fc-layer-1", "aria-hidden": "true" }),
+        /* @__PURE__ */ jsxs9(
           "div",
           {
             className: "sb-fc-card sb-fc-card-rich",
@@ -4899,14 +5673,14 @@ function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStat
               }
             },
             children: [
-              /* @__PURE__ */ jsx10(
+              /* @__PURE__ */ jsx11(
                 "div",
                 {
                   className: "sb-sl-top-ribbon",
                   style: { background: flipped ? "#10b981" : "var(--ui-accent)" }
                 }
               ),
-              /* @__PURE__ */ jsx10(
+              /* @__PURE__ */ jsx11(
                 DitherCanvas,
                 {
                   variant: "mesh",
@@ -4919,8 +5693,8 @@ function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStat
                   style: { position: "absolute", inset: "0 0 auto 0", width: "100%", height: 92, pointerEvents: "none" }
                 }
               ),
-              /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative" }, children: [
-                /* @__PURE__ */ jsx10(
+              /* @__PURE__ */ jsxs9("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative" }, children: [
+                /* @__PURE__ */ jsx11(
                   "span",
                   {
                     className: "sb-kind-tag",
@@ -4928,15 +5702,15 @@ function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStat
                     children: flipped ? "VERIFIED ANSWER" : "STUDY PROMPT"
                   }
                 ),
-                /* @__PURE__ */ jsxs8("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
-                  (card.tags || []).slice(0, 2).map((t) => /* @__PURE__ */ jsxs8("span", { className: "sb-dt-tag", style: { fontSize: 10 }, children: [
+                /* @__PURE__ */ jsxs9("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
+                  (card.tags || []).slice(0, 2).map((t) => /* @__PURE__ */ jsxs9("span", { className: "sb-dt-tag", style: { fontSize: 10 }, children: [
                     "#",
                     t
                   ] }, t)),
-                  /* @__PURE__ */ jsx10("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Space to flip" })
+                  /* @__PURE__ */ jsx11("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Space to flip" })
                 ] })
               ] }),
-              /* @__PURE__ */ jsx10(
+              /* @__PURE__ */ jsx11(
                 "div",
                 {
                   style: {
@@ -4952,16 +5726,16 @@ function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStat
                   children: flipped ? card.back : card.front
                 }
               ),
-              !flipped && showHint && card.hint ? /* @__PURE__ */ jsxs8("div", { className: "sb-quote-box", style: { position: "relative" }, onClick: (e) => e.stopPropagation(), children: [
-                /* @__PURE__ */ jsx10("strong", { style: { fontSize: 10, letterSpacing: "0.06em", color: "var(--ui-text-tertiary)", display: "block" }, children: "HINT" }),
+              !flipped && showHint && card.hint ? /* @__PURE__ */ jsxs9("div", { className: "sb-quote-box", style: { position: "relative" }, onClick: (e) => e.stopPropagation(), children: [
+                /* @__PURE__ */ jsx11("strong", { style: { fontSize: 10, letterSpacing: "0.06em", color: "var(--ui-text-tertiary)", display: "block" }, children: "HINT" }),
                 card.hint
               ] }) : null,
-              /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, position: "relative", paddingTop: 10, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
-                /* @__PURE__ */ jsxs8("div", { style: { display: "flex", gap: 5, alignItems: "center", flexWrap: "wrap" }, onClick: (e) => e.stopPropagation(), children: [
-                  /* @__PURE__ */ jsx10("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Sources:" }),
-                  (card.cites || []).map((cid, idx) => /* @__PURE__ */ jsx10("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: idx + 1 }, cid))
+              /* @__PURE__ */ jsxs9("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, position: "relative", paddingTop: 10, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
+                /* @__PURE__ */ jsxs9("div", { style: { display: "flex", gap: 5, alignItems: "center", flexWrap: "wrap" }, onClick: (e) => e.stopPropagation(), children: [
+                  /* @__PURE__ */ jsx11("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Sources:" }),
+                  (card.cites || []).map((cid, idx) => /* @__PURE__ */ jsx11("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: idx + 1 }, cid))
                 ] }),
-                !flipped && card.hint ? /* @__PURE__ */ jsx10(
+                !flipped && card.hint ? /* @__PURE__ */ jsx11(
                   "button",
                   {
                     type: "button",
@@ -4972,13 +5746,13 @@ function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStat
                     },
                     children: showHint ? "Hide hint" : "Show hint (H)"
                   }
-                ) : /* @__PURE__ */ jsx10("span", { className: "sb-mono", style: { fontSize: 10.5, color: "var(--ui-text-tertiary)" }, children: cardState?.reps ? `Reps: ${cardState.reps} \xB7 Ease ${cardState.ease}` : "New card" })
+                ) : /* @__PURE__ */ jsx11("span", { className: "sb-mono", style: { fontSize: 10.5, color: "var(--ui-text-tertiary)" }, children: cardState?.reps ? `Reps: ${cardState.reps} \xB7 Ease ${cardState.ease}` : "New card" })
               ] })
             ]
           }
         )
       ] }),
-      flipped ? /* @__PURE__ */ jsx10("div", { className: "sb-fc-grade-row", children: gradePreviews.map((g) => /* @__PURE__ */ jsxs8(
+      flipped ? /* @__PURE__ */ jsx11("div", { className: "sb-fc-grade-row", children: gradePreviews.map((g) => /* @__PURE__ */ jsxs9(
         "button",
         {
           type: "button",
@@ -4986,8 +5760,8 @@ function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStat
           "data-tone": g.tone,
           onClick: () => grade(g.q),
           children: [
-            /* @__PURE__ */ jsx10("span", { style: { fontWeight: 650, fontSize: 12.5 }, children: g.label }),
-            /* @__PURE__ */ jsxs8("span", { className: "sb-mono", style: { fontSize: 10.5, opacity: 0.78 }, children: [
+            /* @__PURE__ */ jsx11("span", { style: { fontWeight: 650, fontSize: 12.5 }, children: g.label }),
+            /* @__PURE__ */ jsxs9("span", { className: "sb-mono", style: { fontSize: 10.5, opacity: 0.78 }, children: [
               g.interval,
               " \xB7 [",
               g.key,
@@ -4996,8 +5770,8 @@ function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStat
           ]
         },
         g.q
-      )) }) : /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
-        /* @__PURE__ */ jsxs8(
+      )) }) : /* @__PURE__ */ jsxs9("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
+        /* @__PURE__ */ jsxs9(
           "button",
           {
             type: "button",
@@ -5008,13 +5782,13 @@ function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStat
               setCursor((c) => (c - 1 + order.length) % order.length);
             },
             children: [
-              /* @__PURE__ */ jsx10(Icon, { name: "ChevronLeft", size: 13 }),
+              /* @__PURE__ */ jsx11(Icon, { name: "ChevronLeft", size: 13 }),
               " Prev"
             ]
           }
         ),
-        /* @__PURE__ */ jsx10("button", { type: "button", className: "sb-btn sb-btn-primary", style: { minWidth: 156 }, onClick: () => setFlipped(true), children: "Reveal answer" }),
-        /* @__PURE__ */ jsxs8(
+        /* @__PURE__ */ jsx11("button", { type: "button", className: "sb-btn sb-btn-primary", style: { minWidth: 156 }, onClick: () => setFlipped(true), children: "Reveal answer" }),
+        /* @__PURE__ */ jsxs9(
           "button",
           {
             type: "button",
@@ -5026,7 +5800,7 @@ function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStat
             },
             children: [
               "Next ",
-              /* @__PURE__ */ jsx10(Icon, { name: "ChevronRight", size: 13 })
+              /* @__PURE__ */ jsx11(Icon, { name: "ChevronRight", size: 13 })
             ]
           }
         )
@@ -5036,8 +5810,8 @@ function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStat
 }
 
 // desktop-src/components/renderers/QuizView.jsx
-import { useEffect as useEffect6, useState as useState6 } from "react";
-import { Fragment as Fragment5, jsx as jsx11, jsxs as jsxs9 } from "react/jsx-runtime";
+import { useEffect as useEffect7, useState as useState7 } from "react";
+import { Fragment as Fragment6, jsx as jsx12, jsxs as jsxs10 } from "react/jsx-runtime";
 function isCorrectChoice(q, chosen) {
   if (chosen === void 0 || chosen === null) return false;
   if (typeof q.answer === "number") return chosen === q.answer;
@@ -5055,12 +5829,12 @@ function questionTypeLabel(q) {
 }
 function QuizView({ artifact, onOpenChunk }) {
   const questions = artifact?.spec?.questions || [];
-  const [answers, setAnswers] = useState6({});
-  const [cursor, setCursor] = useState6(0);
-  const [viewMode, setViewMode] = useState6("focus");
-  const [retryMissedOnly, setRetryMissedOnly] = useState6(false);
-  const [shortDraft, setShortDraft] = useState6("");
-  useEffect6(() => {
+  const [answers, setAnswers] = useState7({});
+  const [cursor, setCursor] = useState7(0);
+  const [viewMode, setViewMode] = useState7("focus");
+  const [retryMissedOnly, setRetryMissedOnly] = useState7(false);
+  const [shortDraft, setShortDraft] = useState7("");
+  useEffect7(() => {
     setAnswers({});
     setCursor(0);
     setViewMode("focus");
@@ -5068,7 +5842,7 @@ function QuizView({ artifact, onOpenChunk }) {
     setShortDraft("");
   }, [artifact?.id]);
   if (!questions.length) {
-    return /* @__PURE__ */ jsx11("div", { className: "sb-empty", children: "No questions in this quiz." });
+    return /* @__PURE__ */ jsx12("div", { className: "sb-empty", children: "No questions in this quiz." });
   }
   const answeredCount = Object.keys(answers).length;
   const correctCount = questions.filter((q, idx) => isCorrectChoice(q, answers[q.id || idx])).length;
@@ -5110,29 +5884,29 @@ function QuizView({ artifact, onOpenChunk }) {
     const ok = answered && isCorrectChoice(q, chosen);
     const opts = q.options && q.options.length ? q.options : q.type === "tf" ? ["True", "False"] : [];
     const useGrid = opts.length === 2 || isFocus && opts.length === 4 && opts.every((o) => String(o).length < 95);
-    return /* @__PURE__ */ jsxs9("article", { className: isFocus ? "sb-qz-stage" : "sb-ledger-row", style: isFocus ? void 0 : { gap: 10 }, children: [
-      isFocus ? /* @__PURE__ */ jsxs9("div", { className: "sb-qz-stage-top", children: [
-        /* @__PURE__ */ jsxs9("span", { className: "sb-mono", style: { fontSize: 10.5, fontWeight: 700, letterSpacing: "0.06em", color: "var(--ui-accent)" }, children: [
+    return /* @__PURE__ */ jsxs10("article", { className: isFocus ? "sb-qz-stage" : "sb-ledger-row", style: isFocus ? void 0 : { gap: 10 }, children: [
+      isFocus ? /* @__PURE__ */ jsxs10("div", { className: "sb-qz-stage-top", children: [
+        /* @__PURE__ */ jsxs10("span", { className: "sb-mono", style: { fontSize: 10.5, fontWeight: 700, letterSpacing: "0.06em", color: "var(--ui-accent)" }, children: [
           "QUESTION ",
           origIdx + 1,
           " OF ",
           questions.length
         ] }),
-        /* @__PURE__ */ jsxs9("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
-          /* @__PURE__ */ jsx11("span", { className: "sb-kind-tag", children: questionTypeLabel(q) }),
-          answered ? /* @__PURE__ */ jsx11("span", { className: "sb-verdict", "data-v": ok ? "supported" : "unsupported", children: ok ? "Correct" : "Missed" }) : null
+        /* @__PURE__ */ jsxs10("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
+          /* @__PURE__ */ jsx12("span", { className: "sb-kind-tag", children: questionTypeLabel(q) }),
+          answered ? /* @__PURE__ */ jsx12("span", { className: "sb-verdict", "data-v": ok ? "supported" : "unsupported", children: ok ? "Correct" : "Missed" }) : null
         ] })
-      ] }) : /* @__PURE__ */ jsxs9("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
-        /* @__PURE__ */ jsxs9("div", { style: { display: "flex", alignItems: "center", gap: 7 }, children: [
-          /* @__PURE__ */ jsxs9("span", { className: "sb-mono", style: { fontSize: 11, fontWeight: 700, color: "var(--ui-accent)" }, children: [
+      ] }) : /* @__PURE__ */ jsxs10("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
+        /* @__PURE__ */ jsxs10("div", { style: { display: "flex", alignItems: "center", gap: 7 }, children: [
+          /* @__PURE__ */ jsxs10("span", { className: "sb-mono", style: { fontSize: 11, fontWeight: 700, color: "var(--ui-accent)" }, children: [
             "Q",
             origIdx + 1
           ] }),
-          /* @__PURE__ */ jsx11("span", { className: "sb-kind-tag", children: questionTypeLabel(q) })
+          /* @__PURE__ */ jsx12("span", { className: "sb-kind-tag", children: questionTypeLabel(q) })
         ] }),
-        answered ? /* @__PURE__ */ jsx11("span", { className: "sb-verdict", "data-v": ok ? "supported" : "unsupported", children: ok ? "Correct" : "Missed" }) : null
+        answered ? /* @__PURE__ */ jsx12("span", { className: "sb-verdict", "data-v": ok ? "supported" : "unsupported", children: ok ? "Correct" : "Missed" }) : null
       ] }),
-      /* @__PURE__ */ jsx11(
+      /* @__PURE__ */ jsx12(
         "div",
         {
           style: {
@@ -5145,14 +5919,14 @@ function QuizView({ artifact, onOpenChunk }) {
           children: q.prompt
         }
       ),
-      opts.length > 0 ? /* @__PURE__ */ jsx11("div", { className: "sb-qz-options", style: { gridTemplateColumns: useGrid ? "repeat(2, minmax(0, 1fr))" : "1fr" }, children: opts.map((opt, oi) => {
+      opts.length > 0 ? /* @__PURE__ */ jsx12("div", { className: "sb-qz-options", style: { gridTemplateColumns: useGrid ? "repeat(2, minmax(0, 1fr))" : "1fr" }, children: opts.map((opt, oi) => {
         const isSelected = chosen === oi;
         const isRight = isCorrectChoice(q, oi);
         let state = "idle";
         if (answered && isRight) state = "correct";
         else if (answered && isSelected && !isRight) state = "wrong";
         else if (answered) state = "dim";
-        return /* @__PURE__ */ jsxs9(
+        return /* @__PURE__ */ jsxs10(
           "button",
           {
             type: "button",
@@ -5160,15 +5934,15 @@ function QuizView({ artifact, onOpenChunk }) {
             "data-state": state,
             onClick: () => setAnswers((prev) => ({ ...prev, [key]: oi })),
             children: [
-              /* @__PURE__ */ jsx11("span", { className: "sb-qz-keycap sb-mono", children: String.fromCharCode(65 + oi) }),
-              /* @__PURE__ */ jsx11("span", { style: { flex: 1, textAlign: "left", lineHeight: 1.48 }, children: opt }),
-              state === "correct" ? /* @__PURE__ */ jsx11(Icon, { name: "Check", size: 14, style: { color: "#10b981", flexShrink: 0 } }) : state === "wrong" ? /* @__PURE__ */ jsx11(Icon, { name: "X", size: 14, style: { color: "var(--sb-bad)", flexShrink: 0 } }) : null
+              /* @__PURE__ */ jsx12("span", { className: "sb-qz-keycap sb-mono", children: String.fromCharCode(65 + oi) }),
+              /* @__PURE__ */ jsx12("span", { style: { flex: 1, textAlign: "left", lineHeight: 1.48 }, children: opt }),
+              state === "correct" ? /* @__PURE__ */ jsx12(Icon, { name: "Check", size: 14, style: { color: "#10b981", flexShrink: 0 } }) : state === "wrong" ? /* @__PURE__ */ jsx12(Icon, { name: "X", size: 14, style: { color: "var(--sb-bad)", flexShrink: 0 } }) : null
             ]
           },
           oi
         );
-      }) }) : /* @__PURE__ */ jsxs9("div", { style: { display: "flex", gap: 8 }, children: [
-        /* @__PURE__ */ jsx11(
+      }) }) : /* @__PURE__ */ jsxs10("div", { style: { display: "flex", gap: 8 }, children: [
+        /* @__PURE__ */ jsx12(
           "input",
           {
             className: "sb-input",
@@ -5182,7 +5956,7 @@ function QuizView({ artifact, onOpenChunk }) {
             }
           }
         ),
-        /* @__PURE__ */ jsx11(
+        /* @__PURE__ */ jsx12(
           "button",
           {
             type: "button",
@@ -5193,21 +5967,21 @@ function QuizView({ artifact, onOpenChunk }) {
           }
         )
       ] }),
-      answered ? /* @__PURE__ */ jsxs9("div", { className: "sb-qz-explain", "data-ok": ok, children: [
-        /* @__PURE__ */ jsxs9("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
-          /* @__PURE__ */ jsx11("span", { className: "sb-mono", style: { fontSize: 10.5, fontWeight: 700, letterSpacing: "0.06em", color: ok ? "#10b981" : "var(--sb-bad)" }, children: ok ? "VERIFIED EXPLANATION" : "CORRECTION & SOURCE" }),
-          (q.cites || []).length > 0 ? /* @__PURE__ */ jsx11("div", { style: { display: "flex", gap: 5, alignItems: "center" }, children: (q.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsxs9("button", { type: "button", className: "sb-btn", style: { height: 24, fontSize: 11 }, onClick: () => onOpenChunk?.(cid), children: [
-            /* @__PURE__ */ jsx11(Icon, { name: "BookOpen", size: 11 }),
+      answered ? /* @__PURE__ */ jsxs10("div", { className: "sb-qz-explain", "data-ok": ok, children: [
+        /* @__PURE__ */ jsxs10("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
+          /* @__PURE__ */ jsx12("span", { className: "sb-mono", style: { fontSize: 10.5, fontWeight: 700, letterSpacing: "0.06em", color: ok ? "#10b981" : "var(--sb-bad)" }, children: ok ? "VERIFIED EXPLANATION" : "CORRECTION & SOURCE" }),
+          (q.cites || []).length > 0 ? /* @__PURE__ */ jsx12("div", { style: { display: "flex", gap: 5, alignItems: "center" }, children: (q.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsxs10("button", { type: "button", className: "sb-btn", style: { height: 24, fontSize: 11 }, onClick: () => onOpenChunk?.(cid), children: [
+            /* @__PURE__ */ jsx12(Icon, { name: "BookOpen", size: 11 }),
             " Passage [",
             cIdx + 1,
             "]"
           ] }, cid)) }) : null
         ] }),
-        /* @__PURE__ */ jsx11("div", { style: { fontSize: 12.5, lineHeight: 1.55, color: "var(--ui-text-primary)" }, children: q.explanation || `Expected answer: ${String(q.answer)}` })
+        /* @__PURE__ */ jsx12("div", { style: { fontSize: 12.5, lineHeight: 1.55, color: "var(--ui-text-primary)" }, children: q.explanation || `Expected answer: ${String(q.answer)}` })
       ] }) : null
     ] }, key);
   }
-  return /* @__PURE__ */ jsxs9(
+  return /* @__PURE__ */ jsxs10(
     "div",
     {
       style: { display: "flex", flexDirection: "column", gap: 12 },
@@ -5229,8 +6003,8 @@ function QuizView({ artifact, onOpenChunk }) {
         if (e.key === "ArrowLeft") setCursor((c) => Math.max(0, c - 1));
       },
       children: [
-        /* @__PURE__ */ jsxs9("div", { className: "sb-qz-hero", children: [
-          /* @__PURE__ */ jsx11(
+        /* @__PURE__ */ jsxs10("div", { className: "sb-qz-hero", children: [
+          /* @__PURE__ */ jsx12(
             DitherCanvas,
             {
               variant: "mesh",
@@ -5243,10 +6017,10 @@ function QuizView({ artifact, onOpenChunk }) {
               style: { position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }
             }
           ),
-          /* @__PURE__ */ jsxs9("div", { style: { position: "relative", display: "flex", alignItems: "center", gap: 16, flex: 1, minWidth: 0 }, children: [
-            /* @__PURE__ */ jsxs9("svg", { width: "62", height: "62", viewBox: "0 0 62 62", style: { flexShrink: 0 }, "aria-hidden": "true", children: [
-              /* @__PURE__ */ jsx11("circle", { cx: "31", cy: "31", r: ringR, fill: "none", stroke: "var(--ui-stroke-tertiary)", strokeWidth: "5.5" }),
-              /* @__PURE__ */ jsx11(
+          /* @__PURE__ */ jsxs10("div", { style: { position: "relative", display: "flex", alignItems: "center", gap: 16, flex: 1, minWidth: 0 }, children: [
+            /* @__PURE__ */ jsxs10("svg", { width: "62", height: "62", viewBox: "0 0 62 62", style: { flexShrink: 0 }, "aria-hidden": "true", children: [
+              /* @__PURE__ */ jsx12("circle", { cx: "31", cy: "31", r: ringR, fill: "none", stroke: "var(--ui-stroke-tertiary)", strokeWidth: "5.5" }),
+              /* @__PURE__ */ jsx12(
                 "circle",
                 {
                   cx: "31",
@@ -5260,44 +6034,44 @@ function QuizView({ artifact, onOpenChunk }) {
                   transform: "rotate(-90 31 31)"
                 }
               ),
-              /* @__PURE__ */ jsxs9("text", { x: "31", y: "35", textAnchor: "middle", fill: ringColor, fontSize: "13.5", fontWeight: "800", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: [
+              /* @__PURE__ */ jsxs10("text", { x: "31", y: "35", textAnchor: "middle", fill: ringColor, fontSize: "13.5", fontWeight: "800", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: [
                 accuracyPct,
                 "%"
               ] })
             ] }),
-            /* @__PURE__ */ jsxs9("div", { className: "sb-qz-stats", children: [
-              /* @__PURE__ */ jsxs9("div", { children: [
-                /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-lbl", children: "Progress" }),
-                /* @__PURE__ */ jsxs9("div", { className: "sb-dt-kpi-val sb-mono", children: [
+            /* @__PURE__ */ jsxs10("div", { className: "sb-qz-stats", children: [
+              /* @__PURE__ */ jsxs10("div", { children: [
+                /* @__PURE__ */ jsx12("div", { className: "sb-dt-kpi-lbl", children: "Progress" }),
+                /* @__PURE__ */ jsxs10("div", { className: "sb-dt-kpi-val sb-mono", children: [
                   answeredCount,
                   " / ",
                   questions.length
                 ] })
               ] }),
-              /* @__PURE__ */ jsxs9("div", { children: [
-                /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-lbl", children: "Correct" }),
-                /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-val sb-mono", style: { color: "#10b981" }, children: correctCount })
+              /* @__PURE__ */ jsxs10("div", { children: [
+                /* @__PURE__ */ jsx12("div", { className: "sb-dt-kpi-lbl", children: "Correct" }),
+                /* @__PURE__ */ jsx12("div", { className: "sb-dt-kpi-val sb-mono", style: { color: "#10b981" }, children: correctCount })
               ] }),
-              /* @__PURE__ */ jsxs9("div", { children: [
-                /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-lbl", children: "Streak" }),
-                /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-val sb-mono", style: { color: "var(--ui-accent)" }, children: streak })
+              /* @__PURE__ */ jsxs10("div", { children: [
+                /* @__PURE__ */ jsx12("div", { className: "sb-dt-kpi-lbl", children: "Streak" }),
+                /* @__PURE__ */ jsx12("div", { className: "sb-dt-kpi-val sb-mono", style: { color: "var(--ui-accent)" }, children: streak })
               ] }),
-              /* @__PURE__ */ jsxs9("div", { children: [
-                /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-lbl", children: "Missed" }),
-                /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-val sb-mono", style: { color: missedCount > 0 ? "var(--sb-bad)" : "var(--ui-text-secondary)" }, children: missedCount })
+              /* @__PURE__ */ jsxs10("div", { children: [
+                /* @__PURE__ */ jsx12("div", { className: "sb-dt-kpi-lbl", children: "Missed" }),
+                /* @__PURE__ */ jsx12("div", { className: "sb-dt-kpi-val sb-mono", style: { color: missedCount > 0 ? "var(--sb-bad)" : "var(--ui-text-secondary)" }, children: missedCount })
               ] })
             ] })
           ] }),
-          /* @__PURE__ */ jsxs9("div", { style: { position: "relative", display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }, children: [
-            /* @__PURE__ */ jsxs9("div", { className: "sb-seg", role: "group", "aria-label": "Quiz mode", children: [
-              /* @__PURE__ */ jsx11("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "focus", onClick: () => setViewMode("focus"), children: "Focus" }),
-              /* @__PURE__ */ jsxs9("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "all", onClick: () => setViewMode("all"), children: [
+          /* @__PURE__ */ jsxs10("div", { style: { position: "relative", display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }, children: [
+            /* @__PURE__ */ jsxs10("div", { className: "sb-seg", role: "group", "aria-label": "Quiz mode", children: [
+              /* @__PURE__ */ jsx12("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "focus", onClick: () => setViewMode("focus"), children: "Focus" }),
+              /* @__PURE__ */ jsxs10("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "all", onClick: () => setViewMode("all"), children: [
                 "All (",
                 questions.length,
                 ")"
               ] })
             ] }),
-            /* @__PURE__ */ jsxs9(
+            /* @__PURE__ */ jsxs10(
               "button",
               {
                 type: "button",
@@ -5315,7 +6089,7 @@ function QuizView({ artifact, onOpenChunk }) {
                 ]
               }
             ),
-            /* @__PURE__ */ jsxs9(
+            /* @__PURE__ */ jsxs10(
               "button",
               {
                 type: "button",
@@ -5326,24 +6100,24 @@ function QuizView({ artifact, onOpenChunk }) {
                   setCursor(0);
                 },
                 children: [
-                  /* @__PURE__ */ jsx11(Icon, { name: "RotateCcw", size: 12 }),
+                  /* @__PURE__ */ jsx12(Icon, { name: "RotateCcw", size: 12 }),
                   " Reset"
                 ]
               }
             ),
-            /* @__PURE__ */ jsxs9("button", { type: "button", className: "sb-btn", onClick: downloadKey, children: [
-              /* @__PURE__ */ jsx11(Icon, { name: "Download", size: 12 }),
+            /* @__PURE__ */ jsxs10("button", { type: "button", className: "sb-btn", onClick: downloadKey, children: [
+              /* @__PURE__ */ jsx12(Icon, { name: "Download", size: 12 }),
               " Key .md"
             ] })
           ] })
         ] }),
-        /* @__PURE__ */ jsxs9("div", { className: "sb-qz-stepper", children: [
+        /* @__PURE__ */ jsxs10("div", { className: "sb-qz-stepper", children: [
           questions.map((q, idx) => {
             const k = q.id || idx;
             const ans = answers[k];
             const st = ans === void 0 ? "idle" : isCorrectChoice(q, ans) ? "correct" : "wrong";
             const isCur = viewMode === "focus" && activeEntry?.idx === idx;
-            return /* @__PURE__ */ jsx11(
+            return /* @__PURE__ */ jsx12(
               "button",
               {
                 type: "button",
@@ -5361,12 +6135,12 @@ function QuizView({ artifact, onOpenChunk }) {
               k
             );
           }),
-          viewMode === "focus" ? /* @__PURE__ */ jsx11("span", { style: { marginLeft: "auto", fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Keys: A-D to answer \xB7 Left/Right to navigate" }) : null
+          viewMode === "focus" ? /* @__PURE__ */ jsx12("span", { style: { marginLeft: "auto", fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Keys: A-D to answer \xB7 Left/Right to navigate" }) : null
         ] }),
-        allDone ? /* @__PURE__ */ jsxs9("div", { className: "sb-qz-complete", children: [
-          /* @__PURE__ */ jsxs9("div", { children: [
-            /* @__PURE__ */ jsx11("div", { className: "sb-mono", style: { fontSize: 10.5, fontWeight: 700, letterSpacing: "0.07em", color: "#10b981" }, children: "QUIZ COMPLETE" }),
-            /* @__PURE__ */ jsxs9("div", { style: { fontSize: 15, fontWeight: 700, color: "var(--ui-text-primary)", marginTop: 2 }, children: [
+        allDone ? /* @__PURE__ */ jsxs10("div", { className: "sb-qz-complete", children: [
+          /* @__PURE__ */ jsxs10("div", { children: [
+            /* @__PURE__ */ jsx12("div", { className: "sb-mono", style: { fontSize: 10.5, fontWeight: 700, letterSpacing: "0.07em", color: "#10b981" }, children: "QUIZ COMPLETE" }),
+            /* @__PURE__ */ jsxs10("div", { style: { fontSize: 15, fontWeight: 700, color: "var(--ui-text-primary)", marginTop: 2 }, children: [
               "Scored ",
               correctCount,
               " / ",
@@ -5376,8 +6150,8 @@ function QuizView({ artifact, onOpenChunk }) {
               "%)"
             ] })
           ] }),
-          /* @__PURE__ */ jsxs9("div", { style: { display: "flex", gap: 6 }, children: [
-            missedCount > 0 ? /* @__PURE__ */ jsxs9(
+          /* @__PURE__ */ jsxs10("div", { style: { display: "flex", gap: 6 }, children: [
+            missedCount > 0 ? /* @__PURE__ */ jsxs10(
               "button",
               {
                 type: "button",
@@ -5399,16 +6173,16 @@ function QuizView({ artifact, onOpenChunk }) {
                 ]
               }
             ) : null,
-            /* @__PURE__ */ jsxs9("button", { type: "button", className: "sb-btn", onClick: downloadKey, children: [
-              /* @__PURE__ */ jsx11(Icon, { name: "Download", size: 12 }),
+            /* @__PURE__ */ jsxs10("button", { type: "button", className: "sb-btn", onClick: downloadKey, children: [
+              /* @__PURE__ */ jsx12(Icon, { name: "Download", size: 12 }),
               " Export Answer Key"
             ] })
           ] })
         ] }) : null,
-        viewMode === "focus" && activeEntry ? /* @__PURE__ */ jsxs9(Fragment5, { children: [
+        viewMode === "focus" && activeEntry ? /* @__PURE__ */ jsxs10(Fragment6, { children: [
           renderQuestionCard(activeEntry.q, activeEntry.idx, true),
-          /* @__PURE__ */ jsxs9("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
-            /* @__PURE__ */ jsxs9(
+          /* @__PURE__ */ jsxs10("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
+            /* @__PURE__ */ jsxs10(
               "button",
               {
                 type: "button",
@@ -5416,17 +6190,17 @@ function QuizView({ artifact, onOpenChunk }) {
                 disabled: cursor <= 0,
                 onClick: () => setCursor((c) => Math.max(0, c - 1)),
                 children: [
-                  /* @__PURE__ */ jsx11(Icon, { name: "ChevronLeft", size: 13 }),
+                  /* @__PURE__ */ jsx12(Icon, { name: "ChevronLeft", size: 13 }),
                   " Previous"
                 ]
               }
             ),
-            /* @__PURE__ */ jsxs9("span", { className: "sb-mono", style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: [
+            /* @__PURE__ */ jsxs10("span", { className: "sb-mono", style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: [
               cursor + 1,
               " / ",
               visibleList.length
             ] }),
-            /* @__PURE__ */ jsxs9(
+            /* @__PURE__ */ jsxs10(
               "button",
               {
                 type: "button",
@@ -5435,20 +6209,20 @@ function QuizView({ artifact, onOpenChunk }) {
                 onClick: () => setCursor((c) => Math.min(visibleList.length - 1, c + 1)),
                 children: [
                   "Next question ",
-                  /* @__PURE__ */ jsx11(Icon, { name: "ChevronRight", size: 13 })
+                  /* @__PURE__ */ jsx12(Icon, { name: "ChevronRight", size: 13 })
                 ]
               }
             )
           ] })
-        ] }) : /* @__PURE__ */ jsx11("div", { style: { display: "flex", flexDirection: "column", gap: 10 }, children: visibleList.map(({ q, idx }) => renderQuestionCard(q, idx, false)) })
+        ] }) : /* @__PURE__ */ jsx12("div", { style: { display: "flex", flexDirection: "column", gap: 10 }, children: visibleList.map(({ q, idx }) => renderQuestionCard(q, idx, false)) })
       ]
     }
   );
 }
 
 // desktop-src/components/renderers/MindMapView.jsx
-import { useMemo, useRef as useRef6, useState as useState7 } from "react";
-import { jsx as jsx12, jsxs as jsxs10 } from "react/jsx-runtime";
+import { useMemo, useRef as useRef6, useState as useState8 } from "react";
+import { jsx as jsx13, jsxs as jsxs11 } from "react/jsx-runtime";
 var BRANCH_COLORS = ["#3b82f6", "#10b981", "#38bdf8", "#f59e0b", "#f43f5e", "#8b5cf6"];
 function clipNode(label, maxChars = 25) {
   const s = String(label || "").trim();
@@ -5499,19 +6273,19 @@ function layoutTree(root, collapsed) {
 }
 function MindMapView({ artifact, onOpenChunk }) {
   const root = artifact?.spec?.root;
-  const [zoom, setZoom] = useState7(1);
-  const [pan, setPan] = useState7({ x: 0, y: 0 });
-  const [dragging, setDragging] = useState7(null);
-  const [collapsed, setCollapsed] = useState7({});
-  const [selected, setSelected] = useState7(null);
-  const [exportingPng, setExportingPng] = useState7(false);
+  const [zoom, setZoom] = useState8(1);
+  const [pan, setPan] = useState8({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState8(null);
+  const [collapsed, setCollapsed] = useState8({});
+  const [selected, setSelected] = useState8(null);
+  const [exportingPng, setExportingPng] = useState8(false);
   const svgRef = useRef6(null);
   const graph = useMemo(() => layoutTree(root, collapsed), [root, collapsed]);
   const uid = String(artifact?.id || "map").replace(/[^a-zA-Z0-9_-]/g, "");
   const titleId = `sb-mm-title-${uid}`;
   const descId = `sb-mm-desc-${uid}`;
   if (!root) {
-    return /* @__PURE__ */ jsx12("div", { className: "sb-empty", children: "No mind map structure available." });
+    return /* @__PURE__ */ jsx13("div", { className: "sb-empty", children: "No mind map structure available." });
   }
   async function handleCopySvg() {
     const svgText = bakeSvgVariables(svgRef.current);
@@ -5546,45 +6320,45 @@ function MindMapView({ artifact, onOpenChunk }) {
   }
   const activeNode = selected ? graph.byId.get(selected) : graph.nodes.find((n) => n.depth === 0);
   const hasCollapsed = Object.values(collapsed).some(Boolean);
-  return /* @__PURE__ */ jsxs10("div", { style: { display: "flex", flexDirection: "column", gap: 10 }, children: [
-    /* @__PURE__ */ jsxs10("div", { className: "sb-inf-toolbar", children: [
-      /* @__PURE__ */ jsxs10("div", { style: { display: "flex", gap: 4, alignItems: "center" }, children: [
-        /* @__PURE__ */ jsx12("button", { type: "button", className: "sb-btn sb-btn-icon", title: "Zoom out", onClick: () => setZoom((z) => Math.max(0.45, Number((z - 0.15).toFixed(2)))), children: /* @__PURE__ */ jsx12(Icon, { name: "Minus", size: 13 }) }),
-        /* @__PURE__ */ jsx12("button", { type: "button", className: "sb-btn", onClick: () => {
+  return /* @__PURE__ */ jsxs11("div", { style: { display: "flex", flexDirection: "column", gap: 10 }, children: [
+    /* @__PURE__ */ jsxs11("div", { className: "sb-inf-toolbar", children: [
+      /* @__PURE__ */ jsxs11("div", { style: { display: "flex", gap: 4, alignItems: "center" }, children: [
+        /* @__PURE__ */ jsx13("button", { type: "button", className: "sb-btn sb-btn-icon", title: "Zoom out", onClick: () => setZoom((z) => Math.max(0.45, Number((z - 0.15).toFixed(2)))), children: /* @__PURE__ */ jsx13(Icon, { name: "Minus", size: 13 }) }),
+        /* @__PURE__ */ jsx13("button", { type: "button", className: "sb-btn", onClick: () => {
           setZoom(1);
           setPan({ x: 0, y: 0 });
-        }, children: /* @__PURE__ */ jsxs10("span", { className: "sb-mono", children: [
+        }, children: /* @__PURE__ */ jsxs11("span", { className: "sb-mono", children: [
           Math.round(zoom * 100),
           "%"
         ] }) }),
-        /* @__PURE__ */ jsx12("button", { type: "button", className: "sb-btn sb-btn-icon", title: "Zoom in", onClick: () => setZoom((z) => Math.min(2, Number((z + 0.15).toFixed(2)))), children: /* @__PURE__ */ jsx12(Icon, { name: "Plus", size: 13 }) }),
-        hasCollapsed ? /* @__PURE__ */ jsx12("button", { type: "button", className: "sb-btn", onClick: () => setCollapsed({}), children: "Expand all" }) : null,
-        /* @__PURE__ */ jsxs10("span", { className: "sb-mono", style: { fontSize: 11, color: "var(--ui-text-tertiary)", marginLeft: 4 }, children: [
+        /* @__PURE__ */ jsx13("button", { type: "button", className: "sb-btn sb-btn-icon", title: "Zoom in", onClick: () => setZoom((z) => Math.min(2, Number((z + 0.15).toFixed(2)))), children: /* @__PURE__ */ jsx13(Icon, { name: "Plus", size: 13 }) }),
+        hasCollapsed ? /* @__PURE__ */ jsx13("button", { type: "button", className: "sb-btn", onClick: () => setCollapsed({}), children: "Expand all" }) : null,
+        /* @__PURE__ */ jsxs11("span", { className: "sb-mono", style: { fontSize: 11, color: "var(--ui-text-tertiary)", marginLeft: 4 }, children: [
           graph.nodes.length,
           " nodes"
         ] })
       ] }),
-      /* @__PURE__ */ jsxs10("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" }, children: [
-        /* @__PURE__ */ jsxs10("button", { type: "button", className: "sb-btn", onClick: handleCopySvg, children: [
-          /* @__PURE__ */ jsx12(Icon, { name: "Copy", size: 12 }),
+      /* @__PURE__ */ jsxs11("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" }, children: [
+        /* @__PURE__ */ jsxs11("button", { type: "button", className: "sb-btn", onClick: handleCopySvg, children: [
+          /* @__PURE__ */ jsx13(Icon, { name: "Copy", size: 12 }),
           " Copy SVG"
         ] }),
-        /* @__PURE__ */ jsxs10("button", { type: "button", className: "sb-btn", onClick: handleDownloadSvg, children: [
-          /* @__PURE__ */ jsx12(Icon, { name: "Download", size: 12 }),
+        /* @__PURE__ */ jsxs11("button", { type: "button", className: "sb-btn", onClick: handleDownloadSvg, children: [
+          /* @__PURE__ */ jsx13(Icon, { name: "Download", size: 12 }),
           " SVG"
         ] }),
-        /* @__PURE__ */ jsxs10("button", { type: "button", className: "sb-btn", onClick: handleDownloadOpml, title: "Export outline for XMind, MindNode, or FreeMind", children: [
-          /* @__PURE__ */ jsx12(Icon, { name: "Download", size: 12 }),
+        /* @__PURE__ */ jsxs11("button", { type: "button", className: "sb-btn", onClick: handleDownloadOpml, title: "Export outline for XMind, MindNode, or FreeMind", children: [
+          /* @__PURE__ */ jsx13(Icon, { name: "Download", size: 12 }),
           " OPML"
         ] }),
-        /* @__PURE__ */ jsxs10("button", { type: "button", className: "sb-btn sb-btn-primary", disabled: exportingPng, onClick: handleDownloadPng, children: [
-          /* @__PURE__ */ jsx12(Icon, { name: "ImageDown", size: 12 }),
+        /* @__PURE__ */ jsxs11("button", { type: "button", className: "sb-btn sb-btn-primary", disabled: exportingPng, onClick: handleDownloadPng, children: [
+          /* @__PURE__ */ jsx13(Icon, { name: "ImageDown", size: 12 }),
           " ",
           exportingPng ? "Exporting..." : "PNG"
         ] })
       ] })
     ] }),
-    /* @__PURE__ */ jsx12(
+    /* @__PURE__ */ jsx13(
       "div",
       {
         className: "sb-svg-stage",
@@ -5599,7 +6373,7 @@ function MindMapView({ artifact, onOpenChunk }) {
         },
         onPointerUp: () => setDragging(null),
         onPointerLeave: () => setDragging(null),
-        children: /* @__PURE__ */ jsxs10(
+        children: /* @__PURE__ */ jsxs11(
           "svg",
           {
             ref: svgRef,
@@ -5610,16 +6384,16 @@ function MindMapView({ artifact, onOpenChunk }) {
             viewBox: `0 0 ${graph.width} ${graph.height}`,
             style: { display: "block", background: "var(--sb-bg)" },
             children: [
-              /* @__PURE__ */ jsx12("title", { id: titleId, children: artifact?.spec?.title || "Concept Mind Map" }),
-              /* @__PURE__ */ jsxs10("desc", { id: descId, children: [
+              /* @__PURE__ */ jsx13("title", { id: titleId, children: artifact?.spec?.title || "Concept Mind Map" }),
+              /* @__PURE__ */ jsxs11("desc", { id: descId, children: [
                 "Interactive hierarchical concept map with ",
                 graph.nodes.length,
                 " nodes grounded in notebook sources."
               ] }),
-              /* @__PURE__ */ jsx12("defs", { children: /* @__PURE__ */ jsx12("pattern", { id: `sb-mm-dots-${uid}`, width: "16", height: "16", patternUnits: "userSpaceOnUse", children: /* @__PURE__ */ jsx12("circle", { cx: "2", cy: "2", r: "0.9", fill: "var(--ui-stroke-tertiary)" }) }) }),
-              /* @__PURE__ */ jsx12("rect", { x: "0", y: "0", width: graph.width, height: graph.height, fill: "var(--sb-bg)" }),
-              /* @__PURE__ */ jsx12("rect", { x: "0", y: "0", width: graph.width, height: graph.height, fill: `url(#sb-mm-dots-${uid})`, opacity: "0.65" }),
-              /* @__PURE__ */ jsxs10("g", { transform: `translate(${pan.x}, ${pan.y}) scale(${zoom})`, children: [
+              /* @__PURE__ */ jsx13("defs", { children: /* @__PURE__ */ jsx13("pattern", { id: `sb-mm-dots-${uid}`, width: "16", height: "16", patternUnits: "userSpaceOnUse", children: /* @__PURE__ */ jsx13("circle", { cx: "2", cy: "2", r: "0.9", fill: "var(--ui-stroke-tertiary)" }) }) }),
+              /* @__PURE__ */ jsx13("rect", { x: "0", y: "0", width: graph.width, height: graph.height, fill: "var(--sb-bg)" }),
+              /* @__PURE__ */ jsx13("rect", { x: "0", y: "0", width: graph.width, height: graph.height, fill: `url(#sb-mm-dots-${uid})`, opacity: "0.65" }),
+              /* @__PURE__ */ jsxs11("g", { transform: `translate(${pan.x}, ${pan.y}) scale(${zoom})`, children: [
                 graph.edges.map((ed, i) => {
                   const a = graph.byId.get(ed.from);
                   const b = graph.byId.get(ed.to);
@@ -5629,7 +6403,7 @@ function MindMapView({ artifact, onOpenChunk }) {
                   const tx = b.x;
                   const ty = b.y;
                   const mx = (sx + tx) / 2;
-                  return /* @__PURE__ */ jsx12(
+                  return /* @__PURE__ */ jsx13(
                     "path",
                     {
                       d: `M ${sx} ${sy} C ${mx} ${sy}, ${mx} ${ty}, ${tx} ${ty}`,
@@ -5645,7 +6419,7 @@ function MindMapView({ artifact, onOpenChunk }) {
                   const isRoot = n.depth === 0;
                   const isSel = activeNode && activeNode.id === n.id;
                   const label = clipNode(n.label, 24);
-                  return /* @__PURE__ */ jsxs10(
+                  return /* @__PURE__ */ jsxs11(
                     "g",
                     {
                       "data-node": n.id,
@@ -5656,7 +6430,7 @@ function MindMapView({ artifact, onOpenChunk }) {
                         if (n.hasChildren) setCollapsed((prev) => ({ ...prev, [n.id]: !prev[n.id] }));
                       },
                       children: [
-                        /* @__PURE__ */ jsx12(
+                        /* @__PURE__ */ jsx13(
                           "rect",
                           {
                             width: "194",
@@ -5668,8 +6442,8 @@ function MindMapView({ artifact, onOpenChunk }) {
                             strokeWidth: isRoot || isSel ? "1.8" : "1"
                           }
                         ),
-                        !isRoot ? /* @__PURE__ */ jsx12("rect", { x: "0", y: "7", width: "3", height: "24", rx: "1.5", fill: n.color }) : null,
-                        /* @__PURE__ */ jsx12(
+                        !isRoot ? /* @__PURE__ */ jsx13("rect", { x: "0", y: "7", width: "3", height: "24", rx: "1.5", fill: n.color }) : null,
+                        /* @__PURE__ */ jsx13(
                           "text",
                           {
                             x: "13",
@@ -5681,7 +6455,7 @@ function MindMapView({ artifact, onOpenChunk }) {
                             children: label
                           }
                         ),
-                        n.hasChildren ? /* @__PURE__ */ jsxs10(
+                        n.hasChildren ? /* @__PURE__ */ jsxs11(
                           "g",
                           {
                             transform: "translate(194, 19)",
@@ -5690,8 +6464,8 @@ function MindMapView({ artifact, onOpenChunk }) {
                               setCollapsed((prev) => ({ ...prev, [n.id]: !prev[n.id] }));
                             },
                             children: [
-                              /* @__PURE__ */ jsx12("circle", { r: "8.5", fill: "var(--sb-surface)", stroke: n.color, strokeWidth: "1.4" }),
-                              /* @__PURE__ */ jsx12("text", { textAnchor: "middle", y: "3.5", fill: n.color, fontSize: "11", fontWeight: "700", children: n.collapsed ? "+" : "-" })
+                              /* @__PURE__ */ jsx13("circle", { r: "8.5", fill: "var(--sb-surface)", stroke: n.color, strokeWidth: "1.4" }),
+                              /* @__PURE__ */ jsx13("text", { textAnchor: "middle", y: "3.5", fill: n.color, fontSize: "11", fontWeight: "700", children: n.collapsed ? "+" : "-" })
                             ]
                           }
                         ) : null
@@ -5706,19 +6480,19 @@ function MindMapView({ artifact, onOpenChunk }) {
         )
       }
     ),
-    activeNode ? /* @__PURE__ */ jsxs10("div", { className: "sb-ledger-row", style: { borderLeft: `3px solid ${activeNode.color}` }, children: [
-      /* @__PURE__ */ jsxs10("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
-        /* @__PURE__ */ jsx12("strong", { style: { fontSize: 13 }, children: activeNode.label }),
-        /* @__PURE__ */ jsx12("div", { style: { display: "flex", gap: 4 }, children: (activeNode.cites || []).map((cid, idx) => /* @__PURE__ */ jsx12("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: idx + 1 }, cid)) })
+    activeNode ? /* @__PURE__ */ jsxs11("div", { className: "sb-ledger-row", style: { borderLeft: `3px solid ${activeNode.color}` }, children: [
+      /* @__PURE__ */ jsxs11("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
+        /* @__PURE__ */ jsx13("strong", { style: { fontSize: 13 }, children: activeNode.label }),
+        /* @__PURE__ */ jsx13("div", { style: { display: "flex", gap: 4 }, children: (activeNode.cites || []).map((cid, idx) => /* @__PURE__ */ jsx13("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: idx + 1 }, cid)) })
       ] }),
-      activeNode.summary ? /* @__PURE__ */ jsx12("div", { style: { fontSize: 12.5, color: "var(--ui-text-secondary)", lineHeight: 1.55 }, children: activeNode.summary }) : null
+      activeNode.summary ? /* @__PURE__ */ jsx13("div", { style: { fontSize: 12.5, color: "var(--ui-text-secondary)", lineHeight: 1.55 }, children: activeNode.summary }) : null
     ] }) : null
   ] });
 }
 
 // desktop-src/components/renderers/InfographicView.jsx
-import { useMemo as useMemo2, useRef as useRef7, useState as useState8 } from "react";
-import { Fragment as Fragment6, jsx as jsx13, jsxs as jsxs11 } from "react/jsx-runtime";
+import { useMemo as useMemo2, useRef as useRef7, useState as useState9 } from "react";
+import { Fragment as Fragment7, jsx as jsx14, jsxs as jsxs12 } from "react/jsx-runtime";
 var LAYOUT_OPTIONS = [
   { id: "stat-grid", label: "Bento" },
   { id: "timeline", label: "Timeline" },
@@ -5846,10 +6620,10 @@ function InfographicView({ artifact, onOpenChunk }) {
   const spec = artifact?.spec || {};
   const blocks = spec.blocks || [];
   const svgRef = useRef7(null);
-  const [layout, setLayout] = useState8(() => normalizeLayout(spec.layout));
-  const [paletteKey, setPaletteKey] = useState8(() => PALETTES[spec.palette] ? spec.palette : "adaptive");
-  const [selectedIdx, setSelectedIdx] = useState8(null);
-  const [exportingPng, setExportingPng] = useState8(false);
+  const [layout, setLayout] = useState9(() => normalizeLayout(spec.layout));
+  const [paletteKey, setPaletteKey] = useState9(() => PALETTES[spec.palette] ? spec.palette : "adaptive");
+  const [selectedIdx, setSelectedIdx] = useState9(null);
+  const [exportingPng, setExportingPng] = useState9(false);
   const enriched = useMemo2(() => {
     const items2 = blocks.map((blk, idx) => {
       const metric = parseMetric(blk.value, idx, blocks.length);
@@ -5900,7 +6674,7 @@ function InfographicView({ artifact, onOpenChunk }) {
     };
   }, [blocks]);
   if (!blocks.length) {
-    return /* @__PURE__ */ jsx13("div", { className: "sb-empty", children: "No infographic blocks available." });
+    return /* @__PURE__ */ jsx14("div", { className: "sb-empty", children: "No infographic blocks available." });
   }
   const palette = PALETTES[paletteKey] || PALETTES.adaptive;
   const accentAt = (idx) => palette.accents[idx % palette.accents.length];
@@ -5998,7 +6772,7 @@ function InfographicView({ artifact, onOpenChunk }) {
       const num = enriched.citeNum[cid] || i + 1;
       const bw = 22;
       const bx = rightX - (list.length - i) * (bw + 4) + 4;
-      return /* @__PURE__ */ jsxs11(
+      return /* @__PURE__ */ jsxs12(
         "g",
         {
           style: { cursor: "pointer" },
@@ -6007,8 +6781,8 @@ function InfographicView({ artifact, onOpenChunk }) {
             onOpenChunk?.(cid);
           },
           children: [
-            /* @__PURE__ */ jsx13("rect", { x: bx, y, width: bw, height: 18, rx: "4", fill: accent, fillOpacity: "0.16", stroke: accent, strokeOpacity: "0.45", strokeWidth: "1" }),
-            /* @__PURE__ */ jsx13(
+            /* @__PURE__ */ jsx14("rect", { x: bx, y, width: bw, height: 18, rx: "4", fill: accent, fillOpacity: "0.16", stroke: accent, strokeOpacity: "0.45", strokeWidth: "1" }),
+            /* @__PURE__ */ jsx14(
               "text",
               {
                 x: bx + bw / 2,
@@ -6033,13 +6807,13 @@ function InfographicView({ artifact, onOpenChunk }) {
     const subtitle = String(spec.subtitle || `Synthesized from ${enriched.citeOrder.length} cited passages`);
     const summaryText = metricCount > 0 ? `${items.length} FINDINGS  |  ${metricCount} METRICS` : `${items.length} FINDINGS  |  ${enriched.citeOrder.length} CITATIONS`;
     const badgeW = Math.max(154, summaryText.length * 6.8 + 24);
-    return /* @__PURE__ */ jsxs11("g", { children: [
-      /* @__PURE__ */ jsx13("rect", { x: "0", y: "0", width: W, height: "3", fill: `url(#sb-top-grad-${uid})` }),
-      /* @__PURE__ */ jsx13("rect", { x: PAD, y: "16", width: "98", height: "19", rx: "9.5", fill: primaryAccent, fillOpacity: "0.15", stroke: primaryAccent, strokeOpacity: "0.35", strokeWidth: "1" }),
-      /* @__PURE__ */ jsx13("circle", { cx: PAD + 11, cy: "25.5", r: "3", fill: primaryAccent }),
-      /* @__PURE__ */ jsx13("text", { x: PAD + 20, y: "29", fill: primaryAccent, fontSize: "9.5", fontWeight: "700", letterSpacing: "0.9", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: "VISUAL BRIEF" }),
-      /* @__PURE__ */ jsx13("text", { x: PAD + 110, y: "29", fill: "var(--ui-text-tertiary)", fontSize: "10.5", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: layout.toUpperCase() }),
-      /* @__PURE__ */ jsx13(
+    return /* @__PURE__ */ jsxs12("g", { children: [
+      /* @__PURE__ */ jsx14("rect", { x: "0", y: "0", width: W, height: "3", fill: `url(#sb-top-grad-${uid})` }),
+      /* @__PURE__ */ jsx14("rect", { x: PAD, y: "16", width: "98", height: "19", rx: "9.5", fill: primaryAccent, fillOpacity: "0.15", stroke: primaryAccent, strokeOpacity: "0.35", strokeWidth: "1" }),
+      /* @__PURE__ */ jsx14("circle", { cx: PAD + 11, cy: "25.5", r: "3", fill: primaryAccent }),
+      /* @__PURE__ */ jsx14("text", { x: PAD + 20, y: "29", fill: primaryAccent, fontSize: "9.5", fontWeight: "700", letterSpacing: "0.9", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: "VISUAL BRIEF" }),
+      /* @__PURE__ */ jsx14("text", { x: PAD + 110, y: "29", fill: "var(--ui-text-tertiary)", fontSize: "10.5", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: layout.toUpperCase() }),
+      /* @__PURE__ */ jsx14(
         "rect",
         {
           x: W - PAD - badgeW,
@@ -6052,7 +6826,7 @@ function InfographicView({ artifact, onOpenChunk }) {
           strokeWidth: "1"
         }
       ),
-      /* @__PURE__ */ jsx13(
+      /* @__PURE__ */ jsx14(
         "text",
         {
           x: W - PAD - badgeW / 2,
@@ -6066,7 +6840,7 @@ function InfographicView({ artifact, onOpenChunk }) {
           children: summaryText
         }
       ),
-      /* @__PURE__ */ jsx13(
+      /* @__PURE__ */ jsx14(
         "text",
         {
           x: PAD,
@@ -6079,17 +6853,17 @@ function InfographicView({ artifact, onOpenChunk }) {
           children: String(spec.title || "Infographic").slice(0, 58)
         }
       ),
-      /* @__PURE__ */ jsx13("text", { x: PAD, y: "80", fill: "var(--ui-text-secondary)", fontSize: "12.5", fontFamily: "system-ui, -apple-system, sans-serif", children: subtitle.slice(0, 96) }),
-      /* @__PURE__ */ jsx13("line", { x1: PAD, y1: HEADER_H, x2: W - PAD, y2: HEADER_H, stroke: "var(--ui-stroke-tertiary)", strokeWidth: "1" }),
-      /* @__PURE__ */ jsx13("rect", { x: PAD, y: HEADER_H - 1, width: "84", height: "2", rx: "1", fill: secondAccent, fillOpacity: "0.85" })
+      /* @__PURE__ */ jsx14("text", { x: PAD, y: "80", fill: "var(--ui-text-secondary)", fontSize: "12.5", fontFamily: "system-ui, -apple-system, sans-serif", children: subtitle.slice(0, 96) }),
+      /* @__PURE__ */ jsx14("line", { x1: PAD, y1: HEADER_H, x2: W - PAD, y2: HEADER_H, stroke: "var(--ui-stroke-tertiary)", strokeWidth: "1" }),
+      /* @__PURE__ */ jsx14("rect", { x: PAD, y: HEADER_H - 1, width: "84", height: "2", rx: "1", fill: secondAccent, fillOpacity: "0.85" })
     ] });
   }
   function renderFooter() {
     const fy = H - FOOTER_H;
-    return /* @__PURE__ */ jsxs11("g", { children: [
-      /* @__PURE__ */ jsx13("line", { x1: PAD, y1: fy, x2: W - PAD, y2: fy, stroke: "var(--ui-stroke-tertiary)", strokeWidth: "1" }),
-      /* @__PURE__ */ jsx13("text", { x: PAD, y: fy + 23, fill: "var(--ui-text-tertiary)", fontSize: "10", fontWeight: "600", letterSpacing: "0.8", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: "SOURCEBOOK  |  GROUNDED VISUAL SYNTHESIS" }),
-      /* @__PURE__ */ jsx13(
+    return /* @__PURE__ */ jsxs12("g", { children: [
+      /* @__PURE__ */ jsx14("line", { x1: PAD, y1: fy, x2: W - PAD, y2: fy, stroke: "var(--ui-stroke-tertiary)", strokeWidth: "1" }),
+      /* @__PURE__ */ jsx14("text", { x: PAD, y: fy + 23, fill: "var(--ui-text-tertiary)", fontSize: "10", fontWeight: "600", letterSpacing: "0.8", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: "SOURCEBOOK  |  GROUNDED VISUAL SYNTHESIS" }),
+      /* @__PURE__ */ jsx14(
         "text",
         {
           x: W - PAD,
@@ -6124,9 +6898,9 @@ function InfographicView({ artifact, onOpenChunk }) {
     const barItems = enriched.metricItems.slice(0, 5);
     const bentoRows = packBentoRows(rest);
     let curY = heroY + heroH + 16;
-    return /* @__PURE__ */ jsxs11("g", { children: [
-      /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(hero), children: [
-        /* @__PURE__ */ jsx13(
+    return /* @__PURE__ */ jsxs12("g", { children: [
+      /* @__PURE__ */ jsxs12("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(hero), children: [
+        /* @__PURE__ */ jsx14(
           "rect",
           {
             x: PAD,
@@ -6139,9 +6913,9 @@ function InfographicView({ artifact, onOpenChunk }) {
             strokeWidth: isHeroSel ? "1.8" : "1"
           }
         ),
-        /* @__PURE__ */ jsx13("rect", { x: PAD, y: heroY, width: heroW, height: "3.5", rx: "2", fill: heroAccent }),
-        /* @__PURE__ */ jsx13("circle", { cx, cy, r, fill: "none", stroke: "var(--ui-stroke-tertiary)", strokeWidth: "10" }),
-        /* @__PURE__ */ jsx13(
+        /* @__PURE__ */ jsx14("rect", { x: PAD, y: heroY, width: heroW, height: "3.5", rx: "2", fill: heroAccent }),
+        /* @__PURE__ */ jsx14("circle", { cx, cy, r, fill: "none", stroke: "var(--ui-stroke-tertiary)", strokeWidth: "10" }),
+        /* @__PURE__ */ jsx14(
           "circle",
           {
             cx,
@@ -6155,8 +6929,8 @@ function InfographicView({ artifact, onOpenChunk }) {
             transform: `rotate(-90 ${cx} ${cy})`
           }
         ),
-        /* @__PURE__ */ jsx13("circle", { cx, cy, r: r - 12, fill: "var(--sb-bg)", fillOpacity: "0.65" }),
-        /* @__PURE__ */ jsx13(
+        /* @__PURE__ */ jsx14("circle", { cx, cy, r: r - 12, fill: "var(--sb-bg)", fillOpacity: "0.65" }),
+        /* @__PURE__ */ jsx14(
           "text",
           {
             x: cx,
@@ -6169,7 +6943,7 @@ function InfographicView({ artifact, onOpenChunk }) {
             children: heroVal
           }
         ),
-        /* @__PURE__ */ jsx13(
+        /* @__PURE__ */ jsx14(
           "text",
           {
             x: cx,
@@ -6183,8 +6957,8 @@ function InfographicView({ artifact, onOpenChunk }) {
             children: hero._tag
           }
         ),
-        /* @__PURE__ */ jsx13("rect", { x: PAD + 172, y: heroY + 20, width: "108", height: "18", rx: "9", fill: heroAccent, fillOpacity: "0.15" }),
-        /* @__PURE__ */ jsx13(
+        /* @__PURE__ */ jsx14("rect", { x: PAD + 172, y: heroY + 20, width: "108", height: "18", rx: "9", fill: heroAccent, fillOpacity: "0.15" }),
+        /* @__PURE__ */ jsx14(
           "text",
           {
             x: PAD + 182,
@@ -6197,7 +6971,7 @@ function InfographicView({ artifact, onOpenChunk }) {
             children: "HEADLINE METRIC"
           }
         ),
-        /* @__PURE__ */ jsx13(
+        /* @__PURE__ */ jsx14(
           "text",
           {
             x: PAD + 172,
@@ -6206,10 +6980,10 @@ function InfographicView({ artifact, onOpenChunk }) {
             fontSize: "16",
             fontWeight: "700",
             fontFamily: "system-ui, -apple-system, sans-serif",
-            children: heroTitleLines.map((ln, li) => /* @__PURE__ */ jsx13("tspan", { x: PAD + 172, dy: li === 0 ? 0 : 20, children: ln }, li))
+            children: heroTitleLines.map((ln, li) => /* @__PURE__ */ jsx14("tspan", { x: PAD + 172, dy: li === 0 ? 0 : 20, children: ln }, li))
           }
         ),
-        /* @__PURE__ */ jsx13(
+        /* @__PURE__ */ jsx14(
           "text",
           {
             x: PAD + 172,
@@ -6217,13 +6991,13 @@ function InfographicView({ artifact, onOpenChunk }) {
             fill: "var(--ui-text-secondary)",
             fontSize: "12",
             fontFamily: "system-ui, -apple-system, sans-serif",
-            children: heroBodyLines.map((ln, li) => /* @__PURE__ */ jsx13("tspan", { x: PAD + 172, dy: li === 0 ? 0 : 17, children: ln }, li))
+            children: heroBodyLines.map((ln, li) => /* @__PURE__ */ jsx14("tspan", { x: PAD + 172, dy: li === 0 ? 0 : 17, children: ln }, li))
           }
         ),
         renderCiteBadgesSvg(hero.cites, PAD + heroW - 16, heroY + heroH - 28, heroAccent)
       ] }),
-      /* @__PURE__ */ jsxs11("g", { children: [
-        /* @__PURE__ */ jsx13(
+      /* @__PURE__ */ jsxs12("g", { children: [
+        /* @__PURE__ */ jsx14(
           "rect",
           {
             x: chartX,
@@ -6236,7 +7010,7 @@ function InfographicView({ artifact, onOpenChunk }) {
             strokeWidth: "1"
           }
         ),
-        /* @__PURE__ */ jsx13(
+        /* @__PURE__ */ jsx14(
           "text",
           {
             x: chartX + 18,
@@ -6249,15 +7023,15 @@ function InfographicView({ artifact, onOpenChunk }) {
             children: barItems.length >= 2 ? "METRIC COMPARISON" : "KEY HIGHLIGHTS"
           }
         ),
-        /* @__PURE__ */ jsx13("line", { x1: chartX + 18, y1: heroY + 36, x2: chartX + chartW - 18, y2: heroY + 36, stroke: "var(--ui-stroke-tertiary)", strokeWidth: "1" }),
+        /* @__PURE__ */ jsx14("line", { x1: chartX + 18, y1: heroY + 36, x2: chartX + chartW - 18, y2: heroY + 36, stroke: "var(--ui-stroke-tertiary)", strokeWidth: "1" }),
         barItems.length >= 2 ? barItems.map((bi, bIdx) => {
           const rowY = heroY + 48 + bIdx * 29;
           const barColor = accentAt(bIdx);
           const trackW = chartW - 36;
           const fillW = Math.max(12, Math.round(trackW * bi._ratio));
           const unitNote = bi._metric?.group === "latency" ? " (ms)" : "";
-          return /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(bi), children: [
-            /* @__PURE__ */ jsx13(
+          return /* @__PURE__ */ jsxs12("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(bi), children: [
+            /* @__PURE__ */ jsx14(
               "text",
               {
                 x: chartX + 18,
@@ -6269,7 +7043,7 @@ function InfographicView({ artifact, onOpenChunk }) {
                 children: `${String(bi.heading || "").slice(0, 28)}${unitNote}`
               }
             ),
-            /* @__PURE__ */ jsx13(
+            /* @__PURE__ */ jsx14(
               "text",
               {
                 x: chartX + chartW - 18,
@@ -6282,15 +7056,15 @@ function InfographicView({ artifact, onOpenChunk }) {
                 children: bi._metric?.display
               }
             ),
-            /* @__PURE__ */ jsx13("rect", { x: chartX + 18, y: rowY + 14, width: trackW, height: "7", rx: "3.5", fill: "var(--ui-stroke-tertiary)" }),
-            /* @__PURE__ */ jsx13("rect", { x: chartX + 18, y: rowY + 14, width: fillW, height: "7", rx: "3.5", fill: barColor })
+            /* @__PURE__ */ jsx14("rect", { x: chartX + 18, y: rowY + 14, width: trackW, height: "7", rx: "3.5", fill: "var(--ui-stroke-tertiary)" }),
+            /* @__PURE__ */ jsx14("rect", { x: chartX + 18, y: rowY + 14, width: fillW, height: "7", rx: "3.5", fill: barColor })
           ] }, bi.id || bIdx);
         }) : items.slice(0, 4).map((it, sIdx) => {
           const rowY = heroY + 52 + sIdx * 36;
           const col = accentAt(sIdx);
-          return /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
-            /* @__PURE__ */ jsx13("circle", { cx: chartX + 25, cy: rowY + 6, r: "5", fill: col, fillOpacity: "0.22", stroke: col, strokeWidth: "1.5" }),
-            /* @__PURE__ */ jsx13("text", { x: chartX + 38, y: rowY + 10, fill: "var(--ui-text-primary)", fontSize: "11.5", fontWeight: "600", fontFamily: "system-ui, -apple-system, sans-serif", children: String(it.heading || "").slice(0, 36) })
+          return /* @__PURE__ */ jsxs12("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
+            /* @__PURE__ */ jsx14("circle", { cx: chartX + 25, cy: rowY + 6, r: "5", fill: col, fillOpacity: "0.22", stroke: col, strokeWidth: "1.5" }),
+            /* @__PURE__ */ jsx14("text", { x: chartX + 38, y: rowY + 10, fill: "var(--ui-text-primary)", fontSize: "11.5", fontWeight: "600", fontFamily: "system-ui, -apple-system, sans-serif", children: String(it.heading || "").slice(0, 36) })
           ] }, it.id || sIdx);
         })
       ] }),
@@ -6301,7 +7075,7 @@ function InfographicView({ artifact, onOpenChunk }) {
         curY += row.height + 14;
         const maxBodyChars = row.cols === 3 ? 33 : row.cols === 2 ? 54 : 112;
         const maxTitleChars = row.cols === 3 ? 30 : 44;
-        return /* @__PURE__ */ jsx13("g", { children: row.items.map((it, cIdx) => {
+        return /* @__PURE__ */ jsx14("g", { children: row.items.map((it, cIdx) => {
           const x = PAD + cIdx * (cardW + gap);
           const colorIdx = items.indexOf(it);
           const col = accentAt(colorIdx);
@@ -6310,8 +7084,8 @@ function InfographicView({ artifact, onOpenChunk }) {
           const bodyLines = wrapText(it.body, maxBodyChars, row.cols === 3 ? 3 : 3);
           const tagText = it._tag;
           const tagW = Math.max(66, tagText.length * 6.2 + 16);
-          return /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
-            /* @__PURE__ */ jsx13(
+          return /* @__PURE__ */ jsxs12("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
+            /* @__PURE__ */ jsx14(
               "rect",
               {
                 x,
@@ -6324,9 +7098,9 @@ function InfographicView({ artifact, onOpenChunk }) {
                 strokeWidth: isSel ? "1.8" : "1"
               }
             ),
-            /* @__PURE__ */ jsx13("rect", { x, y: rowY + 12, width: "3", height: row.height - 24, rx: "1.5", fill: col }),
-            hasNum ? /* @__PURE__ */ jsxs11(Fragment6, { children: [
-              /* @__PURE__ */ jsx13(
+            /* @__PURE__ */ jsx14("rect", { x, y: rowY + 12, width: "3", height: row.height - 24, rx: "1.5", fill: col }),
+            hasNum ? /* @__PURE__ */ jsxs12(Fragment7, { children: [
+              /* @__PURE__ */ jsx14(
                 "text",
                 {
                   x: x + 16,
@@ -6338,7 +7112,7 @@ function InfographicView({ artifact, onOpenChunk }) {
                   children: it._metric.display
                 }
               ),
-              /* @__PURE__ */ jsx13(
+              /* @__PURE__ */ jsx14(
                 "rect",
                 {
                   x: x + cardW - tagW - 14,
@@ -6350,7 +7124,7 @@ function InfographicView({ artifact, onOpenChunk }) {
                   fillOpacity: "0.14"
                 }
               ),
-              /* @__PURE__ */ jsx13(
+              /* @__PURE__ */ jsx14(
                 "text",
                 {
                   x: x + cardW - tagW / 2 - 14,
@@ -6364,11 +7138,11 @@ function InfographicView({ artifact, onOpenChunk }) {
                   children: tagText
                 }
               ),
-              /* @__PURE__ */ jsx13("rect", { x: x + 16, y: rowY + 43, width: cardW - 32, height: "3.5", rx: "2", fill: "var(--ui-stroke-tertiary)" }),
-              /* @__PURE__ */ jsx13("rect", { x: x + 16, y: rowY + 43, width: Math.max(12, Math.round((cardW - 32) * it._ratio)), height: "3.5", rx: "2", fill: col })
-            ] }) : /* @__PURE__ */ jsxs11(Fragment6, { children: [
-              /* @__PURE__ */ jsx13("rect", { x: x + 16, y: rowY + 16, width: tagW + 8, height: "19", rx: "9.5", fill: col, fillOpacity: "0.15" }),
-              /* @__PURE__ */ jsx13(
+              /* @__PURE__ */ jsx14("rect", { x: x + 16, y: rowY + 43, width: cardW - 32, height: "3.5", rx: "2", fill: "var(--ui-stroke-tertiary)" }),
+              /* @__PURE__ */ jsx14("rect", { x: x + 16, y: rowY + 43, width: Math.max(12, Math.round((cardW - 32) * it._ratio)), height: "3.5", rx: "2", fill: col })
+            ] }) : /* @__PURE__ */ jsxs12(Fragment7, { children: [
+              /* @__PURE__ */ jsx14("rect", { x: x + 16, y: rowY + 16, width: tagW + 8, height: "19", rx: "9.5", fill: col, fillOpacity: "0.15" }),
+              /* @__PURE__ */ jsx14(
                 "text",
                 {
                   x: x + 26,
@@ -6381,7 +7155,7 @@ function InfographicView({ artifact, onOpenChunk }) {
                   children: tagText
                 }
               ),
-              /* @__PURE__ */ jsx13(
+              /* @__PURE__ */ jsx14(
                 "text",
                 {
                   x: x + cardW - 16,
@@ -6395,7 +7169,7 @@ function InfographicView({ artifact, onOpenChunk }) {
                 }
               )
             ] }),
-            /* @__PURE__ */ jsx13(
+            /* @__PURE__ */ jsx14(
               "text",
               {
                 x: x + 16,
@@ -6407,7 +7181,7 @@ function InfographicView({ artifact, onOpenChunk }) {
                 children: clipLabel(it.heading || `Highlight ${colorIdx + 1}`, maxTitleChars)
               }
             ),
-            /* @__PURE__ */ jsx13(
+            /* @__PURE__ */ jsx14(
               "text",
               {
                 x: x + 16,
@@ -6415,7 +7189,7 @@ function InfographicView({ artifact, onOpenChunk }) {
                 fill: "var(--ui-text-secondary)",
                 fontSize: "11.5",
                 fontFamily: "system-ui, -apple-system, sans-serif",
-                children: bodyLines.map((ln, lIdx) => /* @__PURE__ */ jsx13("tspan", { x: x + 16, dy: lIdx === 0 ? 0 : 16, children: ln }, lIdx))
+                children: bodyLines.map((ln, lIdx) => /* @__PURE__ */ jsx14("tspan", { x: x + 16, dy: lIdx === 0 ? 0 : 16, children: ln }, lIdx))
               }
             ),
             renderCiteBadgesSvg(it.cites, x + cardW - 14, rowY + row.height - 24, col)
@@ -6432,20 +7206,20 @@ function InfographicView({ artifact, onOpenChunk }) {
     const cardX = PAD + 68;
     const cardW = CW - 68;
     const lastY = startY + (items.length - 1) * (cardH + gap) + 34;
-    return /* @__PURE__ */ jsxs11("g", { children: [
-      /* @__PURE__ */ jsx13("line", { x1: spineX, y1: startY + 34, x2: spineX, y2: lastY, stroke: "var(--ui-stroke-secondary)", strokeWidth: "2.5", strokeDasharray: "4 4" }),
+    return /* @__PURE__ */ jsxs12("g", { children: [
+      /* @__PURE__ */ jsx14("line", { x1: spineX, y1: startY + 34, x2: spineX, y2: lastY, stroke: "var(--ui-stroke-secondary)", strokeWidth: "2.5", strokeDasharray: "4 4" }),
       items.map((it, idx) => {
         const y = startY + idx * (cardH + gap);
         const col = accentAt(idx);
         const isSel = selectedIdx === it._idx;
         const hasNum = Boolean(it._metric && it._metric.display);
         const bodyLines = wrapText(it.body, hasNum ? 74 : 96, 2);
-        return /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
-          /* @__PURE__ */ jsx13("line", { x1: spineX + 16, y1: y + 34, x2: cardX, y2: y + 34, stroke: col, strokeOpacity: "0.65", strokeWidth: "1.5" }),
-          /* @__PURE__ */ jsx13("circle", { cx: spineX, cy: y + 34, r: "17", fill: "var(--sb-bg)", stroke: col, strokeWidth: "2" }),
-          /* @__PURE__ */ jsx13("circle", { cx: spineX, cy: y + 34, r: "12", fill: col, fillOpacity: "0.18" }),
-          /* @__PURE__ */ jsx13("text", { x: spineX, y: y + 38, textAnchor: "middle", fill: col, fontSize: "11", fontWeight: "750", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: `0${idx + 1}` }),
-          /* @__PURE__ */ jsx13(
+        return /* @__PURE__ */ jsxs12("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
+          /* @__PURE__ */ jsx14("line", { x1: spineX + 16, y1: y + 34, x2: cardX, y2: y + 34, stroke: col, strokeOpacity: "0.65", strokeWidth: "1.5" }),
+          /* @__PURE__ */ jsx14("circle", { cx: spineX, cy: y + 34, r: "17", fill: "var(--sb-bg)", stroke: col, strokeWidth: "2" }),
+          /* @__PURE__ */ jsx14("circle", { cx: spineX, cy: y + 34, r: "12", fill: col, fillOpacity: "0.18" }),
+          /* @__PURE__ */ jsx14("text", { x: spineX, y: y + 38, textAnchor: "middle", fill: col, fontSize: "11", fontWeight: "750", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: `0${idx + 1}` }),
+          /* @__PURE__ */ jsx14(
             "rect",
             {
               x: cardX,
@@ -6458,13 +7232,13 @@ function InfographicView({ artifact, onOpenChunk }) {
               strokeWidth: isSel ? "1.8" : "1"
             }
           ),
-          /* @__PURE__ */ jsx13("rect", { x: cardX, y: y + 12, width: "3", height: cardH - 24, rx: "1.5", fill: col }),
-          /* @__PURE__ */ jsx13("text", { x: cardX + 18, y: y + 29, fill: "var(--ui-text-primary)", fontSize: "14.5", fontWeight: "700", fontFamily: "system-ui, -apple-system, sans-serif", children: String(it.heading || `Step ${idx + 1}`).slice(0, 56) }),
-          /* @__PURE__ */ jsx13("text", { x: cardX + 18, y: y + 50, fill: "var(--ui-text-secondary)", fontSize: "12", fontFamily: "system-ui, -apple-system, sans-serif", children: bodyLines.map((ln, li) => /* @__PURE__ */ jsx13("tspan", { x: cardX + 18, dy: li === 0 ? 0 : 17, children: ln }, li)) }),
-          hasNum ? /* @__PURE__ */ jsxs11("g", { children: [
-            /* @__PURE__ */ jsx13("rect", { x: cardX + cardW - 146, y: y + 16, width: "128", height: "46", rx: "8", fill: col, fillOpacity: "0.12", stroke: col, strokeOpacity: "0.32", strokeWidth: "1" }),
-            /* @__PURE__ */ jsx13("text", { x: cardX + cardW - 82, y: y + 42, textAnchor: "middle", fill: col, fontSize: "20", fontWeight: "800", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: it._metric.display }),
-            /* @__PURE__ */ jsx13("text", { x: cardX + cardW - 82, y: y + 55, textAnchor: "middle", fill: "var(--ui-text-tertiary)", fontSize: "8.5", fontWeight: "700", letterSpacing: "0.7", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: it._tag })
+          /* @__PURE__ */ jsx14("rect", { x: cardX, y: y + 12, width: "3", height: cardH - 24, rx: "1.5", fill: col }),
+          /* @__PURE__ */ jsx14("text", { x: cardX + 18, y: y + 29, fill: "var(--ui-text-primary)", fontSize: "14.5", fontWeight: "700", fontFamily: "system-ui, -apple-system, sans-serif", children: String(it.heading || `Step ${idx + 1}`).slice(0, 56) }),
+          /* @__PURE__ */ jsx14("text", { x: cardX + 18, y: y + 50, fill: "var(--ui-text-secondary)", fontSize: "12", fontFamily: "system-ui, -apple-system, sans-serif", children: bodyLines.map((ln, li) => /* @__PURE__ */ jsx14("tspan", { x: cardX + 18, dy: li === 0 ? 0 : 17, children: ln }, li)) }),
+          hasNum ? /* @__PURE__ */ jsxs12("g", { children: [
+            /* @__PURE__ */ jsx14("rect", { x: cardX + cardW - 146, y: y + 16, width: "128", height: "46", rx: "8", fill: col, fillOpacity: "0.12", stroke: col, strokeOpacity: "0.32", strokeWidth: "1" }),
+            /* @__PURE__ */ jsx14("text", { x: cardX + cardW - 82, y: y + 42, textAnchor: "middle", fill: col, fontSize: "20", fontWeight: "800", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: it._metric.display }),
+            /* @__PURE__ */ jsx14("text", { x: cardX + cardW - 82, y: y + 55, textAnchor: "middle", fill: "var(--ui-text-tertiary)", fontSize: "8.5", fontWeight: "700", letterSpacing: "0.7", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: it._tag })
           ] }) : null,
           renderCiteBadgesSvg(it.cites, cardX + cardW - 18, y + cardH - 24, col)
         ] }, it.id || idx);
@@ -6484,17 +7258,17 @@ function InfographicView({ artifact, onOpenChunk }) {
     const midX = PAD + colW + gap / 2;
     const maxRows = Math.max(leftItems.length, rightItems.length, 1);
     const dividerBottom = cardStartY + maxRows * 124 + Math.max(0, maxRows - 1) * 12;
-    const renderCol = (list, x, color, label, offsetIdx) => /* @__PURE__ */ jsxs11("g", { children: [
-      /* @__PURE__ */ jsx13("rect", { x, y: topY, width: colW, height: "30", rx: "8", fill: color, fillOpacity: "0.14", stroke: color, strokeOpacity: "0.36", strokeWidth: "1" }),
-      /* @__PURE__ */ jsx13("circle", { cx: x + 14, cy: topY + 15, r: "4", fill: color }),
-      /* @__PURE__ */ jsx13("text", { x: x + 26, y: topY + 19, fill: color, fontSize: "11", fontWeight: "750", letterSpacing: "0.8", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: label }),
+    const renderCol = (list, x, color, label, offsetIdx) => /* @__PURE__ */ jsxs12("g", { children: [
+      /* @__PURE__ */ jsx14("rect", { x, y: topY, width: colW, height: "30", rx: "8", fill: color, fillOpacity: "0.14", stroke: color, strokeOpacity: "0.36", strokeWidth: "1" }),
+      /* @__PURE__ */ jsx14("circle", { cx: x + 14, cy: topY + 15, r: "4", fill: color }),
+      /* @__PURE__ */ jsx14("text", { x: x + 26, y: topY + 19, fill: color, fontSize: "11", fontWeight: "750", letterSpacing: "0.8", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: label }),
       list.map((it, idx) => {
         const y = cardStartY + idx * 136;
         const isSel = selectedIdx === it._idx;
         const hasNum = Boolean(it._metric && it._metric.display);
         const bodyLines = wrapText(it.body, 48, 3);
-        return /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
-          /* @__PURE__ */ jsx13(
+        return /* @__PURE__ */ jsxs12("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
+          /* @__PURE__ */ jsx14(
             "rect",
             {
               x,
@@ -6507,21 +7281,21 @@ function InfographicView({ artifact, onOpenChunk }) {
               strokeWidth: isSel ? "1.8" : "1"
             }
           ),
-          /* @__PURE__ */ jsx13("text", { x: x + 16, y: y + 26, fill: "var(--ui-text-primary)", fontSize: "13.5", fontWeight: "700", fontFamily: "system-ui, -apple-system, sans-serif", children: String(it.heading || `Factor ${offsetIdx + idx + 1}`).slice(0, 34) }),
-          hasNum ? /* @__PURE__ */ jsx13("text", { x: x + colW - 16, y: y + 28, textAnchor: "end", fill: color, fontSize: "18", fontWeight: "800", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: it._metric.display }) : null,
-          hasNum ? /* @__PURE__ */ jsxs11(Fragment6, { children: [
-            /* @__PURE__ */ jsx13("rect", { x: x + 16, y: y + 36, width: colW - 32, height: "4", rx: "2", fill: "var(--ui-stroke-tertiary)" }),
-            /* @__PURE__ */ jsx13("rect", { x: x + 16, y: y + 36, width: Math.max(12, Math.round((colW - 32) * it._ratio)), height: "4", rx: "2", fill: color })
+          /* @__PURE__ */ jsx14("text", { x: x + 16, y: y + 26, fill: "var(--ui-text-primary)", fontSize: "13.5", fontWeight: "700", fontFamily: "system-ui, -apple-system, sans-serif", children: String(it.heading || `Factor ${offsetIdx + idx + 1}`).slice(0, 34) }),
+          hasNum ? /* @__PURE__ */ jsx14("text", { x: x + colW - 16, y: y + 28, textAnchor: "end", fill: color, fontSize: "18", fontWeight: "800", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: it._metric.display }) : null,
+          hasNum ? /* @__PURE__ */ jsxs12(Fragment7, { children: [
+            /* @__PURE__ */ jsx14("rect", { x: x + 16, y: y + 36, width: colW - 32, height: "4", rx: "2", fill: "var(--ui-stroke-tertiary)" }),
+            /* @__PURE__ */ jsx14("rect", { x: x + 16, y: y + 36, width: Math.max(12, Math.round((colW - 32) * it._ratio)), height: "4", rx: "2", fill: color })
           ] }) : null,
-          /* @__PURE__ */ jsx13("text", { x: x + 16, y: y + (hasNum ? 58 : 48), fill: "var(--ui-text-secondary)", fontSize: "11.5", fontFamily: "system-ui, -apple-system, sans-serif", children: bodyLines.map((ln, li) => /* @__PURE__ */ jsx13("tspan", { x: x + 16, dy: li === 0 ? 0 : 16, children: ln }, li)) }),
+          /* @__PURE__ */ jsx14("text", { x: x + 16, y: y + (hasNum ? 58 : 48), fill: "var(--ui-text-secondary)", fontSize: "11.5", fontFamily: "system-ui, -apple-system, sans-serif", children: bodyLines.map((ln, li) => /* @__PURE__ */ jsx14("tspan", { x: x + 16, dy: li === 0 ? 0 : 16, children: ln }, li)) }),
           renderCiteBadgesSvg(it.cites, x + colW - 14, y + 98, color)
         ] }, it.id || idx);
       })
     ] });
-    return /* @__PURE__ */ jsxs11("g", { children: [
-      /* @__PURE__ */ jsx13("line", { x1: midX, y1: topY + 38, x2: midX, y2: dividerBottom, stroke: "var(--ui-stroke-tertiary)", strokeWidth: "1", strokeDasharray: "3 4" }),
-      /* @__PURE__ */ jsx13("circle", { cx: midX, cy: topY + 15, r: "13", fill: "var(--sb-surface)", stroke: "var(--ui-stroke-secondary)", strokeWidth: "1" }),
-      /* @__PURE__ */ jsx13("text", { x: midX, y: topY + 19, textAnchor: "middle", fill: "var(--ui-text-tertiary)", fontSize: "9.5", fontWeight: "750", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: "VS" }),
+    return /* @__PURE__ */ jsxs12("g", { children: [
+      /* @__PURE__ */ jsx14("line", { x1: midX, y1: topY + 38, x2: midX, y2: dividerBottom, stroke: "var(--ui-stroke-tertiary)", strokeWidth: "1", strokeDasharray: "3 4" }),
+      /* @__PURE__ */ jsx14("circle", { cx: midX, cy: topY + 15, r: "13", fill: "var(--sb-surface)", stroke: "var(--ui-stroke-secondary)", strokeWidth: "1" }),
+      /* @__PURE__ */ jsx14("text", { x: midX, y: topY + 19, textAnchor: "middle", fill: "var(--ui-text-tertiary)", fontSize: "9.5", fontWeight: "750", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: "VS" }),
       renderCol(leftItems, PAD, colA, `GROUP A  (${leftItems.length})`, 0),
       renderCol(rightItems, PAD + colW + gap, colB, `GROUP B  (${rightItems.length})`, half)
     ] });
@@ -6553,10 +7327,10 @@ function InfographicView({ artifact, onOpenChunk }) {
         const ctrlOffset = isLeft ? -48 : 48;
         const d = `M ${hubEdgeX} ${cy} C ${hubEdgeX + ctrlOffset} ${cy}, ${anchorX - ctrlOffset} ${anchorY}, ${anchorX} ${anchorY}`;
         const bodyLines = wrapText(it.body, 36, 3);
-        return /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
-          /* @__PURE__ */ jsx13("path", { d, fill: "none", stroke: col, strokeOpacity: "0.55", strokeWidth: "1.8" }),
-          /* @__PURE__ */ jsx13("circle", { cx: anchorX, cy: anchorY, r: "4", fill: col }),
-          /* @__PURE__ */ jsx13(
+        return /* @__PURE__ */ jsxs12("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
+          /* @__PURE__ */ jsx14("path", { d, fill: "none", stroke: col, strokeOpacity: "0.55", strokeWidth: "1.8" }),
+          /* @__PURE__ */ jsx14("circle", { cx: anchorX, cy: anchorY, r: "4", fill: col }),
+          /* @__PURE__ */ jsx14(
             "rect",
             {
               x,
@@ -6569,22 +7343,22 @@ function InfographicView({ artifact, onOpenChunk }) {
               strokeWidth: isSel ? "1.8" : "1"
             }
           ),
-          /* @__PURE__ */ jsx13("text", { x: x + 14, y: y + 25, fill: "var(--ui-text-primary)", fontSize: "12.5", fontWeight: "700", fontFamily: "system-ui, -apple-system, sans-serif", children: clipLabel(it.heading || "", it._metric?.display ? 26 : 34) }),
-          it._metric?.display ? /* @__PURE__ */ jsx13("text", { x: x + cardW - 14, y: y + 26, textAnchor: "end", fill: col, fontSize: "15.5", fontWeight: "800", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: it._metric.display }) : null,
-          /* @__PURE__ */ jsx13("text", { x: x + 14, y: y + 45, fill: "var(--ui-text-secondary)", fontSize: "11", fontFamily: "system-ui, -apple-system, sans-serif", children: bodyLines.map((ln, li) => /* @__PURE__ */ jsx13("tspan", { x: x + 14, dy: li === 0 ? 0 : 15, children: ln }, li)) }),
+          /* @__PURE__ */ jsx14("text", { x: x + 14, y: y + 25, fill: "var(--ui-text-primary)", fontSize: "12.5", fontWeight: "700", fontFamily: "system-ui, -apple-system, sans-serif", children: clipLabel(it.heading || "", it._metric?.display ? 26 : 34) }),
+          it._metric?.display ? /* @__PURE__ */ jsx14("text", { x: x + cardW - 14, y: y + 26, textAnchor: "end", fill: col, fontSize: "15.5", fontWeight: "800", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: it._metric.display }) : null,
+          /* @__PURE__ */ jsx14("text", { x: x + 14, y: y + 45, fill: "var(--ui-text-secondary)", fontSize: "11", fontFamily: "system-ui, -apple-system, sans-serif", children: bodyLines.map((ln, li) => /* @__PURE__ */ jsx14("tspan", { x: x + 14, dy: li === 0 ? 0 : 15, children: ln }, li)) }),
           renderCiteBadgesSvg(it.cites, x + cardW - 12, y + cardH - 22, col)
         ] }, it.id || `${side}-${idx}`);
       });
     };
     const hubHeadingLines = wrapText(hero.heading || spec.title || "Core Topic", 16, 2);
-    return /* @__PURE__ */ jsxs11("g", { children: [
+    return /* @__PURE__ */ jsxs12("g", { children: [
       renderSide(leftSats, "left"),
       renderSide(rightSats, "right"),
-      /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(hero), children: [
-        /* @__PURE__ */ jsx13("circle", { cx, cy, r: hubR + 10, fill: hubCol, fillOpacity: "0.08", stroke: hubCol, strokeOpacity: "0.24", strokeDasharray: "4 4" }),
-        /* @__PURE__ */ jsx13("circle", { cx, cy, r: hubR, fill: "var(--sb-surface)", stroke: hubCol, strokeWidth: "2.5" }),
-        hero._metric?.display ? /* @__PURE__ */ jsx13("text", { x: cx, y: cy - 10, textAnchor: "middle", fill: hubCol, fontSize: "26", fontWeight: "800", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: hero._metric.display }) : null,
-        /* @__PURE__ */ jsx13(
+      /* @__PURE__ */ jsxs12("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(hero), children: [
+        /* @__PURE__ */ jsx14("circle", { cx, cy, r: hubR + 10, fill: hubCol, fillOpacity: "0.08", stroke: hubCol, strokeOpacity: "0.24", strokeDasharray: "4 4" }),
+        /* @__PURE__ */ jsx14("circle", { cx, cy, r: hubR, fill: "var(--sb-surface)", stroke: hubCol, strokeWidth: "2.5" }),
+        hero._metric?.display ? /* @__PURE__ */ jsx14("text", { x: cx, y: cy - 10, textAnchor: "middle", fill: hubCol, fontSize: "26", fontWeight: "800", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: hero._metric.display }) : null,
+        /* @__PURE__ */ jsx14(
           "text",
           {
             x: cx,
@@ -6594,10 +7368,10 @@ function InfographicView({ artifact, onOpenChunk }) {
             fontSize: "12",
             fontWeight: "700",
             fontFamily: "system-ui, -apple-system, sans-serif",
-            children: hubHeadingLines.map((ln, li) => /* @__PURE__ */ jsx13("tspan", { x: cx, dy: li === 0 ? 0 : 15, children: ln }, li))
+            children: hubHeadingLines.map((ln, li) => /* @__PURE__ */ jsx14("tspan", { x: cx, dy: li === 0 ? 0 : 15, children: ln }, li))
           }
         ),
-        /* @__PURE__ */ jsx13("text", { x: cx, y: cy + 46, textAnchor: "middle", fill: "var(--ui-text-tertiary)", fontSize: "8.5", fontWeight: "700", letterSpacing: "0.8", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: "CORE HUB" })
+        /* @__PURE__ */ jsx14("text", { x: cx, y: cy + 46, textAnchor: "middle", fill: "var(--ui-text-tertiary)", fontSize: "8.5", fontWeight: "700", letterSpacing: "0.8", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: "CORE HUB" })
       ] })
     ] });
   }
@@ -6612,7 +7386,7 @@ function InfographicView({ artifact, onOpenChunk }) {
     const minW = 104;
     const noteX = PAD + 404;
     const noteW = CW - 404;
-    return /* @__PURE__ */ jsx13("g", { children: tiers.map((it, idx) => {
+    return /* @__PURE__ */ jsx14("g", { children: tiers.map((it, idx) => {
       const y = topY + idx * (tierH + gap);
       const col = accentAt(idx);
       const isSel = selectedIdx === it._idx;
@@ -6627,9 +7401,9 @@ function InfographicView({ artifact, onOpenChunk }) {
       const rightMidX = pyrCenter + (wTop + wBot) / 4;
       const midY = y + tierH / 2;
       const bodyLines = wrapText(it.body, 56, 2);
-      return /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
-        /* @__PURE__ */ jsx13("polygon", { points: pts, fill: col, fillOpacity: isSel ? "0.28" : "0.16", stroke: col, strokeWidth: isSel ? "2" : "1.3" }),
-        /* @__PURE__ */ jsx13(
+      return /* @__PURE__ */ jsxs12("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
+        /* @__PURE__ */ jsx14("polygon", { points: pts, fill: col, fillOpacity: isSel ? "0.28" : "0.16", stroke: col, strokeWidth: isSel ? "2" : "1.3" }),
+        /* @__PURE__ */ jsx14(
           "text",
           {
             x: pyrCenter,
@@ -6642,10 +7416,10 @@ function InfographicView({ artifact, onOpenChunk }) {
             children: it._metric?.display || `TIER 0${idx + 1}`
           }
         ),
-        it._metric?.display ? /* @__PURE__ */ jsx13("text", { x: pyrCenter, y: midY + 17, textAnchor: "middle", fill: "var(--ui-text-secondary)", fontSize: "8.5", fontWeight: "700", letterSpacing: "0.7", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: it._tag }) : null,
-        /* @__PURE__ */ jsx13("line", { x1: rightMidX + 4, y1: midY, x2: noteX, y2: midY, stroke: col, strokeOpacity: "0.6", strokeWidth: "1.3", strokeDasharray: "3 3" }),
-        /* @__PURE__ */ jsx13("circle", { cx: noteX, cy: midY, r: "3.5", fill: col }),
-        /* @__PURE__ */ jsx13(
+        it._metric?.display ? /* @__PURE__ */ jsx14("text", { x: pyrCenter, y: midY + 17, textAnchor: "middle", fill: "var(--ui-text-secondary)", fontSize: "8.5", fontWeight: "700", letterSpacing: "0.7", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: it._tag }) : null,
+        /* @__PURE__ */ jsx14("line", { x1: rightMidX + 4, y1: midY, x2: noteX, y2: midY, stroke: col, strokeOpacity: "0.6", strokeWidth: "1.3", strokeDasharray: "3 3" }),
+        /* @__PURE__ */ jsx14("circle", { cx: noteX, cy: midY, r: "3.5", fill: col }),
+        /* @__PURE__ */ jsx14(
           "rect",
           {
             x: noteX,
@@ -6658,16 +7432,16 @@ function InfographicView({ artifact, onOpenChunk }) {
             strokeWidth: isSel ? "1.8" : "1"
           }
         ),
-        /* @__PURE__ */ jsx13("text", { x: noteX + 16, y: y + 24, fill: "var(--ui-text-primary)", fontSize: "13", fontWeight: "700", fontFamily: "system-ui, -apple-system, sans-serif", children: String(it.heading || `Tier ${idx + 1}`).slice(0, 44) }),
-        /* @__PURE__ */ jsx13("text", { x: noteX + 16, y: y + 43, fill: "var(--ui-text-secondary)", fontSize: "11.5", fontFamily: "system-ui, -apple-system, sans-serif", children: bodyLines.map((ln, li) => /* @__PURE__ */ jsx13("tspan", { x: noteX + 16, dy: li === 0 ? 0 : 15, children: ln }, li)) }),
+        /* @__PURE__ */ jsx14("text", { x: noteX + 16, y: y + 24, fill: "var(--ui-text-primary)", fontSize: "13", fontWeight: "700", fontFamily: "system-ui, -apple-system, sans-serif", children: String(it.heading || `Tier ${idx + 1}`).slice(0, 44) }),
+        /* @__PURE__ */ jsx14("text", { x: noteX + 16, y: y + 43, fill: "var(--ui-text-secondary)", fontSize: "11.5", fontFamily: "system-ui, -apple-system, sans-serif", children: bodyLines.map((ln, li) => /* @__PURE__ */ jsx14("tspan", { x: noteX + 16, dy: li === 0 ? 0 : 15, children: ln }, li)) }),
         renderCiteBadgesSvg(it.cites, noteX + noteW - 14, y + tierH - 22, col)
       ] }, it.id || idx);
     }) });
   }
   const selectedBlock = selectedIdx != null ? items[selectedIdx] : null;
-  return /* @__PURE__ */ jsxs11("div", { style: { display: "flex", flexDirection: "column", gap: 10 }, children: [
-    /* @__PURE__ */ jsxs11("div", { className: "sb-inf-toolbar", children: [
-      /* @__PURE__ */ jsx13("div", { className: "sb-seg", role: "group", "aria-label": "Infographic layout", children: LAYOUT_OPTIONS.map((opt) => /* @__PURE__ */ jsx13(
+  return /* @__PURE__ */ jsxs12("div", { style: { display: "flex", flexDirection: "column", gap: 10 }, children: [
+    /* @__PURE__ */ jsxs12("div", { className: "sb-inf-toolbar", children: [
+      /* @__PURE__ */ jsx14("div", { className: "sb-seg", role: "group", "aria-label": "Infographic layout", children: LAYOUT_OPTIONS.map((opt) => /* @__PURE__ */ jsx14(
         "button",
         {
           type: "button",
@@ -6678,8 +7452,8 @@ function InfographicView({ artifact, onOpenChunk }) {
         },
         opt.id
       )) }),
-      /* @__PURE__ */ jsxs11("div", { style: { display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }, children: [
-        /* @__PURE__ */ jsx13(
+      /* @__PURE__ */ jsxs12("div", { style: { display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }, children: [
+        /* @__PURE__ */ jsx14(
           "select",
           {
             className: "sb-select",
@@ -6687,25 +7461,25 @@ function InfographicView({ artifact, onOpenChunk }) {
             onChange: (e) => setPaletteKey(e.target.value),
             "aria-label": "Infographic color palette",
             title: "Switch visual color palette",
-            children: Object.entries(PALETTES).map(([k, p]) => /* @__PURE__ */ jsx13("option", { value: k, children: p.label }, k))
+            children: Object.entries(PALETTES).map(([k, p]) => /* @__PURE__ */ jsx14("option", { value: k, children: p.label }, k))
           }
         ),
-        /* @__PURE__ */ jsxs11("button", { type: "button", className: "sb-btn", onClick: handleCopySvg, title: "Copy standalone vector SVG", children: [
-          /* @__PURE__ */ jsx13(Icon, { name: "Copy", size: 12 }),
+        /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-btn", onClick: handleCopySvg, title: "Copy standalone vector SVG", children: [
+          /* @__PURE__ */ jsx14(Icon, { name: "Copy", size: 12 }),
           " Copy SVG"
         ] }),
-        /* @__PURE__ */ jsxs11("button", { type: "button", className: "sb-btn", onClick: handleDownloadSvg, title: "Download vector .svg file", children: [
-          /* @__PURE__ */ jsx13(Icon, { name: "Download", size: 12 }),
+        /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-btn", onClick: handleDownloadSvg, title: "Download vector .svg file", children: [
+          /* @__PURE__ */ jsx14(Icon, { name: "Download", size: 12 }),
           " SVG"
         ] }),
-        /* @__PURE__ */ jsxs11("button", { type: "button", className: "sb-btn sb-btn-primary", disabled: exportingPng, onClick: handleDownloadPng, title: "Download high-resolution 2x PNG", children: [
-          /* @__PURE__ */ jsx13(Icon, { name: "ImageDown", size: 12 }),
+        /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-btn sb-btn-primary", disabled: exportingPng, onClick: handleDownloadPng, title: "Download high-resolution 2x PNG", children: [
+          /* @__PURE__ */ jsx14(Icon, { name: "ImageDown", size: 12 }),
           " ",
           exportingPng ? "Exporting..." : "PNG"
         ] })
       ] })
     ] }),
-    spec.hero_image_url ? /* @__PURE__ */ jsx13(
+    spec.hero_image_url ? /* @__PURE__ */ jsx14(
       "img",
       {
         src: spec.hero_image_url,
@@ -6713,7 +7487,7 @@ function InfographicView({ artifact, onOpenChunk }) {
         style: { width: "100%", maxHeight: 200, objectFit: "cover", borderRadius: 10, border: "1px solid var(--ui-stroke-secondary)" }
       }
     ) : null,
-    /* @__PURE__ */ jsx13("div", { className: "sb-svg-stage", children: /* @__PURE__ */ jsxs11(
+    /* @__PURE__ */ jsx14("div", { className: "sb-svg-stage", children: /* @__PURE__ */ jsxs12(
       "svg",
       {
         ref: svgRef,
@@ -6723,26 +7497,26 @@ function InfographicView({ artifact, onOpenChunk }) {
         viewBox: `0 0 ${W} ${H}`,
         style: { display: "block", background: "var(--sb-bg)" },
         children: [
-          /* @__PURE__ */ jsx13("title", { id: titleId, children: spec.title || "Infographic" }),
-          /* @__PURE__ */ jsx13("desc", { id: descId, children: spec.subtitle || `Structured ${layout} infographic with ${blocks.length} cited items.` }),
-          /* @__PURE__ */ jsxs11("defs", { children: [
-            /* @__PURE__ */ jsxs11("linearGradient", { id: `sb-top-grad-${uid}`, x1: "0%", y1: "0%", x2: "100%", y2: "0%", children: [
-              /* @__PURE__ */ jsx13("stop", { offset: "0%", stopColor: accentAt(0) }),
-              /* @__PURE__ */ jsx13("stop", { offset: "50%", stopColor: accentAt(1) }),
-              /* @__PURE__ */ jsx13("stop", { offset: "100%", stopColor: accentAt(2) })
+          /* @__PURE__ */ jsx14("title", { id: titleId, children: spec.title || "Infographic" }),
+          /* @__PURE__ */ jsx14("desc", { id: descId, children: spec.subtitle || `Structured ${layout} infographic with ${blocks.length} cited items.` }),
+          /* @__PURE__ */ jsxs12("defs", { children: [
+            /* @__PURE__ */ jsxs12("linearGradient", { id: `sb-top-grad-${uid}`, x1: "0%", y1: "0%", x2: "100%", y2: "0%", children: [
+              /* @__PURE__ */ jsx14("stop", { offset: "0%", stopColor: accentAt(0) }),
+              /* @__PURE__ */ jsx14("stop", { offset: "50%", stopColor: accentAt(1) }),
+              /* @__PURE__ */ jsx14("stop", { offset: "100%", stopColor: accentAt(2) })
             ] }),
-            /* @__PURE__ */ jsxs11("linearGradient", { id: `sb-hero-wash-${uid}`, x1: "0%", y1: "0%", x2: "100%", y2: "100%", children: [
-              /* @__PURE__ */ jsx13("stop", { offset: "0%", stopColor: accentAt(0), stopOpacity: "0.11" }),
-              /* @__PURE__ */ jsx13("stop", { offset: "48%", stopColor: "var(--sb-surface)", stopOpacity: "1" }),
-              /* @__PURE__ */ jsx13("stop", { offset: "100%", stopColor: "var(--sb-surface)", stopOpacity: "1" })
+            /* @__PURE__ */ jsxs12("linearGradient", { id: `sb-hero-wash-${uid}`, x1: "0%", y1: "0%", x2: "100%", y2: "100%", children: [
+              /* @__PURE__ */ jsx14("stop", { offset: "0%", stopColor: accentAt(0), stopOpacity: "0.11" }),
+              /* @__PURE__ */ jsx14("stop", { offset: "48%", stopColor: "var(--sb-surface)", stopOpacity: "1" }),
+              /* @__PURE__ */ jsx14("stop", { offset: "100%", stopColor: "var(--sb-surface)", stopOpacity: "1" })
             ] }),
-            /* @__PURE__ */ jsxs11("pattern", { id: `sb-bayer-grid-${uid}`, width: "8", height: "8", patternUnits: "userSpaceOnUse", children: [
-              /* @__PURE__ */ jsx13("rect", { x: "0", y: "0", width: "1.5", height: "1.5", fill: accentAt(0), fillOpacity: "0.22" }),
-              /* @__PURE__ */ jsx13("rect", { x: "4", y: "4", width: "1.5", height: "1.5", fill: accentAt(1), fillOpacity: "0.18" })
+            /* @__PURE__ */ jsxs12("pattern", { id: `sb-bayer-grid-${uid}`, width: "8", height: "8", patternUnits: "userSpaceOnUse", children: [
+              /* @__PURE__ */ jsx14("rect", { x: "0", y: "0", width: "1.5", height: "1.5", fill: accentAt(0), fillOpacity: "0.22" }),
+              /* @__PURE__ */ jsx14("rect", { x: "4", y: "4", width: "1.5", height: "1.5", fill: accentAt(1), fillOpacity: "0.18" })
             ] })
           ] }),
-          /* @__PURE__ */ jsx13("rect", { x: "0", y: "0", width: W, height: H, fill: "var(--sb-bg)" }),
-          /* @__PURE__ */ jsx13("rect", { x: "0", y: "0", width: W, height: "92", fill: `url(#sb-bayer-grid-${uid})`, opacity: "0.7" }),
+          /* @__PURE__ */ jsx14("rect", { x: "0", y: "0", width: W, height: H, fill: "var(--sb-bg)" }),
+          /* @__PURE__ */ jsx14("rect", { x: "0", y: "0", width: W, height: "92", fill: `url(#sb-bayer-grid-${uid})`, opacity: "0.7" }),
           renderHeader(),
           layout === "stat-grid" ? renderBentoLayout() : null,
           layout === "timeline" ? renderTimelineLayout() : null,
@@ -6753,21 +7527,21 @@ function InfographicView({ artifact, onOpenChunk }) {
         ]
       }
     ) }),
-    selectedBlock ? /* @__PURE__ */ jsxs11("div", { className: "sb-inf-detail", children: [
-      /* @__PURE__ */ jsxs11("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }, children: [
-        /* @__PURE__ */ jsxs11("div", { style: { display: "flex", alignItems: "center", gap: 8, minWidth: 0 }, children: [
-          selectedBlock._metric?.display ? /* @__PURE__ */ jsx13("span", { className: "sb-mono", style: { fontWeight: 750, fontSize: 13, color: accentAt(selectedBlock._idx) }, children: selectedBlock._metric.display }) : null,
-          /* @__PURE__ */ jsx13("span", { style: { fontWeight: 650, color: "var(--ui-text-primary)", fontSize: 12.5 }, children: selectedBlock.heading })
+    selectedBlock ? /* @__PURE__ */ jsxs12("div", { className: "sb-inf-detail", children: [
+      /* @__PURE__ */ jsxs12("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }, children: [
+        /* @__PURE__ */ jsxs12("div", { style: { display: "flex", alignItems: "center", gap: 8, minWidth: 0 }, children: [
+          selectedBlock._metric?.display ? /* @__PURE__ */ jsx14("span", { className: "sb-mono", style: { fontWeight: 750, fontSize: 13, color: accentAt(selectedBlock._idx) }, children: selectedBlock._metric.display }) : null,
+          /* @__PURE__ */ jsx14("span", { style: { fontWeight: 650, color: "var(--ui-text-primary)", fontSize: 12.5 }, children: selectedBlock.heading })
         ] }),
-        /* @__PURE__ */ jsxs11("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
-          (selectedBlock.cites || []).map((cid) => /* @__PURE__ */ jsxs11(
+        /* @__PURE__ */ jsxs12("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
+          (selectedBlock.cites || []).map((cid) => /* @__PURE__ */ jsxs12(
             "button",
             {
               type: "button",
               className: "sb-btn",
               onClick: () => onOpenChunk?.(cid),
               children: [
-                /* @__PURE__ */ jsx13(Icon, { name: "BookOpen", size: 12 }),
+                /* @__PURE__ */ jsx14(Icon, { name: "BookOpen", size: 12 }),
                 " Inspect Passage [",
                 enriched.citeNum[cid] || 1,
                 "]"
@@ -6775,21 +7549,21 @@ function InfographicView({ artifact, onOpenChunk }) {
             },
             cid
           )),
-          /* @__PURE__ */ jsx13("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setSelectedIdx(null), "aria-label": "Close detail", children: /* @__PURE__ */ jsx13(Icon, { name: "X", size: 12 }) })
+          /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setSelectedIdx(null), "aria-label": "Close detail", children: /* @__PURE__ */ jsx14(Icon, { name: "X", size: 12 }) })
         ] })
       ] }),
-      /* @__PURE__ */ jsx13("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", lineHeight: 1.5 }, children: selectedBlock.body })
+      /* @__PURE__ */ jsx14("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", lineHeight: 1.5 }, children: selectedBlock.body })
     ] }) : null,
-    /* @__PURE__ */ jsxs11("div", { style: { display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }, children: [
-      /* @__PURE__ */ jsx13("span", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: "Cited passages:" }),
-      enriched.citeOrder.map((cid, idx) => /* @__PURE__ */ jsx13("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: idx + 1 }, cid))
+    /* @__PURE__ */ jsxs12("div", { style: { display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }, children: [
+      /* @__PURE__ */ jsx14("span", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: "Cited passages:" }),
+      enriched.citeOrder.map((cid, idx) => /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: idx + 1 }, cid))
     ] })
   ] });
 }
 
 // desktop-src/components/renderers/DataTableView.jsx
-import { Fragment as Fragment7, useMemo as useMemo3, useState as useState9 } from "react";
-import { Fragment as Fragment8, jsx as jsx14, jsxs as jsxs12 } from "react/jsx-runtime";
+import { Fragment as Fragment8, useMemo as useMemo3, useState as useState10 } from "react";
+import { Fragment as Fragment9, jsx as jsx15, jsxs as jsxs13 } from "react/jsx-runtime";
 var BADGE_TONES = [
   { color: "#3b82f6", bg: "rgba(59, 130, 246, 0.13)", border: "rgba(59, 130, 246, 0.30)" },
   { color: "#10b981", bg: "rgba(16, 185, 129, 0.13)", border: "rgba(16, 185, 129, 0.30)" },
@@ -6845,15 +7619,15 @@ function barColorForGroup(group) {
 function DataTableView({ artifact, onOpenChunk }) {
   const cols = artifact?.spec?.columns || [];
   const rows = artifact?.spec?.rows || [];
-  const [query, setQuery] = useState9("");
-  const [sort, setSort] = useState9({ key: null, dir: "asc" });
-  const [viewMode, setViewMode] = useState9("table");
-  const [density, setDensity] = useState9("comfortable");
-  const [activeFacet, setActiveFacet] = useState9("ALL");
-  const [metricsOnly, setMetricsOnly] = useState9(false);
-  const [expandedRowId, setExpandedRowId] = useState9(null);
-  const [hiddenCols, setHiddenCols] = useState9({});
-  const [showColMenu, setShowColMenu] = useState9(false);
+  const [query, setQuery] = useState10("");
+  const [sort, setSort] = useState10({ key: null, dir: "asc" });
+  const [viewMode, setViewMode] = useState10("table");
+  const [density, setDensity] = useState10("comfortable");
+  const [activeFacet, setActiveFacet] = useState10("ALL");
+  const [metricsOnly, setMetricsOnly] = useState10(false);
+  const [expandedRowId, setExpandedRowId] = useState10(null);
+  const [hiddenCols, setHiddenCols] = useState10({});
+  const [showColMenu, setShowColMenu] = useState10(false);
   const meta = useMemo3(() => {
     const colRoles = {};
     let facetCol = null;
@@ -6971,7 +7745,7 @@ function DataTableView({ artifact, onOpenChunk }) {
     return list;
   }, [rows, query, sort, activeFacet, metricsOnly, meta.facetCol, meta.metricCol]);
   if (!cols.length) {
-    return /* @__PURE__ */ jsx14("div", { className: "sb-empty", children: "No table columns available." });
+    return /* @__PURE__ */ jsx15("div", { className: "sb-empty", children: "No table columns available." });
   }
   function toggleSort(key) {
     setSort((prev) => {
@@ -7026,38 +7800,38 @@ function DataTableView({ artifact, onOpenChunk }) {
     if (role === "badge") {
       const tone = hashTone(val);
       const label = cleanSourceLabel(val);
-      return /* @__PURE__ */ jsxs12(
+      return /* @__PURE__ */ jsxs13(
         "span",
         {
           className: "sb-dt-badge",
           title: String(val),
           style: { background: tone.bg, borderColor: tone.border, color: tone.color },
           children: [
-            /* @__PURE__ */ jsx14("span", { className: "sb-dt-dot", style: { background: tone.color } }),
-            /* @__PURE__ */ jsx14("span", { className: "sb-dt-badge-txt", children: label })
+            /* @__PURE__ */ jsx15("span", { className: "sb-dt-dot", style: { background: tone.color } }),
+            /* @__PURE__ */ jsx15("span", { className: "sb-dt-badge-txt", children: label })
           ]
         }
       );
     }
     if (role === "tag") {
-      return /* @__PURE__ */ jsx14("span", { className: "sb-dt-tag", title: String(val), children: String(val) });
+      return /* @__PURE__ */ jsx15("span", { className: "sb-dt-tag", title: String(val), children: String(val) });
     }
     if (role === "metric") {
       const pm = parseCellMetric(val);
       if (!pm.isMetric) {
-        return /* @__PURE__ */ jsx14("span", { className: "sb-dt-qual", children: pm.display });
+        return /* @__PURE__ */ jsx15("span", { className: "sb-dt-qual", children: pm.display });
       }
       const ratio = metricRatio(pm);
       const color = barColorForGroup(pm.group);
-      return /* @__PURE__ */ jsxs12("div", { className: "sb-dt-metric-cell", children: [
-        /* @__PURE__ */ jsx14("span", { className: "sb-mono sb-dt-metric-val", style: { color }, children: pm.display }),
-        /* @__PURE__ */ jsx14("div", { className: "sb-dt-bar-track", children: /* @__PURE__ */ jsx14("div", { className: "sb-dt-bar-fill", style: { width: `${Math.round(ratio * 100)}%`, background: color } }) })
+      return /* @__PURE__ */ jsxs13("div", { className: "sb-dt-metric-cell", children: [
+        /* @__PURE__ */ jsx15("span", { className: "sb-mono sb-dt-metric-val", style: { color }, children: pm.display }),
+        /* @__PURE__ */ jsx15("div", { className: "sb-dt-bar-track", children: /* @__PURE__ */ jsx15("div", { className: "sb-dt-bar-fill", style: { width: `${Math.round(ratio * 100)}%`, background: color } }) })
       ] });
     }
     if (role === "url" && /^https?:\/\//i.test(String(val))) {
-      return /* @__PURE__ */ jsx14("a", { className: "sb-link", href: String(val), target: "_blank", rel: "noreferrer", onClick: (e) => e.stopPropagation(), children: String(val).replace(/^https?:\/\/(www\.)?/, "").slice(0, 34) });
+      return /* @__PURE__ */ jsx15("a", { className: "sb-link", href: String(val), target: "_blank", rel: "noreferrer", onClick: (e) => e.stopPropagation(), children: String(val).replace(/^https?:\/\/(www\.)?/, "").slice(0, 34) });
     }
-    return /* @__PURE__ */ jsx14("div", { className: density === "compact" ? "sb-dt-clamp-1" : "sb-dt-clamp-2", children: String(val) });
+    return /* @__PURE__ */ jsx15("div", { className: density === "compact" ? "sb-dt-clamp-1" : "sb-dt-clamp-2", children: String(val) });
   }
   const chartGroups = useMemo3(() => {
     const visibleIds = new Set(filtered.map((r) => r.id));
@@ -7084,36 +7858,36 @@ function DataTableView({ artifact, onOpenChunk }) {
     }));
   }, [meta.chartEntries, filtered]);
   const pctQuantified = rows.length ? Math.round(meta.quantifiedCount / rows.length * 100) : 0;
-  return /* @__PURE__ */ jsxs12("div", { className: "sb-dt-root", children: [
-    /* @__PURE__ */ jsxs12("div", { className: "sb-dt-kpis", children: [
-      /* @__PURE__ */ jsxs12("div", { className: "sb-dt-kpi", children: [
-        /* @__PURE__ */ jsx14("div", { className: "sb-dt-kpi-lbl", children: "Rows" }),
-        /* @__PURE__ */ jsx14("div", { className: "sb-dt-kpi-val sb-mono", children: filtered.length === rows.length ? rows.length : `${filtered.length} / ${rows.length}` })
+  return /* @__PURE__ */ jsxs13("div", { className: "sb-dt-root", children: [
+    /* @__PURE__ */ jsxs13("div", { className: "sb-dt-kpis", children: [
+      /* @__PURE__ */ jsxs13("div", { className: "sb-dt-kpi", children: [
+        /* @__PURE__ */ jsx15("div", { className: "sb-dt-kpi-lbl", children: "Rows" }),
+        /* @__PURE__ */ jsx15("div", { className: "sb-dt-kpi-val sb-mono", children: filtered.length === rows.length ? rows.length : `${filtered.length} / ${rows.length}` })
       ] }),
-      /* @__PURE__ */ jsxs12("div", { className: "sb-dt-kpi", children: [
-        /* @__PURE__ */ jsx14("div", { className: "sb-dt-kpi-lbl", children: "Quantified" }),
-        /* @__PURE__ */ jsxs12("div", { style: { display: "flex", alignItems: "center", gap: 8 }, children: [
-          /* @__PURE__ */ jsxs12("span", { className: "sb-dt-kpi-val sb-mono", style: { color: "#10b981" }, children: [
+      /* @__PURE__ */ jsxs13("div", { className: "sb-dt-kpi", children: [
+        /* @__PURE__ */ jsx15("div", { className: "sb-dt-kpi-lbl", children: "Quantified" }),
+        /* @__PURE__ */ jsxs13("div", { style: { display: "flex", alignItems: "center", gap: 8 }, children: [
+          /* @__PURE__ */ jsxs13("span", { className: "sb-dt-kpi-val sb-mono", style: { color: "#10b981" }, children: [
             meta.quantifiedCount,
             "/",
             rows.length
           ] }),
-          /* @__PURE__ */ jsx14("div", { className: "sb-dt-bar-track", style: { flex: 1, maxWidth: 68 }, children: /* @__PURE__ */ jsx14("div", { className: "sb-dt-bar-fill", style: { width: `${pctQuantified}%`, background: "#10b981" } }) })
+          /* @__PURE__ */ jsx15("div", { className: "sb-dt-bar-track", style: { flex: 1, maxWidth: 68 }, children: /* @__PURE__ */ jsx15("div", { className: "sb-dt-bar-fill", style: { width: `${pctQuantified}%`, background: "#10b981" } }) })
         ] })
       ] }),
-      /* @__PURE__ */ jsxs12("div", { className: "sb-dt-kpi", children: [
-        /* @__PURE__ */ jsx14("div", { className: "sb-dt-kpi-lbl", children: "Sources" }),
-        /* @__PURE__ */ jsx14("div", { className: "sb-dt-kpi-val sb-mono", children: meta.distinctSources })
+      /* @__PURE__ */ jsxs13("div", { className: "sb-dt-kpi", children: [
+        /* @__PURE__ */ jsx15("div", { className: "sb-dt-kpi-lbl", children: "Sources" }),
+        /* @__PURE__ */ jsx15("div", { className: "sb-dt-kpi-val sb-mono", children: meta.distinctSources })
       ] }),
-      /* @__PURE__ */ jsxs12("div", { className: "sb-dt-kpi", children: [
-        /* @__PURE__ */ jsx14("div", { className: "sb-dt-kpi-lbl", children: "Peak Metric" }),
-        /* @__PURE__ */ jsx14("div", { className: "sb-dt-kpi-val sb-mono", style: { color: "var(--ui-accent)" }, children: meta.peakMetric ? meta.peakMetric.display : `${cols.length} cols` })
+      /* @__PURE__ */ jsxs13("div", { className: "sb-dt-kpi", children: [
+        /* @__PURE__ */ jsx15("div", { className: "sb-dt-kpi-lbl", children: "Peak Metric" }),
+        /* @__PURE__ */ jsx15("div", { className: "sb-dt-kpi-val sb-mono", style: { color: "var(--ui-accent)" }, children: meta.peakMetric ? meta.peakMetric.display : `${cols.length} cols` })
       ] })
     ] }),
-    /* @__PURE__ */ jsxs12("div", { className: "sb-dt-toolbar", children: [
-      /* @__PURE__ */ jsxs12("div", { className: "sb-dt-search-wrap", children: [
-        /* @__PURE__ */ jsx14(Icon, { name: "Search", size: 13, style: { color: "var(--ui-text-tertiary)", flexShrink: 0 } }),
-        /* @__PURE__ */ jsx14(
+    /* @__PURE__ */ jsxs13("div", { className: "sb-dt-toolbar", children: [
+      /* @__PURE__ */ jsxs13("div", { className: "sb-dt-search-wrap", children: [
+        /* @__PURE__ */ jsx15(Icon, { name: "Search", size: 13, style: { color: "var(--ui-text-tertiary)", flexShrink: 0 } }),
+        /* @__PURE__ */ jsx15(
           "input",
           {
             className: "sb-dt-search",
@@ -7123,24 +7897,24 @@ function DataTableView({ artifact, onOpenChunk }) {
             "aria-label": "Filter table rows"
           }
         ),
-        query ? /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-dt-clear", onClick: () => setQuery(""), "aria-label": "Clear filter", children: /* @__PURE__ */ jsx14(Icon, { name: "X", size: 12 }) }) : null
+        query ? /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-dt-clear", onClick: () => setQuery(""), "aria-label": "Clear filter", children: /* @__PURE__ */ jsx15(Icon, { name: "X", size: 12 }) }) : null
       ] }),
-      /* @__PURE__ */ jsxs12("div", { className: "sb-seg", role: "group", "aria-label": "Data view mode", children: [
-        /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "table", onClick: () => setViewMode("table"), children: [
-          /* @__PURE__ */ jsx14(Icon, { name: "Table", size: 12 }),
+      /* @__PURE__ */ jsxs13("div", { className: "sb-seg", role: "group", "aria-label": "Data view mode", children: [
+        /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "table", onClick: () => setViewMode("table"), children: [
+          /* @__PURE__ */ jsx15(Icon, { name: "Table", size: 12 }),
           " Table"
         ] }),
-        /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "cards", onClick: () => setViewMode("cards"), children: [
-          /* @__PURE__ */ jsx14(Icon, { name: "LayoutGrid", size: 12 }),
+        /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "cards", onClick: () => setViewMode("cards"), children: [
+          /* @__PURE__ */ jsx15(Icon, { name: "LayoutGrid", size: 12 }),
           " Cards"
         ] }),
-        /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "chart", onClick: () => setViewMode("chart"), children: [
-          /* @__PURE__ */ jsx14(Icon, { name: "BarChart2", size: 12 }),
+        /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "chart", onClick: () => setViewMode("chart"), children: [
+          /* @__PURE__ */ jsx15(Icon, { name: "BarChart2", size: 12 }),
           " Chart"
         ] })
       ] }),
-      viewMode === "table" ? /* @__PURE__ */ jsxs12("div", { style: { display: "flex", gap: 5, position: "relative" }, children: [
-        /* @__PURE__ */ jsxs12(
+      viewMode === "table" ? /* @__PURE__ */ jsxs13("div", { style: { display: "flex", gap: 5, position: "relative" }, children: [
+        /* @__PURE__ */ jsxs13(
           "button",
           {
             type: "button",
@@ -7148,13 +7922,13 @@ function DataTableView({ artifact, onOpenChunk }) {
             onClick: () => setDensity((d) => d === "comfortable" ? "compact" : "comfortable"),
             title: "Toggle row density",
             children: [
-              /* @__PURE__ */ jsx14(Icon, { name: "List", size: 12 }),
+              /* @__PURE__ */ jsx15(Icon, { name: "List", size: 12 }),
               " ",
               density === "comfortable" ? "Comfortable" : "Compact"
             ]
           }
         ),
-        /* @__PURE__ */ jsxs12(
+        /* @__PURE__ */ jsxs13(
           "button",
           {
             type: "button",
@@ -7163,15 +7937,15 @@ function DataTableView({ artifact, onOpenChunk }) {
             onClick: () => setShowColMenu((v) => !v),
             title: "Show or hide columns",
             children: [
-              /* @__PURE__ */ jsx14(Icon, { name: "Columns3", size: 12 }),
+              /* @__PURE__ */ jsx15(Icon, { name: "Columns3", size: 12 }),
               " Columns"
             ]
           }
         ),
-        showColMenu ? /* @__PURE__ */ jsxs12("div", { className: "sb-dt-col-menu", children: [
-          /* @__PURE__ */ jsx14("div", { style: { fontSize: 10.5, fontWeight: 650, color: "var(--ui-text-tertiary)", padding: "2px 6px 4px", textTransform: "uppercase", letterSpacing: "0.05em" }, children: "Visible Columns" }),
-          cols.map((c) => /* @__PURE__ */ jsxs12("label", { className: "sb-dt-col-opt", children: [
-            /* @__PURE__ */ jsx14(
+        showColMenu ? /* @__PURE__ */ jsxs13("div", { className: "sb-dt-col-menu", children: [
+          /* @__PURE__ */ jsx15("div", { style: { fontSize: 10.5, fontWeight: 650, color: "var(--ui-text-tertiary)", padding: "2px 6px 4px", textTransform: "uppercase", letterSpacing: "0.05em" }, children: "Visible Columns" }),
+          cols.map((c) => /* @__PURE__ */ jsxs13("label", { className: "sb-dt-col-opt", children: [
+            /* @__PURE__ */ jsx15(
               "input",
               {
                 type: "checkbox",
@@ -7181,12 +7955,12 @@ function DataTableView({ artifact, onOpenChunk }) {
                 onChange: () => toggleCol(c.key)
               }
             ),
-            /* @__PURE__ */ jsx14("span", { children: c.label || c.key })
+            /* @__PURE__ */ jsx15("span", { children: c.label || c.key })
           ] }, c.key))
         ] }) : null
       ] }) : null,
-      /* @__PURE__ */ jsxs12("div", { style: { display: "flex", gap: 5 }, children: [
-        /* @__PURE__ */ jsxs12(
+      /* @__PURE__ */ jsxs13("div", { style: { display: "flex", gap: 5 }, children: [
+        /* @__PURE__ */ jsxs13(
           "button",
           {
             type: "button",
@@ -7197,24 +7971,24 @@ function DataTableView({ artifact, onOpenChunk }) {
             },
             title: "Copy filtered rows as Markdown",
             children: [
-              /* @__PURE__ */ jsx14(Icon, { name: "Copy", size: 12 }),
+              /* @__PURE__ */ jsx15(Icon, { name: "Copy", size: 12 }),
               " MD"
             ]
           }
         ),
-        /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-btn", onClick: exportCsv, title: "Download CSV", children: [
-          /* @__PURE__ */ jsx14(Icon, { name: "Download", size: 12 }),
+        /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-btn", onClick: exportCsv, title: "Download CSV", children: [
+          /* @__PURE__ */ jsx15(Icon, { name: "Download", size: 12 }),
           " CSV"
         ] }),
-        /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-btn", onClick: exportJson, title: "Download JSON", children: [
-          /* @__PURE__ */ jsx14(Icon, { name: "FileJson", size: 12 }),
+        /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-btn", onClick: exportJson, title: "Download JSON", children: [
+          /* @__PURE__ */ jsx15(Icon, { name: "FileJson", size: 12 }),
           " JSON"
         ] })
       ] })
     ] }),
-    meta.facetCounts.length > 1 || meta.quantifiedCount > 0 ? /* @__PURE__ */ jsxs12("div", { className: "sb-dt-facets", children: [
-      meta.facetCounts.length > 1 ? /* @__PURE__ */ jsxs12(Fragment8, { children: [
-        /* @__PURE__ */ jsxs12(
+    meta.facetCounts.length > 1 || meta.quantifiedCount > 0 ? /* @__PURE__ */ jsxs13("div", { className: "sb-dt-facets", children: [
+      meta.facetCounts.length > 1 ? /* @__PURE__ */ jsxs13(Fragment9, { children: [
+        /* @__PURE__ */ jsxs13(
           "button",
           {
             type: "button",
@@ -7223,11 +7997,11 @@ function DataTableView({ artifact, onOpenChunk }) {
             onClick: () => setActiveFacet("ALL"),
             children: [
               "All ",
-              /* @__PURE__ */ jsx14("span", { className: "sb-dt-facet-n", children: rows.length })
+              /* @__PURE__ */ jsx15("span", { className: "sb-dt-facet-n", children: rows.length })
             ]
           }
         ),
-        meta.facetCounts.map((f) => /* @__PURE__ */ jsxs12(
+        meta.facetCounts.map((f) => /* @__PURE__ */ jsxs13(
           "button",
           {
             type: "button",
@@ -7236,15 +8010,15 @@ function DataTableView({ artifact, onOpenChunk }) {
             onClick: () => setActiveFacet((prev) => prev === f.value ? "ALL" : f.value),
             title: f.value,
             children: [
-              /* @__PURE__ */ jsx14("span", { className: "sb-dt-dot", style: { background: f.tone.color } }),
-              /* @__PURE__ */ jsx14("span", { children: f.label.length > 19 ? f.label.slice(0, 17).trimEnd() + "..." : f.label }),
-              /* @__PURE__ */ jsx14("span", { className: "sb-dt-facet-n", children: f.count })
+              /* @__PURE__ */ jsx15("span", { className: "sb-dt-dot", style: { background: f.tone.color } }),
+              /* @__PURE__ */ jsx15("span", { children: f.label.length > 19 ? f.label.slice(0, 17).trimEnd() + "..." : f.label }),
+              /* @__PURE__ */ jsx15("span", { className: "sb-dt-facet-n", children: f.count })
             ]
           },
           f.value
         ))
       ] }) : null,
-      meta.quantifiedCount > 0 && meta.quantifiedCount < rows.length ? /* @__PURE__ */ jsxs12(
+      meta.quantifiedCount > 0 && meta.quantifiedCount < rows.length ? /* @__PURE__ */ jsxs13(
         "button",
         {
           type: "button",
@@ -7254,28 +8028,28 @@ function DataTableView({ artifact, onOpenChunk }) {
           onClick: () => setMetricsOnly((v) => !v),
           title: "Show only rows with quantified numeric metrics",
           children: [
-            /* @__PURE__ */ jsx14(Icon, { name: "Filter", size: 11 }),
+            /* @__PURE__ */ jsx15(Icon, { name: "Filter", size: 11 }),
             " Metrics only ",
-            /* @__PURE__ */ jsx14("span", { className: "sb-dt-facet-n", children: meta.quantifiedCount })
+            /* @__PURE__ */ jsx15("span", { className: "sb-dt-facet-n", children: meta.quantifiedCount })
           ]
         }
       ) : null
     ] }) : null,
-    viewMode === "table" ? /* @__PURE__ */ jsx14("div", { className: "sb-table-wrap sb-scroll sb-dt-table-stage", children: /* @__PURE__ */ jsxs12("table", { className: "sb-table", "data-density": density, children: [
-      /* @__PURE__ */ jsx14("thead", { children: /* @__PURE__ */ jsxs12("tr", { children: [
-        /* @__PURE__ */ jsx14("th", { style: { width: 28, cursor: "default" } }),
+    viewMode === "table" ? /* @__PURE__ */ jsx15("div", { className: "sb-table-wrap sb-scroll sb-dt-table-stage", children: /* @__PURE__ */ jsxs13("table", { className: "sb-table", "data-density": density, children: [
+      /* @__PURE__ */ jsx15("thead", { children: /* @__PURE__ */ jsxs13("tr", { children: [
+        /* @__PURE__ */ jsx15("th", { style: { width: 28, cursor: "default" } }),
         visibleCols.map((c) => {
           const isMetric = meta.colRoles[c.key] === "metric";
           const active = sort.key === c.key;
-          return /* @__PURE__ */ jsx14(
+          return /* @__PURE__ */ jsx15(
             "th",
             {
               "data-sorted": active ? sort.dir : void 0,
               style: { textAlign: isMetric ? "right" : "left" },
               onClick: () => toggleSort(c.key),
-              children: /* @__PURE__ */ jsxs12("span", { className: "sb-dt-th-inner", style: { justifyContent: isMetric ? "flex-end" : "flex-start" }, children: [
-                /* @__PURE__ */ jsx14("span", { children: c.label || c.key }),
-                /* @__PURE__ */ jsx14(
+              children: /* @__PURE__ */ jsxs13("span", { className: "sb-dt-th-inner", style: { justifyContent: isMetric ? "flex-end" : "flex-start" }, children: [
+                /* @__PURE__ */ jsx15("span", { children: c.label || c.key }),
+                /* @__PURE__ */ jsx15(
                   Icon,
                   {
                     name: active ? sort.dir === "asc" ? "ArrowUp" : "ArrowDown" : "ArrowUpDown",
@@ -7288,23 +8062,23 @@ function DataTableView({ artifact, onOpenChunk }) {
             c.key
           );
         }),
-        /* @__PURE__ */ jsx14("th", { style: { width: 82, textAlign: "right", cursor: "default" }, children: "Actions" })
+        /* @__PURE__ */ jsx15("th", { style: { width: 82, textAlign: "right", cursor: "default" }, children: "Actions" })
       ] }) }),
-      /* @__PURE__ */ jsx14("tbody", { children: filtered.length === 0 ? /* @__PURE__ */ jsx14("tr", { children: /* @__PURE__ */ jsx14("td", { colSpan: visibleCols.length + 2, style: { textAlign: "center", padding: "32px 16px", color: "var(--ui-text-tertiary)" }, children: "No rows match your current filter." }) }) : filtered.map((r, rIdx) => {
+      /* @__PURE__ */ jsx15("tbody", { children: filtered.length === 0 ? /* @__PURE__ */ jsx15("tr", { children: /* @__PURE__ */ jsx15("td", { colSpan: visibleCols.length + 2, style: { textAlign: "center", padding: "32px 16px", color: "var(--ui-text-tertiary)" }, children: "No rows match your current filter." }) }) : filtered.map((r, rIdx) => {
         const rowKey = r.id || `row-${rIdx}`;
         const isExp = expandedRowId === rowKey;
-        return /* @__PURE__ */ jsxs12(Fragment7, { children: [
-          /* @__PURE__ */ jsxs12(
+        return /* @__PURE__ */ jsxs13(Fragment8, { children: [
+          /* @__PURE__ */ jsxs13(
             "tr",
             {
               className: "sb-dt-row",
               "data-expanded": isExp,
               onClick: () => setExpandedRowId((prev) => prev === rowKey ? null : rowKey),
               children: [
-                /* @__PURE__ */ jsx14("td", { style: { width: 28, color: "var(--ui-text-tertiary)", paddingRight: 4 }, children: /* @__PURE__ */ jsx14(Icon, { name: isExp ? "ChevronDown" : "ChevronRight", size: 13 }) }),
+                /* @__PURE__ */ jsx15("td", { style: { width: 28, color: "var(--ui-text-tertiary)", paddingRight: 4 }, children: /* @__PURE__ */ jsx15(Icon, { name: isExp ? "ChevronDown" : "ChevronRight", size: 13 }) }),
                 visibleCols.map((c) => {
                   const isMetric = meta.colRoles[c.key] === "metric";
-                  return /* @__PURE__ */ jsx14(
+                  return /* @__PURE__ */ jsx15(
                     "td",
                     {
                       className: isMetric ? "sb-num" : void 0,
@@ -7317,8 +8091,8 @@ function DataTableView({ artifact, onOpenChunk }) {
                     c.key
                   );
                 }),
-                /* @__PURE__ */ jsx14("td", { style: { whiteSpace: "nowrap", textAlign: "right" }, children: /* @__PURE__ */ jsxs12("div", { className: "sb-dt-row-actions", children: [
-                  /* @__PURE__ */ jsx14(
+                /* @__PURE__ */ jsx15("td", { style: { whiteSpace: "nowrap", textAlign: "right" }, children: /* @__PURE__ */ jsxs13("div", { className: "sb-dt-row-actions", children: [
+                  /* @__PURE__ */ jsx15(
                     "button",
                     {
                       type: "button",
@@ -7326,10 +8100,10 @@ function DataTableView({ artifact, onOpenChunk }) {
                       onClick: (e) => copyRow(e, r),
                       title: "Copy row",
                       "aria-label": "Copy row",
-                      children: /* @__PURE__ */ jsx14(Icon, { name: "Copy", size: 12 })
+                      children: /* @__PURE__ */ jsx15(Icon, { name: "Copy", size: 12 })
                     }
                   ),
-                  (r.cites || []).map((cid, idx) => /* @__PURE__ */ jsx14(
+                  (r.cites || []).map((cid, idx) => /* @__PURE__ */ jsx15(
                     "button",
                     {
                       type: "button",
@@ -7347,15 +8121,15 @@ function DataTableView({ artifact, onOpenChunk }) {
               ]
             }
           ),
-          isExp ? /* @__PURE__ */ jsx14("tr", { className: "sb-dt-detail-row", children: /* @__PURE__ */ jsx14("td", { colSpan: visibleCols.length + 2, children: /* @__PURE__ */ jsxs12("div", { className: "sb-dt-detail-panel", children: [
-            /* @__PURE__ */ jsx14("div", { className: "sb-dt-detail-grid", children: cols.map((c) => /* @__PURE__ */ jsxs12("div", { className: "sb-dt-detail-field", style: meta.colRoles[c.key] === "longtext" ? { gridColumn: "1 / -1" } : void 0, children: [
-              /* @__PURE__ */ jsx14("div", { className: "sb-dt-detail-key", children: c.label || c.key }),
-              /* @__PURE__ */ jsx14("div", { className: "sb-dt-detail-val", children: String(r.cells?.[c.key] ?? "") })
+          isExp ? /* @__PURE__ */ jsx15("tr", { className: "sb-dt-detail-row", children: /* @__PURE__ */ jsx15("td", { colSpan: visibleCols.length + 2, children: /* @__PURE__ */ jsxs13("div", { className: "sb-dt-detail-panel", children: [
+            /* @__PURE__ */ jsx15("div", { className: "sb-dt-detail-grid", children: cols.map((c) => /* @__PURE__ */ jsxs13("div", { className: "sb-dt-detail-field", style: meta.colRoles[c.key] === "longtext" ? { gridColumn: "1 / -1" } : void 0, children: [
+              /* @__PURE__ */ jsx15("div", { className: "sb-dt-detail-key", children: c.label || c.key }),
+              /* @__PURE__ */ jsx15("div", { className: "sb-dt-detail-val", children: String(r.cells?.[c.key] ?? "") })
             ] }, c.key)) }),
-            (r.cites || []).length ? /* @__PURE__ */ jsxs12("div", { style: { display: "flex", alignItems: "center", gap: 6, marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
-              /* @__PURE__ */ jsx14("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Source passages:" }),
-              (r.cites || []).map((cid, idx) => /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-btn", onClick: () => onOpenChunk?.(cid), children: [
-                /* @__PURE__ */ jsx14(Icon, { name: "BookOpen", size: 12 }),
+            (r.cites || []).length ? /* @__PURE__ */ jsxs13("div", { style: { display: "flex", alignItems: "center", gap: 6, marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
+              /* @__PURE__ */ jsx15("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Source passages:" }),
+              (r.cites || []).map((cid, idx) => /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-btn", onClick: () => onOpenChunk?.(cid), children: [
+                /* @__PURE__ */ jsx15(Icon, { name: "BookOpen", size: 12 }),
                 " Inspect [",
                 idx + 1,
                 "]"
@@ -7365,82 +8139,82 @@ function DataTableView({ artifact, onOpenChunk }) {
         ] }, rowKey);
       }) })
     ] }) }) : null,
-    viewMode === "cards" ? /* @__PURE__ */ jsx14("div", { className: "sb-dt-cards-grid", children: filtered.map((r, idx) => {
+    viewMode === "cards" ? /* @__PURE__ */ jsx15("div", { className: "sb-dt-cards-grid", children: filtered.map((r, idx) => {
       const facetVal = meta.facetCol ? r.cells?.[meta.facetCol] : "";
       const tone = hashTone(facetVal);
       const pm = meta.metricCol ? parseCellMetric(r.cells?.[meta.metricCol]) : null;
       const tagCol = cols.find((c) => meta.colRoles[c.key] === "tag");
       const bodyCol = cols.find((c) => meta.colRoles[c.key] === "longtext") || cols[cols.length - 1];
-      return /* @__PURE__ */ jsxs12("div", { className: "sb-dt-card", children: [
-        /* @__PURE__ */ jsxs12("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }, children: [
-          facetVal ? /* @__PURE__ */ jsxs12("span", { className: "sb-dt-badge", style: { background: tone.bg, borderColor: tone.border, color: tone.color }, children: [
-            /* @__PURE__ */ jsx14("span", { className: "sb-dt-dot", style: { background: tone.color } }),
-            /* @__PURE__ */ jsx14("span", { className: "sb-dt-badge-txt", children: cleanSourceLabel(facetVal) })
-          ] }) : /* @__PURE__ */ jsx14("span", {}),
-          pm?.isMetric ? /* @__PURE__ */ jsx14("span", { className: "sb-mono", style: { fontSize: 17, fontWeight: 750, color: barColorForGroup(pm.group) }, children: pm.display }) : pm ? /* @__PURE__ */ jsx14("span", { className: "sb-dt-qual", children: pm.display }) : null
+      return /* @__PURE__ */ jsxs13("div", { className: "sb-dt-card", children: [
+        /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }, children: [
+          facetVal ? /* @__PURE__ */ jsxs13("span", { className: "sb-dt-badge", style: { background: tone.bg, borderColor: tone.border, color: tone.color }, children: [
+            /* @__PURE__ */ jsx15("span", { className: "sb-dt-dot", style: { background: tone.color } }),
+            /* @__PURE__ */ jsx15("span", { className: "sb-dt-badge-txt", children: cleanSourceLabel(facetVal) })
+          ] }) : /* @__PURE__ */ jsx15("span", {}),
+          pm?.isMetric ? /* @__PURE__ */ jsx15("span", { className: "sb-mono", style: { fontSize: 17, fontWeight: 750, color: barColorForGroup(pm.group) }, children: pm.display }) : pm ? /* @__PURE__ */ jsx15("span", { className: "sb-dt-qual", children: pm.display }) : null
         ] }),
-        tagCol && r.cells?.[tagCol.key] ? /* @__PURE__ */ jsx14("div", { style: { fontWeight: 650, fontSize: 13, color: "var(--ui-text-primary)" }, children: String(r.cells[tagCol.key]) }) : null,
-        bodyCol && r.cells?.[bodyCol.key] ? /* @__PURE__ */ jsx14("div", { style: { fontSize: 12.5, color: "var(--ui-text-secondary)", lineHeight: 1.55 }, children: String(r.cells[bodyCol.key]) }) : null,
-        /* @__PURE__ */ jsxs12("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: 8, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
-          /* @__PURE__ */ jsx14("div", { style: { display: "flex", gap: 4, alignItems: "center" }, children: (r.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: cIdx + 1 }, cid)) }),
-          /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-btn sb-btn-ghost", onClick: (e) => copyRow(e, r), children: [
-            /* @__PURE__ */ jsx14(Icon, { name: "Copy", size: 11 }),
+        tagCol && r.cells?.[tagCol.key] ? /* @__PURE__ */ jsx15("div", { style: { fontWeight: 650, fontSize: 13, color: "var(--ui-text-primary)" }, children: String(r.cells[tagCol.key]) }) : null,
+        bodyCol && r.cells?.[bodyCol.key] ? /* @__PURE__ */ jsx15("div", { style: { fontSize: 12.5, color: "var(--ui-text-secondary)", lineHeight: 1.55 }, children: String(r.cells[bodyCol.key]) }) : null,
+        /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: 8, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
+          /* @__PURE__ */ jsx15("div", { style: { display: "flex", gap: 4, alignItems: "center" }, children: (r.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: cIdx + 1 }, cid)) }),
+          /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-btn sb-btn-ghost", onClick: (e) => copyRow(e, r), children: [
+            /* @__PURE__ */ jsx15(Icon, { name: "Copy", size: 11 }),
             " Copy"
           ] })
         ] })
       ] }, r.id || idx);
     }) }) : null,
-    viewMode === "chart" ? /* @__PURE__ */ jsx14("div", { className: "sb-dt-chart-stage", children: chartGroups.length === 0 ? /* @__PURE__ */ jsxs12("div", { className: "sb-empty", children: [
-      /* @__PURE__ */ jsx14(Icon, { name: "BarChart2", size: 22 }),
-      /* @__PURE__ */ jsx14("div", { style: { fontWeight: 600, color: "var(--ui-text-secondary)" }, children: "No numeric metrics in current selection" }),
-      /* @__PURE__ */ jsx14("div", { style: { fontSize: 12 }, children: "Clear filters or add quantitative sources to plot visual comparison bars." })
-    ] }) : chartGroups.map((grp) => /* @__PURE__ */ jsxs12("div", { className: "sb-dt-chart-group", children: [
-      /* @__PURE__ */ jsxs12("div", { className: "sb-dt-chart-head", children: [
-        /* @__PURE__ */ jsxs12("span", { style: { display: "inline-flex", alignItems: "center", gap: 7, fontWeight: 650, fontSize: 12, color: "var(--ui-text-primary)" }, children: [
-          /* @__PURE__ */ jsx14("span", { className: "sb-dt-dot", style: { background: grp.color, width: 8, height: 8 } }),
+    viewMode === "chart" ? /* @__PURE__ */ jsx15("div", { className: "sb-dt-chart-stage", children: chartGroups.length === 0 ? /* @__PURE__ */ jsxs13("div", { className: "sb-empty", children: [
+      /* @__PURE__ */ jsx15(Icon, { name: "BarChart2", size: 22 }),
+      /* @__PURE__ */ jsx15("div", { style: { fontWeight: 600, color: "var(--ui-text-secondary)" }, children: "No numeric metrics in current selection" }),
+      /* @__PURE__ */ jsx15("div", { style: { fontSize: 12 }, children: "Clear filters or add quantitative sources to plot visual comparison bars." })
+    ] }) : chartGroups.map((grp) => /* @__PURE__ */ jsxs13("div", { className: "sb-dt-chart-group", children: [
+      /* @__PURE__ */ jsxs13("div", { className: "sb-dt-chart-head", children: [
+        /* @__PURE__ */ jsxs13("span", { style: { display: "inline-flex", alignItems: "center", gap: 7, fontWeight: 650, fontSize: 12, color: "var(--ui-text-primary)" }, children: [
+          /* @__PURE__ */ jsx15("span", { className: "sb-dt-dot", style: { background: grp.color, width: 8, height: 8 } }),
           grp.label
         ] }),
-        /* @__PURE__ */ jsxs12("span", { className: "sb-mono", style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: [
+        /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: [
           grp.entries.length,
           " benchmark",
           grp.entries.length === 1 ? "" : "s"
         ] })
       ] }),
-      /* @__PURE__ */ jsx14("div", { style: { display: "flex", flexDirection: "column", gap: 11 }, children: grp.entries.map((entry, eIdx) => {
+      /* @__PURE__ */ jsx15("div", { style: { display: "flex", flexDirection: "column", gap: 11 }, children: grp.entries.map((entry, eIdx) => {
         const pct = Math.round(metricRatio(entry.metric) * 100);
-        return /* @__PURE__ */ jsxs12("div", { className: "sb-dt-chart-row", children: [
-          /* @__PURE__ */ jsxs12("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10 }, children: [
-            /* @__PURE__ */ jsxs12("div", { style: { display: "flex", alignItems: "center", gap: 8, minWidth: 0 }, children: [
-              /* @__PURE__ */ jsx14("span", { style: { fontWeight: 600, fontSize: 12.5, color: "var(--ui-text-primary)" }, children: entry.title }),
-              entry.source ? /* @__PURE__ */ jsx14("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: entry.source }) : null
+        return /* @__PURE__ */ jsxs13("div", { className: "sb-dt-chart-row", children: [
+          /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10 }, children: [
+            /* @__PURE__ */ jsxs13("div", { style: { display: "flex", alignItems: "center", gap: 8, minWidth: 0 }, children: [
+              /* @__PURE__ */ jsx15("span", { style: { fontWeight: 600, fontSize: 12.5, color: "var(--ui-text-primary)" }, children: entry.title }),
+              entry.source ? /* @__PURE__ */ jsx15("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: entry.source }) : null
             ] }),
-            /* @__PURE__ */ jsxs12("div", { style: { display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }, children: [
-              /* @__PURE__ */ jsx14("span", { className: "sb-mono", style: { fontSize: 14, fontWeight: 750, color: grp.color }, children: entry.metric.display }),
-              (entry.row.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), children: cIdx + 1 }, cid))
+            /* @__PURE__ */ jsxs13("div", { style: { display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }, children: [
+              /* @__PURE__ */ jsx15("span", { className: "sb-mono", style: { fontSize: 14, fontWeight: 750, color: grp.color }, children: entry.metric.display }),
+              (entry.row.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), children: cIdx + 1 }, cid))
             ] })
           ] }),
-          /* @__PURE__ */ jsx14("div", { className: "sb-dt-bar-track", style: { height: 8 }, children: /* @__PURE__ */ jsx14("div", { className: "sb-dt-bar-fill", style: { width: `${pct}%`, background: grp.color } }) }),
-          entry.detail ? /* @__PURE__ */ jsx14("div", { style: { fontSize: 11.5, color: "var(--ui-text-secondary)", lineHeight: 1.45 }, children: entry.detail }) : null
+          /* @__PURE__ */ jsx15("div", { className: "sb-dt-bar-track", style: { height: 8 }, children: /* @__PURE__ */ jsx15("div", { className: "sb-dt-bar-fill", style: { width: `${pct}%`, background: grp.color } }) }),
+          entry.detail ? /* @__PURE__ */ jsx15("div", { style: { fontSize: 11.5, color: "var(--ui-text-secondary)", lineHeight: 1.45 }, children: entry.detail }) : null
         ] }, entry.row.id || eIdx);
       }) })
     ] }, grp.group)) }) : null,
-    /* @__PURE__ */ jsxs12("div", { className: "sb-dt-footer", children: [
-      /* @__PURE__ */ jsxs12("span", { children: [
+    /* @__PURE__ */ jsxs13("div", { className: "sb-dt-footer", children: [
+      /* @__PURE__ */ jsxs13("span", { children: [
         "Showing ",
-        /* @__PURE__ */ jsx14("strong", { className: "sb-mono", children: filtered.length }),
+        /* @__PURE__ */ jsx15("strong", { className: "sb-mono", children: filtered.length }),
         " of ",
-        /* @__PURE__ */ jsx14("strong", { className: "sb-mono", children: rows.length }),
+        /* @__PURE__ */ jsx15("strong", { className: "sb-mono", children: rows.length }),
         " rows",
         sort.key ? ` | Sorted by ${cols.find((c) => c.key === sort.key)?.label || sort.key} (${sort.dir})` : ""
       ] }),
-      /* @__PURE__ */ jsx14("span", { children: viewMode === "table" ? "Click any row to inspect full details" : `${meta.distinctSources} active sources` })
+      /* @__PURE__ */ jsx15("span", { children: viewMode === "table" ? "Click any row to inspect full details" : `${meta.distinctSources} active sources` })
     ] })
   ] });
 }
 
 // desktop-src/components/renderers/SlideDeckView.jsx
-import { useEffect as useEffect7, useState as useState10 } from "react";
-import { Fragment as Fragment9, jsx as jsx15, jsxs as jsxs13 } from "react/jsx-runtime";
+import { useEffect as useEffect8, useState as useState11 } from "react";
+import { Fragment as Fragment10, jsx as jsx16, jsxs as jsxs14 } from "react/jsx-runtime";
 var SLIDE_THEMES = {
   editorial: {
     label: "Editorial",
@@ -7490,9 +8264,14 @@ var SLIDE_THEMES = {
 var LAYOUT_ACCENTS = {
   title: "#3b82f6",
   stat: "#10b981",
+  bento: "#6366f1",
+  comparison: "#f59e0b",
+  timeline: "#06b6d4",
   "two-col": "#38bdf8",
   bullets: "#3b82f6",
   quote: "#f59e0b",
+  "image-left": "#8b5cf6",
+  "image-full": "#3b82f6",
   section: "#8b5cf6",
   closing: "#10b981"
 };
@@ -7502,20 +8281,73 @@ function parsePct(val) {
   const n = parseFloat(m[1]);
   return Number.isFinite(n) ? Math.max(0.05, Math.min(1, n / 100)) : null;
 }
-function SlideDeckView({ nbId, artifact, onOpenChunk }) {
+function normalizeThemeKey(t) {
+  const k = String(t || "editorial").toLowerCase();
+  if (SLIDE_THEMES[k]) return k;
+  if (k === "bold" || k === "noir") return "keynote";
+  return "editorial";
+}
+function SlideDeckView({
+  nbId,
+  artifact,
+  autoPresent = false,
+  onClearAutoPresent,
+  onOpenChunk,
+  onRequestRevise,
+  onRequestRename,
+  onRequestInspect,
+  onRequestDelete
+}) {
   const slides = artifact?.spec?.slides || [];
-  const [idx, setIdx] = useState10(0);
-  const [showNotes, setShowNotes] = useState10(true);
-  const [presenting, setPresenting] = useState10(false);
-  const [viewMode, setViewMode] = useState10("stage");
-  const [themeKey, setThemeKey] = useState10("editorial");
-  const [elapsedSec, setElapsedSec] = useState10(0);
-  useEffect7(() => {
+  const [idx, setIdx] = useState11(0);
+  const [showNotes, setShowNotes] = useState11(true);
+  const [presenting, setPresenting] = useState11(false);
+  const [viewMode, setViewMode] = useState11("stage");
+  const [themeKey, setThemeKey] = useState11(() => normalizeThemeKey(artifact?.spec?.theme || artifact?.params?.theme));
+  const [elapsedSec, setElapsedSec] = useState11(0);
+  const [exportingFmt, setExportingFmt] = useState11("");
+  const [moreOpen, setMoreOpen] = useState11(false);
+  const [showArtOverlay, setShowArtOverlay] = useState11(false);
+  const [mediaUrls, setMediaUrls] = useState11({});
+  useEffect8(() => {
     setIdx(0);
-    setPresenting(false);
     setViewMode("stage");
-  }, [artifact?.id]);
-  useEffect7(() => {
+    setMoreOpen(false);
+    setThemeKey(normalizeThemeKey(artifact?.spec?.theme || artifact?.params?.theme));
+    if (autoPresent) {
+      setPresenting(true);
+      onClearAutoPresent?.();
+    } else {
+      setPresenting(false);
+    }
+  }, [artifact?.id, autoPresent]);
+  useEffect8(() => {
+    if (!nbId || !artifact?.id || !slides.length) return void 0;
+    let alive = true;
+    const files = slides.map((s) => s.image_file).filter(Boolean);
+    if (!files.length) return void 0;
+    Promise.all(
+      files.map(async (fname) => {
+        try {
+          const dataUrl = await loadArtifactMediaDataUrl(nbId, artifact.id, fname);
+          return [fname, dataUrl];
+        } catch {
+          return [fname, null];
+        }
+      })
+    ).then((entries) => {
+      if (!alive) return;
+      const next = {};
+      entries.forEach(([k, v]) => {
+        if (v) next[k] = v;
+      });
+      setMediaUrls(next);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [nbId, artifact?.id, slides.length]);
+  useEffect8(() => {
     if (!presenting) {
       setElapsedSec(0);
       return void 0;
@@ -7527,13 +8359,18 @@ function SlideDeckView({ nbId, artifact, onOpenChunk }) {
     return void 0;
   }, [presenting]);
   if (!slides.length) {
-    return /* @__PURE__ */ jsx15("div", { className: "sb-empty", children: "No slides in this deck." });
+    return /* @__PURE__ */ jsx16("div", { className: "sb-empty", children: "No slides in this deck." });
   }
   const sl = slides[idx] || slides[0];
   const nextSl = slides[idx + 1] || null;
   const theme = SLIDE_THEMES[themeKey] || SLIDE_THEMES.editorial;
   const mins = String(Math.floor(elapsedSec / 60)).padStart(2, "0");
   const secs = String(elapsedSec % 60).padStart(2, "0");
+  function resolveSlideImage(slide) {
+    if (slide?.image_file && mediaUrls[slide.image_file]) return mediaUrls[slide.image_file];
+    if (slide?.image_url && /^(data:|https?:)/.test(String(slide.image_url))) return slide.image_url;
+    return null;
+  }
   function toMarp() {
     const lines = ["---", "marp: true", `title: ${artifact?.spec?.title || "SourceBook Deck"}`, "paginate: true", "---", ""];
     slides.forEach((s, i) => {
@@ -7555,8 +8392,31 @@ ${s.notes}
     });
     return lines.join("\n");
   }
+  async function downloadBinaryDeck(fmt) {
+    if (!nbId || !artifact?.id || exportingFmt) return;
+    setExportingFmt(fmt);
+    setMoreOpen(false);
+    try {
+      const res = await api(
+        `/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(artifact.id)}/export-binary?fmt=${encodeURIComponent(fmt)}&theme=${encodeURIComponent(themeKey)}`
+      );
+      if (res?.b64) {
+        downloadBinaryBase64(
+          res.filename || `${artifact.id}.${fmt}`,
+          res.b64,
+          res.media_type || (fmt === "pptx" ? "application/vnd.openxmlformats-officedocument.presentationml.presentation" : "application/pdf")
+        );
+        sdk.host?.notify?.({ kind: "success", title: "SourceBook", message: `Downloaded ${res.filename || fmt.toUpperCase()}.` });
+      }
+    } catch (err) {
+      sdk.host?.notify?.({ kind: "error", title: "SourceBook", message: err.message || `Could not export ${fmt.toUpperCase()}.` });
+    } finally {
+      setExportingFmt("");
+    }
+  }
   async function downloadHtmlDeck() {
     if (!nbId || !artifact?.id) return;
+    setMoreOpen(false);
     try {
       const res = await api(`/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(artifact.id)}/export-payload?fmt=html`);
       if (res?.content) {
@@ -7569,22 +8429,55 @@ ${s.notes}
   function renderSlideBody(slide, large) {
     const layout = slide.layout || "bullets";
     const bullets = slide.bullets || [];
+    const columns = slide.columns || [];
+    const steps = slide.steps || [];
     const statVal = slide.stat?.value;
     const pct = statVal ? parsePct(statVal) : null;
+    const imgSrc = resolveSlideImage(slide);
+    if (imgSrc && (slide.image_mode === "full_slide" || layout === "image-full")) {
+      return /* @__PURE__ */ jsxs14("div", { className: "sb-sl-full-art", children: [
+        /* @__PURE__ */ jsx16(
+          "img",
+          {
+            src: imgSrc,
+            alt: slide.title || "Generated slide",
+            style: { width: "100%", height: "100%", objectFit: "cover", display: "block", borderRadius: 8 }
+          }
+        ),
+        showArtOverlay ? /* @__PURE__ */ jsxs14("div", { className: "sb-sl-art-overlay", children: [
+          /* @__PURE__ */ jsx16("div", { style: { fontWeight: 700, fontSize: large ? 19 : 15, color: "#fff" }, children: slide.title }),
+          bullets.length > 0 ? /* @__PURE__ */ jsx16("ul", { style: { margin: "6px 0 0", paddingLeft: 18, fontSize: large ? 13 : 11.5, color: "#e2e8f0" }, children: bullets.slice(0, 4).map((b, i) => /* @__PURE__ */ jsx16("li", { children: b }, i)) }) : null
+        ] }) : null
+      ] });
+    }
     if (layout === "title" || layout === "section") {
-      return /* @__PURE__ */ jsxs13("div", { className: "sb-sl-cover", children: [
-        /* @__PURE__ */ jsxs13(
+      if (imgSrc) {
+        return /* @__PURE__ */ jsxs14("div", { className: "sb-sl-hybrid-split", children: [
+          /* @__PURE__ */ jsxs14("div", { style: { display: "flex", flexDirection: "column", gap: 14, justifyContent: "center" }, children: [
+            /* @__PURE__ */ jsxs14("div", { className: "sb-sl-eyebrow", style: { color: theme.accent, borderColor: theme.border, background: theme.cardBg, alignSelf: "flex-start" }, children: [
+              /* @__PURE__ */ jsx16("span", { className: "sb-dt-dot", style: { background: theme.accent } }),
+              /* @__PURE__ */ jsx16("span", { children: layout === "title" ? "SOURCEBOOK PRESENTATION" : "SECTION BREAK" })
+            ] }),
+            /* @__PURE__ */ jsx16("h2", { style: { margin: 0, fontSize: large ? 34 : 26, fontWeight: 780, lineHeight: 1.15, letterSpacing: "-0.025em", color: theme.fg }, children: slide.title }),
+            /* @__PURE__ */ jsx16("div", { style: { width: 64, height: 3, borderRadius: 99, background: `linear-gradient(90deg, ${theme.accent}, ${theme.secondary})` } }),
+            slide.body ? /* @__PURE__ */ jsx16("p", { style: { margin: 0, fontSize: large ? 15.5 : 13.5, color: theme.muted, lineHeight: 1.5 }, children: slide.body }) : null
+          ] }),
+          /* @__PURE__ */ jsx16("div", { className: "sb-sl-hybrid-art", style: { borderColor: theme.border }, children: /* @__PURE__ */ jsx16("img", { src: imgSrc, alt: slide.title || "Slide artwork", style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } }) })
+        ] });
+      }
+      return /* @__PURE__ */ jsxs14("div", { className: "sb-sl-cover", children: [
+        /* @__PURE__ */ jsxs14(
           "div",
           {
             className: "sb-sl-eyebrow",
             style: { color: theme.accent, borderColor: theme.border, background: theme.cardBg },
             children: [
-              /* @__PURE__ */ jsx15("span", { className: "sb-dt-dot", style: { background: theme.accent } }),
-              /* @__PURE__ */ jsx15("span", { children: layout === "title" ? "SOURCEBOOK BRIEFING DECK" : "SECTION BREAK" })
+              /* @__PURE__ */ jsx16("span", { className: "sb-dt-dot", style: { background: theme.accent } }),
+              /* @__PURE__ */ jsx16("span", { children: layout === "title" ? "SOURCEBOOK BRIEFING DECK" : "SECTION BREAK" })
             ]
           }
         ),
-        /* @__PURE__ */ jsx15(
+        /* @__PURE__ */ jsx16(
           "h2",
           {
             style: {
@@ -7599,7 +8492,7 @@ ${s.notes}
             children: slide.title
           }
         ),
-        /* @__PURE__ */ jsx15(
+        /* @__PURE__ */ jsx16(
           "div",
           {
             style: {
@@ -7610,82 +8503,75 @@ ${s.notes}
             }
           }
         ),
-        slide.body ? /* @__PURE__ */ jsx15("p", { style: { margin: 0, fontSize: large ? 17 : 14.5, color: theme.muted, maxWidth: "52ch", lineHeight: 1.55 }, children: slide.body }) : null
+        slide.body ? /* @__PURE__ */ jsx16("p", { style: { margin: 0, fontSize: large ? 17 : 14.5, color: theme.muted, maxWidth: "52ch", lineHeight: 1.55 }, children: slide.body }) : null
       ] });
     }
     if (layout === "stat" && statVal) {
       const r = 46;
       const circ = 2 * Math.PI * r;
       const dash = circ * (pct ?? 0.78);
-      return /* @__PURE__ */ jsxs13("div", { className: "sb-sl-stat-split", children: [
-        /* @__PURE__ */ jsxs13(
-          "div",
-          {
-            className: "sb-sl-stat-hero",
-            style: { background: theme.cardBg, borderColor: theme.border },
-            children: [
-              /* @__PURE__ */ jsx15(
-                DitherCanvas,
+      return /* @__PURE__ */ jsxs14("div", { className: "sb-sl-stat-split", children: [
+        /* @__PURE__ */ jsxs14("div", { className: "sb-sl-stat-hero", style: { background: theme.cardBg, borderColor: theme.border }, children: [
+          /* @__PURE__ */ jsx16(
+            DitherCanvas,
+            {
+              variant: "mesh",
+              animated: false,
+              color: theme.accent,
+              secondaryColor: theme.secondary,
+              opacity: 0.22,
+              cols: 96,
+              rows: 36,
+              style: { position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }
+            }
+          ),
+          /* @__PURE__ */ jsxs14("div", { style: { position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }, children: [
+            /* @__PURE__ */ jsxs14("svg", { width: large ? 136 : 112, height: large ? 136 : 112, viewBox: "0 0 116 116", "aria-hidden": "true", children: [
+              /* @__PURE__ */ jsx16("circle", { cx: "58", cy: "58", r, fill: "none", stroke: theme.border, strokeWidth: "8" }),
+              /* @__PURE__ */ jsx16(
+                "circle",
                 {
-                  variant: "mesh",
-                  animated: false,
-                  color: theme.accent,
-                  secondaryColor: theme.secondary,
-                  opacity: 0.22,
-                  cols: 96,
-                  rows: 36,
-                  style: { position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }
+                  cx: "58",
+                  cy: "58",
+                  r,
+                  fill: "none",
+                  stroke: theme.accent,
+                  strokeWidth: "8",
+                  strokeLinecap: "round",
+                  strokeDasharray: `${dash.toFixed(1)} ${circ.toFixed(1)}`,
+                  transform: "rotate(-90 58 58)"
                 }
               ),
-              /* @__PURE__ */ jsxs13("div", { style: { position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }, children: [
-                /* @__PURE__ */ jsxs13("svg", { width: large ? 136 : 112, height: large ? 136 : 112, viewBox: "0 0 116 116", "aria-hidden": "true", children: [
-                  /* @__PURE__ */ jsx15("circle", { cx: "58", cy: "58", r, fill: "none", stroke: theme.border, strokeWidth: "8" }),
-                  /* @__PURE__ */ jsx15(
-                    "circle",
-                    {
-                      cx: "58",
-                      cy: "58",
-                      r,
-                      fill: "none",
-                      stroke: theme.accent,
-                      strokeWidth: "8",
-                      strokeLinecap: "round",
-                      strokeDasharray: `${dash.toFixed(1)} ${circ.toFixed(1)}`,
-                      transform: "rotate(-90 58 58)"
-                    }
-                  ),
-                  /* @__PURE__ */ jsx15(
-                    "text",
-                    {
-                      x: "58",
-                      y: "64",
-                      textAnchor: "middle",
-                      fill: theme.accent,
-                      fontSize: String(statVal).length >= 5 ? "20" : "26",
-                      fontWeight: "800",
-                      fontFamily: "ui-monospace, SFMono-Regular, monospace",
-                      children: statVal
-                    }
-                  )
-                ] }),
-                slide.stat.label ? /* @__PURE__ */ jsx15("div", { style: { fontSize: large ? 13 : 11.5, fontWeight: 600, color: theme.muted, textAlign: "center", maxWidth: 200 }, children: slide.stat.label }) : null
-              ] })
-            ]
-          }
-        ),
-        /* @__PURE__ */ jsxs13("div", { style: { display: "flex", flexDirection: "column", gap: 14, justifyContent: "center", minWidth: 0 }, children: [
-          /* @__PURE__ */ jsx15("h2", { style: { margin: 0, fontSize: large ? 25 : 20, fontWeight: 720, lineHeight: 1.24, letterSpacing: "-0.02em", color: theme.fg }, children: slide.title }),
-          bullets.length > 0 ? /* @__PURE__ */ jsx15("div", { style: { display: "flex", flexDirection: "column", gap: 8 }, children: bullets.map((b, bIdx) => /* @__PURE__ */ jsxs13(
+              /* @__PURE__ */ jsx16(
+                "text",
+                {
+                  x: "58",
+                  y: "64",
+                  textAnchor: "middle",
+                  fill: theme.accent,
+                  fontSize: String(statVal).length >= 5 ? "20" : "26",
+                  fontWeight: "800",
+                  fontFamily: "ui-monospace, SFMono-Regular, monospace",
+                  children: statVal
+                }
+              )
+            ] }),
+            slide.stat.label ? /* @__PURE__ */ jsx16("div", { style: { fontSize: large ? 13 : 11.5, fontWeight: 600, color: theme.muted, textAlign: "center", maxWidth: 200 }, children: slide.stat.label }) : null
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxs14("div", { style: { display: "flex", flexDirection: "column", gap: 14, justifyContent: "center", minWidth: 0 }, children: [
+          /* @__PURE__ */ jsx16("h2", { style: { margin: 0, fontSize: large ? 25 : 20, fontWeight: 720, lineHeight: 1.24, letterSpacing: "-0.02em", color: theme.fg }, children: slide.title }),
+          bullets.length > 0 ? /* @__PURE__ */ jsx16("div", { style: { display: "flex", flexDirection: "column", gap: 8 }, children: bullets.map((b, bIdx) => /* @__PURE__ */ jsxs14(
             "div",
             {
               className: "sb-sl-point",
               style: { background: theme.cardBg, borderColor: theme.border, color: theme.fg },
               children: [
-                /* @__PURE__ */ jsxs13("span", { className: "sb-mono sb-sl-step", style: { color: theme.accent }, children: [
+                /* @__PURE__ */ jsxs14("span", { className: "sb-mono sb-sl-step", style: { color: theme.accent }, children: [
                   "0",
                   bIdx + 1
                 ] }),
-                /* @__PURE__ */ jsx15("span", { style: { fontSize: large ? 14 : 12.5, lineHeight: 1.48, color: theme.muted }, children: b })
+                /* @__PURE__ */ jsx16("span", { style: { fontSize: large ? 14 : 12.5, lineHeight: 1.48, color: theme.muted }, children: b })
               ]
             },
             bIdx
@@ -7693,10 +8579,52 @@ ${s.notes}
         ] })
       ] });
     }
+    if (layout === "comparison" && columns.length >= 2) {
+      return /* @__PURE__ */ jsxs14("div", { style: { display: "flex", flexDirection: "column", gap: 16, marginBlock: "auto" }, children: [
+        /* @__PURE__ */ jsx16("h2", { style: { margin: 0, fontSize: large ? 27 : 21, fontWeight: 730, lineHeight: 1.22, letterSpacing: "-0.02em", color: theme.fg }, children: slide.title }),
+        /* @__PURE__ */ jsx16("div", { className: "sb-sl-comparison", children: columns.slice(0, 2).map((col, cIdx) => {
+          const colAcc = cIdx === 0 ? theme.accent : theme.secondary;
+          return /* @__PURE__ */ jsxs14(
+            "div",
+            {
+              className: "sb-sl-comp-col",
+              style: { background: theme.cardBg, borderColor: theme.border, borderTopColor: colAcc },
+              children: [
+                /* @__PURE__ */ jsx16("div", { className: "sb-mono", style: { fontSize: 11.5, fontWeight: 750, letterSpacing: "0.06em", textTransform: "uppercase", color: colAcc }, children: col.heading || `Column ${cIdx + 1}` }),
+                /* @__PURE__ */ jsx16("div", { style: { display: "flex", flexDirection: "column", gap: 8 }, children: (col.points || []).slice(0, 5).map((pt, pIdx) => /* @__PURE__ */ jsxs14("div", { style: { display: "flex", gap: 8, alignItems: "flex-start", fontSize: large ? 14 : 12.5, color: theme.fg, lineHeight: 1.45 }, children: [
+                  /* @__PURE__ */ jsx16("span", { className: "sb-dt-dot", style: { background: colAcc, marginTop: 6 } }),
+                  /* @__PURE__ */ jsx16("span", { children: pt })
+                ] }, pIdx)) })
+              ]
+            },
+            cIdx
+          );
+        }) })
+      ] });
+    }
+    if (layout === "timeline" && steps.length > 0) {
+      return /* @__PURE__ */ jsxs14("div", { style: { display: "flex", flexDirection: "column", gap: 18, marginBlock: "auto" }, children: [
+        /* @__PURE__ */ jsx16("h2", { style: { margin: 0, fontSize: large ? 27 : 21, fontWeight: 730, lineHeight: 1.22, letterSpacing: "-0.02em", color: theme.fg }, children: slide.title }),
+        /* @__PURE__ */ jsx16("div", { className: "sb-sl-timeline", style: { gridTemplateColumns: `repeat(${Math.min(4, steps.length)}, minmax(0, 1fr))` }, children: steps.slice(0, 4).map((st, sIdx) => {
+          const sAcc = sIdx % 2 === 0 ? theme.accent : theme.secondary;
+          return /* @__PURE__ */ jsxs14("div", { className: "sb-sl-step-card", style: { background: theme.cardBg, borderColor: theme.border }, children: [
+            /* @__PURE__ */ jsxs14("div", { style: { display: "flex", alignItems: "center", gap: 8 }, children: [
+              /* @__PURE__ */ jsxs14("span", { className: "sb-mono sb-sl-step-pill", style: { background: sAcc, color: "#fff" }, children: [
+                "0",
+                sIdx + 1
+              ] }),
+              /* @__PURE__ */ jsx16("div", { style: { flex: 1, height: 1.5, background: theme.border } })
+            ] }),
+            /* @__PURE__ */ jsx16("strong", { style: { fontSize: large ? 14.5 : 13, color: theme.fg, lineHeight: 1.3 }, children: st.label || st.title || `Phase ${sIdx + 1}` }),
+            /* @__PURE__ */ jsx16("span", { style: { fontSize: large ? 13 : 11.5, color: theme.muted, lineHeight: 1.45 }, children: st.detail || st.summary || "" })
+          ] }, sIdx);
+        }) })
+      ] });
+    }
     if (layout === "quote") {
-      return /* @__PURE__ */ jsxs13("div", { className: "sb-sl-quote-wrap", children: [
-        /* @__PURE__ */ jsx15("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: theme.accent }, children: slide.title }),
-        /* @__PURE__ */ jsxs13(
+      return /* @__PURE__ */ jsxs14("div", { className: "sb-sl-quote-wrap", children: [
+        /* @__PURE__ */ jsx16("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: theme.accent }, children: slide.title }),
+        /* @__PURE__ */ jsxs14(
           "blockquote",
           {
             style: {
@@ -7718,32 +8646,48 @@ ${s.notes}
         )
       ] });
     }
-    if (layout === "closing") {
-      return /* @__PURE__ */ jsxs13("div", { style: { display: "flex", flexDirection: "column", gap: 18, marginBlock: "auto" }, children: [
-        /* @__PURE__ */ jsxs13("div", { style: { display: "flex", flexDirection: "column", gap: 6 }, children: [
-          /* @__PURE__ */ jsx15("span", { className: "sb-mono", style: { fontSize: 10.5, fontWeight: 700, letterSpacing: "0.1em", color: theme.secondary }, children: "KEY TAKEAWAYS" }),
-          /* @__PURE__ */ jsx15("h2", { style: { margin: 0, fontSize: large ? 30 : 23, fontWeight: 750, lineHeight: 1.2, letterSpacing: "-0.02em", color: theme.fg }, children: slide.title })
+    if (imgSrc) {
+      return /* @__PURE__ */ jsxs14("div", { className: "sb-sl-hybrid-split", children: [
+        /* @__PURE__ */ jsxs14("div", { style: { display: "flex", flexDirection: "column", gap: 12, justifyContent: "center", minWidth: 0 }, children: [
+          /* @__PURE__ */ jsx16("h2", { style: { margin: 0, fontSize: large ? 25 : 19.5, fontWeight: 730, lineHeight: 1.22, letterSpacing: "-0.02em", color: theme.fg }, children: slide.title }),
+          slide.body ? /* @__PURE__ */ jsx16("p", { style: { margin: 0, fontSize: large ? 14 : 12.5, color: theme.muted, lineHeight: 1.5 }, children: slide.body }) : null,
+          bullets.length > 0 ? /* @__PURE__ */ jsx16("div", { style: { display: "flex", flexDirection: "column", gap: 7 }, children: bullets.slice(0, 4).map((b, bIdx) => /* @__PURE__ */ jsxs14("div", { className: "sb-sl-point", style: { background: theme.cardBg, borderColor: theme.border }, children: [
+            /* @__PURE__ */ jsxs14("span", { className: "sb-mono sb-sl-step", style: { color: bIdx % 2 === 0 ? theme.accent : theme.secondary }, children: [
+              "0",
+              bIdx + 1
+            ] }),
+            /* @__PURE__ */ jsx16("span", { style: { fontSize: large ? 13.5 : 12, color: theme.fg, lineHeight: 1.45 }, children: b })
+          ] }, bIdx)) }) : null
         ] }),
-        bullets.length > 0 ? /* @__PURE__ */ jsx15("div", { className: "sb-sl-cards-grid", style: { gridTemplateColumns: bullets.length >= 3 ? "repeat(2, minmax(0, 1fr))" : "1fr" }, children: bullets.map((b, bIdx) => /* @__PURE__ */ jsxs13(
+        /* @__PURE__ */ jsx16("div", { className: "sb-sl-hybrid-art", style: { borderColor: theme.border }, children: /* @__PURE__ */ jsx16("img", { src: imgSrc, alt: slide.title || "Slide illustration", style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } }) })
+      ] });
+    }
+    if (layout === "closing") {
+      return /* @__PURE__ */ jsxs14("div", { style: { display: "flex", flexDirection: "column", gap: 18, marginBlock: "auto" }, children: [
+        /* @__PURE__ */ jsxs14("div", { style: { display: "flex", flexDirection: "column", gap: 6 }, children: [
+          /* @__PURE__ */ jsx16("span", { className: "sb-mono", style: { fontSize: 10.5, fontWeight: 700, letterSpacing: "0.1em", color: theme.secondary }, children: "KEY TAKEAWAYS" }),
+          /* @__PURE__ */ jsx16("h2", { style: { margin: 0, fontSize: large ? 30 : 23, fontWeight: 750, lineHeight: 1.2, letterSpacing: "-0.02em", color: theme.fg }, children: slide.title })
+        ] }),
+        bullets.length > 0 ? /* @__PURE__ */ jsx16("div", { className: "sb-sl-cards-grid", style: { gridTemplateColumns: bullets.length >= 3 ? "repeat(2, minmax(0, 1fr))" : "1fr" }, children: bullets.map((b, bIdx) => /* @__PURE__ */ jsxs14(
           "div",
           {
             className: "sb-sl-card",
             style: { background: theme.cardBg, borderColor: theme.border, borderTopColor: bIdx % 2 === 0 ? theme.accent : theme.secondary },
             children: [
-              /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 10, fontWeight: 700, color: bIdx % 2 === 0 ? theme.accent : theme.secondary }, children: [
+              /* @__PURE__ */ jsxs14("span", { className: "sb-mono", style: { fontSize: 10, fontWeight: 700, color: bIdx % 2 === 0 ? theme.accent : theme.secondary }, children: [
                 "SOURCE 0",
                 bIdx + 1
               ] }),
-              /* @__PURE__ */ jsx15("span", { style: { fontSize: large ? 14 : 12.5, color: theme.fg, lineHeight: 1.45 }, children: b })
+              /* @__PURE__ */ jsx16("span", { style: { fontSize: large ? 14 : 12.5, color: theme.fg, lineHeight: 1.45 }, children: b })
             ]
           },
           bIdx
         )) }) : null
       ] });
     }
-    const useTwoCol = layout === "two-col" || bullets.length >= 3;
-    return /* @__PURE__ */ jsxs13("div", { style: { display: "flex", flexDirection: "column", gap: 16, marginBlock: "auto" }, children: [
-      /* @__PURE__ */ jsx15(
+    const useTwoCol = layout === "two-col" || layout === "bento" || bullets.length >= 3;
+    return /* @__PURE__ */ jsxs14("div", { style: { display: "flex", flexDirection: "column", gap: 16, marginBlock: "auto" }, children: [
+      /* @__PURE__ */ jsx16(
         "h2",
         {
           style: {
@@ -7757,21 +8701,13 @@ ${s.notes}
           children: slide.title
         }
       ),
-      slide.image_url ? /* @__PURE__ */ jsx15(
-        "img",
-        {
-          src: slide.image_url,
-          alt: slide.title || "Slide illustration",
-          style: { width: "100%", maxHeight: large ? 220 : 140, objectFit: "cover", borderRadius: 9, border: `1px solid ${theme.border}` }
-        }
-      ) : null,
-      slide.body ? /* @__PURE__ */ jsx15("p", { style: { margin: 0, fontSize: large ? 15 : 13, color: theme.muted, lineHeight: 1.55 }, children: slide.body }) : null,
-      bullets.length > 0 ? /* @__PURE__ */ jsx15(
+      slide.body ? /* @__PURE__ */ jsx16("p", { style: { margin: 0, fontSize: large ? 15 : 13, color: theme.muted, lineHeight: 1.55 }, children: slide.body }) : null,
+      bullets.length > 0 ? /* @__PURE__ */ jsx16(
         "div",
         {
           className: "sb-sl-cards-grid",
           style: { gridTemplateColumns: useTwoCol ? "repeat(2, minmax(0, 1fr))" : "1fr" },
-          children: bullets.map((b, bIdx) => /* @__PURE__ */ jsxs13(
+          children: bullets.map((b, bIdx) => /* @__PURE__ */ jsxs14(
             "div",
             {
               className: "sb-sl-card",
@@ -7781,11 +8717,11 @@ ${s.notes}
                 borderLeft: `2.5px solid ${bIdx % 2 === 0 ? theme.accent : theme.secondary}`
               },
               children: [
-                /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 10, fontWeight: 700, color: bIdx % 2 === 0 ? theme.accent : theme.secondary }, children: [
+                /* @__PURE__ */ jsxs14("span", { className: "sb-mono", style: { fontSize: 10, fontWeight: 700, color: bIdx % 2 === 0 ? theme.accent : theme.secondary }, children: [
                   "0",
                   bIdx + 1
                 ] }),
-                /* @__PURE__ */ jsx15("span", { style: { fontSize: large ? 14.5 : 12.5, lineHeight: 1.48, color: theme.fg }, children: b })
+                /* @__PURE__ */ jsx16("span", { style: { fontSize: large ? 14.5 : 12.5, lineHeight: 1.48, color: theme.fg }, children: b })
               ]
             },
             bIdx
@@ -7796,8 +8732,10 @@ ${s.notes}
   }
   function renderSlideCard(slide, slideIdx, large = false) {
     const layout = slide.layout || "bullets";
+    const imgSrc = resolveSlideImage(slide);
+    const isFullArt = Boolean(imgSrc && (slide.image_mode === "full_slide" || layout === "image-full"));
     const isHero = layout === "title" || layout === "closing" || layout === "section";
-    return /* @__PURE__ */ jsxs13(
+    return /* @__PURE__ */ jsxs14(
       "section",
       {
         className: "sb-slide-stage sb-slide-stage-rich",
@@ -7805,54 +8743,59 @@ ${s.notes}
           background: theme.bg,
           borderColor: theme.border,
           color: theme.fg,
-          ...large ? { maxWidth: 1020, width: "100%", padding: "36px 44px" } : {}
+          ...isFullArt ? { padding: 0, gap: 0 } : large ? { maxWidth: 1020, width: "100%", padding: "36px 44px" } : {}
         },
         children: [
-          /* @__PURE__ */ jsx15(
-            "div",
-            {
-              className: "sb-sl-top-ribbon",
-              style: { background: `linear-gradient(90deg, ${theme.accent}, ${theme.secondary})` }
-            }
-          ),
-          isHero ? /* @__PURE__ */ jsx15(
-            DitherCanvas,
-            {
-              variant: "aurora",
-              animated: presenting,
-              color: theme.accent,
-              secondaryColor: theme.secondary,
-              opacity: themeKey === "paper" ? 0.14 : 0.24,
-              cols: 160,
-              rows: 28,
-              style: { position: "absolute", inset: "0 0 auto 0", width: "100%", height: 110, pointerEvents: "none" }
-            }
-          ) : null,
-          /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative" }, children: [
-            /* @__PURE__ */ jsx15(
-              "span",
+          !isFullArt ? /* @__PURE__ */ jsxs14(Fragment10, { children: [
+            /* @__PURE__ */ jsx16(
+              "div",
               {
-                className: "sb-kind-tag",
-                style: { background: theme.cardBg, borderColor: theme.border, color: theme.muted },
-                children: layout
+                className: "sb-sl-top-ribbon",
+                style: { background: `linear-gradient(90deg, ${theme.accent}, ${theme.secondary})` }
               }
             ),
-            /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 11, color: theme.dim }, children: [
-              String(slideIdx + 1).padStart(2, "0"),
-              " / ",
-              String(slides.length).padStart(2, "0")
+            isHero ? /* @__PURE__ */ jsx16(
+              DitherCanvas,
+              {
+                variant: "aurora",
+                animated: presenting,
+                color: theme.accent,
+                secondaryColor: theme.secondary,
+                opacity: themeKey === "paper" ? 0.14 : 0.24,
+                cols: 160,
+                rows: 28,
+                style: { position: "absolute", inset: "0 0 auto 0", width: "100%", height: 110, pointerEvents: "none" }
+              }
+            ) : null,
+            /* @__PURE__ */ jsxs14("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative" }, children: [
+              /* @__PURE__ */ jsx16(
+                "span",
+                {
+                  className: "sb-kind-tag",
+                  style: { background: theme.cardBg, borderColor: theme.border, color: theme.muted },
+                  children: layout
+                }
+              ),
+              /* @__PURE__ */ jsxs14("span", { className: "sb-mono", style: { fontSize: 11, color: theme.dim }, children: [
+                String(slideIdx + 1).padStart(2, "0"),
+                " / ",
+                String(slides.length).padStart(2, "0")
+              ] })
             ] })
-          ] }),
-          /* @__PURE__ */ jsx15("div", { style: { position: "relative", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", minHeight: 0 }, children: renderSlideBody(slide, large) }),
-          /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", paddingTop: 10, borderTop: `1px solid ${theme.border}` }, children: [
-            /* @__PURE__ */ jsx15("div", { style: { display: "flex", gap: 5, alignItems: "center" }, children: (slide.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: cIdx + 1 }, cid)) }),
-            /* @__PURE__ */ jsx15("span", { style: { fontSize: 11, color: theme.dim }, children: artifact?.spec?.title || "SourceBook Deck" })
+          ] }) : null,
+          /* @__PURE__ */ jsx16("div", { style: { position: "relative", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", minHeight: 0 }, children: renderSlideBody(slide, large) }),
+          !isFullArt ? /* @__PURE__ */ jsxs14("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", paddingTop: 10, borderTop: `1px solid ${theme.border}` }, children: [
+            /* @__PURE__ */ jsx16("div", { style: { display: "flex", gap: 5, alignItems: "center" }, children: (slide.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx16("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: cIdx + 1 }, cid)) }),
+            /* @__PURE__ */ jsx16("span", { style: { fontSize: 11, color: theme.dim }, children: artifact?.spec?.title || "SourceBook Deck" })
+          ] }) : /* @__PURE__ */ jsxs14("div", { className: "sb-sl-full-art-bar", children: [
+            /* @__PURE__ */ jsx16("div", { style: { display: "flex", gap: 5, alignItems: "center" }, children: (slide.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx16("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: cIdx + 1 }, cid)) }),
+            /* @__PURE__ */ jsx16("button", { type: "button", className: "sb-btn", style: { padding: "3px 8px", fontSize: 11 }, onClick: () => setShowArtOverlay((v) => !v), children: showArtOverlay ? "Hide text overlay" : "Source text" })
           ] })
         ]
       }
     );
   }
-  return /* @__PURE__ */ jsxs13(
+  return /* @__PURE__ */ jsxs14(
     "div",
     {
       style: { display: "flex", flexDirection: "column", gap: 11 },
@@ -7863,22 +8806,22 @@ ${s.notes}
         if (e.key === "Escape" && presenting) setPresenting(false);
       },
       children: [
-        /* @__PURE__ */ jsxs13("div", { className: "sb-inf-toolbar", children: [
-          /* @__PURE__ */ jsxs13("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }, children: [
-            /* @__PURE__ */ jsxs13("div", { style: { display: "flex", alignItems: "center", gap: 4 }, children: [
-              /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-btn sb-btn-icon", disabled: idx === 0, onClick: () => setIdx((i) => Math.max(0, i - 1)), children: /* @__PURE__ */ jsx15(Icon, { name: "ChevronLeft", size: 13 }) }),
-              /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 12, color: "var(--ui-text-secondary)", padding: "0 4px" }, children: [
+        /* @__PURE__ */ jsxs14("div", { className: "sb-inf-toolbar", children: [
+          /* @__PURE__ */ jsxs14("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }, children: [
+            /* @__PURE__ */ jsxs14("div", { style: { display: "flex", alignItems: "center", gap: 4 }, children: [
+              /* @__PURE__ */ jsx16("button", { type: "button", className: "sb-btn sb-btn-icon", disabled: idx === 0, onClick: () => setIdx((i) => Math.max(0, i - 1)), children: /* @__PURE__ */ jsx16(Icon, { name: "ChevronLeft", size: 13 }) }),
+              /* @__PURE__ */ jsxs14("span", { className: "sb-mono", style: { fontSize: 12, color: "var(--ui-text-secondary)", padding: "0 4px" }, children: [
                 idx + 1,
                 " / ",
                 slides.length
               ] }),
-              /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-btn sb-btn-icon", disabled: idx >= slides.length - 1, onClick: () => setIdx((i) => Math.min(slides.length - 1, i + 1)), children: /* @__PURE__ */ jsx15(Icon, { name: "ChevronRight", size: 13 }) })
+              /* @__PURE__ */ jsx16("button", { type: "button", className: "sb-btn sb-btn-icon", disabled: idx >= slides.length - 1, onClick: () => setIdx((i) => Math.min(slides.length - 1, i + 1)), children: /* @__PURE__ */ jsx16(Icon, { name: "ChevronRight", size: 13 }) })
             ] }),
-            /* @__PURE__ */ jsxs13("div", { className: "sb-seg", role: "group", "aria-label": "Deck view", children: [
-              /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "stage", onClick: () => setViewMode("stage"), children: "Stage" }),
-              /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "grid", onClick: () => setViewMode("grid"), children: "Overview Grid" })
+            /* @__PURE__ */ jsxs14("div", { className: "sb-seg", role: "group", "aria-label": "Deck view", children: [
+              /* @__PURE__ */ jsx16("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "stage", onClick: () => setViewMode("stage"), children: "Stage" }),
+              /* @__PURE__ */ jsx16("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "grid", onClick: () => setViewMode("grid"), children: "Overview" })
             ] }),
-            /* @__PURE__ */ jsx15(
+            /* @__PURE__ */ jsx16(
               "select",
               {
                 className: "sb-select",
@@ -7886,35 +8829,146 @@ ${s.notes}
                 onChange: (e) => setThemeKey(e.target.value),
                 "aria-label": "Presentation theme",
                 title: "Switch slide deck visual theme",
-                children: Object.entries(SLIDE_THEMES).map(([k, t]) => /* @__PURE__ */ jsxs13("option", { value: k, children: [
+                children: Object.entries(SLIDE_THEMES).map(([k, t]) => /* @__PURE__ */ jsxs14("option", { value: k, children: [
                   "Theme: ",
                   t.label
                 ] }, k))
               }
             )
           ] }),
-          /* @__PURE__ */ jsxs13("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" }, children: [
-            /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => setPresenting(true), title: "Launch full-window Presenter Mode", children: [
-              /* @__PURE__ */ jsx15(Icon, { name: "Play", size: 12 }),
-              " Present"
+          /* @__PURE__ */ jsxs14("div", { style: { display: "flex", gap: 5, flexWrap: "wrap", position: "relative" }, children: [
+            /* @__PURE__ */ jsxs14("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => setPresenting(true), title: "Start full-window slideshow", children: [
+              /* @__PURE__ */ jsx16(Icon, { name: "Play", size: 12 }),
+              " Slideshow"
             ] }),
-            /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-btn", "data-active": showNotes, onClick: () => setShowNotes((v) => !v), children: "Notes" }),
-            /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-btn", onClick: () => {
-              copyText(toMarp());
-              sdk.host?.notify?.({ kind: "success", title: "SourceBook", message: "Copied Marp deck Markdown." });
-            }, children: [
-              /* @__PURE__ */ jsx15(Icon, { name: "Copy", size: 12 }),
-              " Marp"
-            ] }),
-            /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-btn", onClick: downloadHtmlDeck, title: "Download self-contained offline HTML presentation", children: [
-              /* @__PURE__ */ jsx15(Icon, { name: "Download", size: 12 }),
-              " HTML Deck"
-            ] })
+            /* @__PURE__ */ jsxs14(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn",
+                disabled: Boolean(exportingFmt),
+                onClick: () => downloadBinaryDeck("pptx"),
+                title: "Download native PowerPoint (.pptx)",
+                children: [
+                  exportingFmt === "pptx" ? /* @__PURE__ */ jsx16(HermesSpinner, { size: 12 }) : /* @__PURE__ */ jsx16(Icon, { name: "Download", size: 12 }),
+                  " PPTX"
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxs14(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn",
+                disabled: Boolean(exportingFmt),
+                onClick: () => downloadBinaryDeck("pdf"),
+                title: "Download 16:9 PDF Document (.pdf)",
+                children: [
+                  exportingFmt === "pdf" ? /* @__PURE__ */ jsx16(HermesSpinner, { size: 12 }) : /* @__PURE__ */ jsx16(Icon, { name: "FileText", size: 12 }),
+                  " PDF"
+                ]
+              }
+            ),
+            onRequestRevise ? /* @__PURE__ */ jsxs14("button", { type: "button", className: "sb-btn", onClick: () => onRequestRevise(artifact), title: "Revise this slide deck with AI instructions", children: [
+              /* @__PURE__ */ jsx16(Icon, { name: "Sparkles", size: 12 }),
+              " Revise"
+            ] }) : null,
+            /* @__PURE__ */ jsx16(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn sb-btn-icon",
+                "data-active": moreOpen,
+                onClick: () => setMoreOpen((v) => !v),
+                title: "More slide deck actions",
+                "aria-label": "More slide deck actions",
+                children: /* @__PURE__ */ jsx16(Icon, { name: "MoreVertical", size: 13 })
+              }
+            ),
+            moreOpen ? /* @__PURE__ */ jsxs14("div", { className: "sb-art-menu", style: { top: "calc(100% + 6px)", right: 0 }, children: [
+              /* @__PURE__ */ jsxs14("button", { type: "button", className: "sb-art-menu-item", onClick: () => {
+                setMoreOpen(false);
+                setShowNotes((v) => !v);
+              }, children: [
+                /* @__PURE__ */ jsx16(Icon, { name: "FileText", size: 13 }),
+                " ",
+                showNotes ? "Hide speaker notes" : "Show speaker notes"
+              ] }),
+              /* @__PURE__ */ jsxs14("button", { type: "button", className: "sb-art-menu-item", onClick: () => downloadBinaryDeck("pdf"), children: [
+                /* @__PURE__ */ jsx16(Icon, { name: "Download", size: 13 }),
+                " Download PDF Document (.pdf)"
+              ] }),
+              /* @__PURE__ */ jsxs14("button", { type: "button", className: "sb-art-menu-item", onClick: () => downloadBinaryDeck("pptx"), children: [
+                /* @__PURE__ */ jsx16(Icon, { name: "Presentation", size: 13 }),
+                " Download PowerPoint (.pptx)"
+              ] }),
+              /* @__PURE__ */ jsxs14("button", { type: "button", className: "sb-art-menu-item", onClick: () => {
+                setMoreOpen(false);
+                setPresenting(true);
+              }, children: [
+                /* @__PURE__ */ jsx16(Icon, { name: "Play", size: 13 }),
+                " Start slideshow"
+              ] }),
+              onRequestRevise ? /* @__PURE__ */ jsxs14("button", { type: "button", className: "sb-art-menu-item", onClick: () => {
+                setMoreOpen(false);
+                onRequestRevise(artifact);
+              }, children: [
+                /* @__PURE__ */ jsx16(Icon, { name: "Sparkles", size: 13 }),
+                " Revise"
+              ] }) : null,
+              onRequestRename ? /* @__PURE__ */ jsxs14("button", { type: "button", className: "sb-art-menu-item", onClick: () => {
+                setMoreOpen(false);
+                onRequestRename(artifact);
+              }, children: [
+                /* @__PURE__ */ jsx16(Icon, { name: "Edit3", size: 13 }),
+                " Rename"
+              ] }) : null,
+              onRequestInspect ? /* @__PURE__ */ jsxs14("button", { type: "button", className: "sb-art-menu-item", onClick: () => {
+                setMoreOpen(false);
+                onRequestInspect(artifact);
+              }, children: [
+                /* @__PURE__ */ jsx16(Icon, { name: "Info", size: 13 }),
+                " View prompt and sources"
+              ] }) : null,
+              /* @__PURE__ */ jsx16("div", { className: "sb-art-menu-sep" }),
+              /* @__PURE__ */ jsxs14("button", { type: "button", className: "sb-art-menu-item", onClick: downloadHtmlDeck, children: [
+                /* @__PURE__ */ jsx16(Icon, { name: "Code", size: 13 }),
+                " Download HTML Deck (.html)"
+              ] }),
+              /* @__PURE__ */ jsxs14(
+                "button",
+                {
+                  type: "button",
+                  className: "sb-art-menu-item",
+                  onClick: () => {
+                    setMoreOpen(false);
+                    copyText(toMarp());
+                    sdk.host?.notify?.({ kind: "success", title: "SourceBook", message: "Copied Marp deck Markdown." });
+                  },
+                  children: [
+                    /* @__PURE__ */ jsx16(Icon, { name: "Copy", size: 13 }),
+                    " Copy Marp Markdown"
+                  ]
+                }
+              ),
+              onRequestDelete ? /* @__PURE__ */ jsxs14(Fragment10, { children: [
+                /* @__PURE__ */ jsx16("div", { className: "sb-art-menu-sep" }),
+                /* @__PURE__ */ jsxs14("button", { type: "button", className: "sb-art-menu-item sb-art-menu-danger", onClick: () => {
+                  setMoreOpen(false);
+                  onRequestDelete(artifact.id);
+                }, children: [
+                  /* @__PURE__ */ jsx16(Icon, { name: "Trash2", size: 13 }),
+                  " Delete"
+                ] })
+              ] }) : null
+            ] }) : null
           ] })
         ] }),
-        viewMode === "grid" ? /* @__PURE__ */ jsx15("div", { className: "sb-sl-overview-grid", children: slides.map((s, sIdx) => {
+        artifact?.grounding?.image_notice ? /* @__PURE__ */ jsx16("div", { className: "sb-quote-box", style: { fontSize: 11.5 }, children: artifact.grounding.image_notice }) : null,
+        viewMode === "grid" ? /* @__PURE__ */ jsx16("div", { className: "sb-sl-overview-grid", children: slides.map((s, sIdx) => {
           const lColor = LAYOUT_ACCENTS[s.layout] || "var(--ui-accent)";
-          return /* @__PURE__ */ jsxs13(
+          const thumbImg = resolveSlideImage(s);
+          return /* @__PURE__ */ jsxs14(
             "button",
             {
               type: "button",
@@ -7925,33 +8979,36 @@ ${s.notes}
                 setViewMode("stage");
               },
               children: [
-                /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
-                  /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 10.5, fontWeight: 700, color: lColor }, children: [
+                thumbImg ? /* @__PURE__ */ jsx16(
+                  "img",
+                  {
+                    src: thumbImg,
+                    alt: s.title || `Slide ${sIdx + 1}`,
+                    style: { width: "100%", aspectRatio: "16 / 9", objectFit: "cover", borderRadius: 6, marginBottom: 6 }
+                  }
+                ) : null,
+                /* @__PURE__ */ jsxs14("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
+                  /* @__PURE__ */ jsxs14("span", { className: "sb-mono", style: { fontSize: 10.5, fontWeight: 700, color: lColor }, children: [
                     String(sIdx + 1).padStart(2, "0"),
                     " \xB7 ",
                     String(s.layout || "slide").toUpperCase()
                   ] }),
-                  s.stat?.value ? /* @__PURE__ */ jsx15("span", { className: "sb-mono", style: { fontSize: 12, fontWeight: 800, color: lColor }, children: s.stat.value }) : null
+                  s.stat?.value ? /* @__PURE__ */ jsx16("span", { className: "sb-mono", style: { fontSize: 12, fontWeight: 800, color: lColor }, children: s.stat.value }) : null
                 ] }),
-                /* @__PURE__ */ jsx15("div", { style: { fontSize: 13, fontWeight: 650, color: "var(--ui-text-primary)", lineHeight: 1.32, textAlign: "left" }, children: s.title }),
-                (s.bullets || []).length > 0 ? /* @__PURE__ */ jsxs13("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)", textAlign: "left" }, children: [
-                  s.bullets.length,
-                  " takeaway",
-                  s.bullets.length === 1 ? "" : "s"
-                ] }) : null
+                /* @__PURE__ */ jsx16("div", { style: { fontSize: 13, fontWeight: 650, color: "var(--ui-text-primary)", lineHeight: 1.32, textAlign: "left" }, children: s.title })
               ]
             },
             sIdx
           );
-        }) }) : /* @__PURE__ */ jsxs13(Fragment9, { children: [
+        }) }) : /* @__PURE__ */ jsxs14(Fragment10, { children: [
           renderSlideCard(sl, idx, false),
-          showNotes && sl.notes ? /* @__PURE__ */ jsxs13("div", { className: "sb-quote-box", children: [
-            /* @__PURE__ */ jsx15("strong", { style: { display: "block", fontSize: 10.5, letterSpacing: "0.06em", color: "var(--ui-text-tertiary)", marginBottom: 3 }, children: "SPEAKER NOTES" }),
+          showNotes && sl.notes ? /* @__PURE__ */ jsxs14("div", { className: "sb-quote-box", children: [
+            /* @__PURE__ */ jsx16("strong", { style: { display: "block", fontSize: 10.5, letterSpacing: "0.06em", color: "var(--ui-text-tertiary)", marginBottom: 3 }, children: "SPEAKER NOTES" }),
             sl.notes
           ] }) : null,
-          /* @__PURE__ */ jsx15("div", { className: "sb-slide-strip sb-scroll", children: slides.map((s, sIdx) => {
+          /* @__PURE__ */ jsx16("div", { className: "sb-slide-strip sb-scroll", children: slides.map((s, sIdx) => {
             const lColor = LAYOUT_ACCENTS[s.layout] || "var(--ui-accent)";
-            return /* @__PURE__ */ jsxs13(
+            return /* @__PURE__ */ jsxs14(
               "button",
               {
                 type: "button",
@@ -7959,63 +9016,63 @@ ${s.notes}
                 "data-active": sIdx === idx,
                 onClick: () => setIdx(sIdx),
                 children: [
-                  /* @__PURE__ */ jsx15("div", { style: { height: 2.5, borderRadius: 2, background: sIdx === idx ? lColor : "var(--ui-stroke-tertiary)", marginBottom: 6 } }),
-                  /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
-                    /* @__PURE__ */ jsx15("span", { className: "sb-mono", style: { fontSize: 10, color: sIdx === idx ? lColor : "var(--ui-text-tertiary)", fontWeight: 700 }, children: String(sIdx + 1).padStart(2, "0") }),
-                    /* @__PURE__ */ jsx15("span", { className: "sb-mono", style: { fontSize: 9, textTransform: "uppercase", color: "var(--ui-text-tertiary)" }, children: s.stat?.value || s.layout || "slide" })
+                  /* @__PURE__ */ jsx16("div", { style: { height: 2.5, borderRadius: 2, background: sIdx === idx ? lColor : "var(--ui-stroke-tertiary)", marginBottom: 6 } }),
+                  /* @__PURE__ */ jsxs14("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
+                    /* @__PURE__ */ jsx16("span", { className: "sb-mono", style: { fontSize: 10, color: sIdx === idx ? lColor : "var(--ui-text-tertiary)", fontWeight: 700 }, children: String(sIdx + 1).padStart(2, "0") }),
+                    /* @__PURE__ */ jsx16("span", { className: "sb-mono", style: { fontSize: 9, textTransform: "uppercase", color: "var(--ui-text-tertiary)" }, children: s.stat?.value || s.layout || "slide" })
                   ] }),
-                  /* @__PURE__ */ jsx15("div", { style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontWeight: 580, marginTop: 4, color: "var(--ui-text-primary)" }, children: s.title })
+                  /* @__PURE__ */ jsx16("div", { style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontWeight: 580, marginTop: 4, color: "var(--ui-text-primary)" }, children: s.title })
                 ]
               },
               sIdx
             );
           }) })
         ] }),
-        presenting ? /* @__PURE__ */ jsx15(
+        presenting ? /* @__PURE__ */ jsx16(
           "div",
           {
             className: "sb-modal-backdrop",
             style: { flexDirection: "column", gap: 14, padding: 24, zIndex: 80 },
             onClick: () => setPresenting(false),
-            children: /* @__PURE__ */ jsxs13(
+            children: /* @__PURE__ */ jsxs14(
               "div",
               {
                 style: { width: "min(1040px, 95vw)", display: "flex", flexDirection: "column", gap: 12 },
                 onClick: (e) => e.stopPropagation(),
                 children: [
-                  /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
-                    /* @__PURE__ */ jsxs13("div", { style: { display: "flex", alignItems: "center", gap: 10 }, children: [
-                      /* @__PURE__ */ jsx15("span", { className: "sb-kind-tag", children: "Presenter Mode" }),
-                      /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 12.5, color: "var(--ui-text-secondary)" }, children: [
+                  /* @__PURE__ */ jsxs14("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
+                    /* @__PURE__ */ jsxs14("div", { style: { display: "flex", alignItems: "center", gap: 10 }, children: [
+                      /* @__PURE__ */ jsx16("span", { className: "sb-kind-tag", children: "Slideshow" }),
+                      /* @__PURE__ */ jsxs14("span", { className: "sb-mono", style: { fontSize: 12.5, color: "var(--ui-text-secondary)" }, children: [
                         mins,
                         ":",
                         secs
                       ] }),
-                      /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: [
+                      /* @__PURE__ */ jsxs14("span", { className: "sb-mono", style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: [
                         "Slide ",
                         idx + 1,
                         " of ",
                         slides.length
                       ] })
                     ] }),
-                    /* @__PURE__ */ jsxs13("div", { style: { display: "flex", gap: 6 }, children: [
-                      /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-btn", disabled: idx === 0, onClick: () => setIdx((i) => Math.max(0, i - 1)), children: "Prev" }),
-                      /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-btn", disabled: idx >= slides.length - 1, onClick: () => setIdx((i) => Math.min(slides.length - 1, i + 1)), children: "Next" }),
-                      /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-btn", onClick: () => setPresenting(false), children: [
-                        /* @__PURE__ */ jsx15(Icon, { name: "X", size: 13 }),
+                    /* @__PURE__ */ jsxs14("div", { style: { display: "flex", gap: 6 }, children: [
+                      /* @__PURE__ */ jsx16("button", { type: "button", className: "sb-btn", disabled: idx === 0, onClick: () => setIdx((i) => Math.max(0, i - 1)), children: "Prev" }),
+                      /* @__PURE__ */ jsx16("button", { type: "button", className: "sb-btn", disabled: idx >= slides.length - 1, onClick: () => setIdx((i) => Math.min(slides.length - 1, i + 1)), children: "Next" }),
+                      /* @__PURE__ */ jsxs14("button", { type: "button", className: "sb-btn", onClick: () => setPresenting(false), children: [
+                        /* @__PURE__ */ jsx16(Icon, { name: "X", size: 13 }),
                         " Exit"
                       ] })
                     ] })
                   ] }),
                   renderSlideCard(sl, idx, true),
-                  /* @__PURE__ */ jsxs13("div", { style: { display: "grid", gridTemplateColumns: nextSl ? "1.6fr 1fr" : "1fr", gap: 10 }, children: [
-                    sl.notes ? /* @__PURE__ */ jsxs13("div", { className: "sb-quote-box", style: { background: "var(--sb-surface)" }, children: [
-                      /* @__PURE__ */ jsx15("strong", { style: { display: "block", fontSize: 10.5, letterSpacing: "0.06em", color: "var(--ui-text-tertiary)", marginBottom: 3 }, children: "SPEAKER NOTES" }),
+                  /* @__PURE__ */ jsxs14("div", { style: { display: "grid", gridTemplateColumns: nextSl ? "1.6fr 1fr" : "1fr", gap: 10 }, children: [
+                    sl.notes ? /* @__PURE__ */ jsxs14("div", { className: "sb-quote-box", style: { background: "var(--sb-surface)" }, children: [
+                      /* @__PURE__ */ jsx16("strong", { style: { display: "block", fontSize: 10.5, letterSpacing: "0.06em", color: "var(--ui-text-tertiary)", marginBottom: 3 }, children: "SPEAKER NOTES" }),
                       sl.notes
-                    ] }) : /* @__PURE__ */ jsx15("div", {}),
-                    nextSl ? /* @__PURE__ */ jsxs13("div", { className: "sb-ledger-row", style: { gap: 4, cursor: "pointer" }, onClick: () => setIdx((i) => Math.min(slides.length - 1, i + 1)), children: [
-                      /* @__PURE__ */ jsx15("span", { className: "sb-mono", style: { fontSize: 10, color: "var(--ui-text-tertiary)", letterSpacing: "0.06em" }, children: "UP NEXT" }),
-                      /* @__PURE__ */ jsx15("strong", { style: { fontSize: 12.5, color: "var(--ui-text-primary)" }, children: nextSl.title })
+                    ] }) : /* @__PURE__ */ jsx16("div", {}),
+                    nextSl ? /* @__PURE__ */ jsxs14("div", { className: "sb-ledger-row", style: { gap: 4, cursor: "pointer" }, onClick: () => setIdx((i) => Math.min(slides.length - 1, i + 1)), children: [
+                      /* @__PURE__ */ jsx16("span", { className: "sb-mono", style: { fontSize: 10, color: "var(--ui-text-tertiary)", letterSpacing: "0.06em" }, children: "UP NEXT" }),
+                      /* @__PURE__ */ jsx16("strong", { style: { fontSize: 12.5, color: "var(--ui-text-primary)" }, children: nextSl.title })
                     ] }) : null
                   ] })
                 ]
@@ -8029,7 +9086,7 @@ ${s.notes}
 }
 
 // desktop-src/components/StudioPanel.jsx
-import { Fragment as Fragment10, jsx as jsx16, jsxs as jsxs14 } from "react/jsx-runtime";
+import { Fragment as Fragment11, jsx as jsx17, jsxs as jsxs15 } from "react/jsx-runtime";
 var STUDIO_FORMATS = [
   { kind: "report", label: "Study Guide", icon: "FileText" },
   { kind: "audio", label: "Audio Overview", icon: "Headphones" },
@@ -8044,6 +9101,7 @@ var KIND_META = Object.fromEntries(STUDIO_FORMATS.map((f) => [f.kind, f]));
 function StudioPanel({
   ctx,
   nbId,
+  sources,
   hasActiveSources,
   capabilities,
   artifacts,
@@ -8055,22 +9113,30 @@ function StudioPanel({
   onRefresh,
   onError
 }) {
-  const [activeArt, setActiveArt] = useState11(null);
-  const [loadingArt, setLoadingArt] = useState11(false);
-  const [runningKind, setRunningKind] = useState11("");
-  const [stage, setStage] = useState11("");
-  const [focusPrompt, setFocusPrompt] = useState11("");
-  const [showOpts, setShowOpts] = useState11(false);
-  const [template, setTemplate] = useState11("briefing");
-  const [audioStyle, setAudioStyle] = useState11("deep_dive");
-  const [count, setCount] = useState11(8);
-  const [language, setLanguage] = useState11("English");
-  const [includeImages, setIncludeImages] = useState11(false);
+  const [activeArt, setActiveArt] = useState12(null);
+  const [loadingArt, setLoadingArt] = useState12(false);
+  const [runningKind, setRunningKind] = useState12("");
+  const [stage, setStage] = useState12("");
+  const [focusPrompt, setFocusPrompt] = useState12("");
+  const [showOpts, setShowOpts] = useState12(false);
+  const [template, setTemplate] = useState12("briefing");
+  const [audioStyle, setAudioStyle] = useState12("deep_dive");
+  const [count, setCount] = useState12(8);
+  const [language, setLanguage] = useState12("English");
+  const [includeImages, setIncludeImages] = useState12(false);
+  const [slideModalOpen, setSlideModalOpen] = useState12(false);
+  const [slideModalMode, setSlideModalMode] = useState12("create");
+  const [slideModalArt, setSlideModalArt] = useState12(null);
+  const [openMenuId, setOpenMenuId] = useState12("");
+  const [autoPresentId, setAutoPresentId] = useState12("");
+  const [renameTarget, setRenameTarget] = useState12(null);
+  const [renameValue, setRenameValue] = useState12("");
+  const [inspectTarget, setInspectTarget] = useState12(null);
   const cancelPollRef = useRef8(null);
-  useEffect8(() => {
+  useEffect9(() => {
     return () => cancelPollRef.current?.();
   }, []);
-  useEffect8(() => {
+  useEffect9(() => {
     if (!nbId || !selectedArtifactId) {
       setActiveArt(null);
       return;
@@ -8101,9 +9167,13 @@ function StudioPanel({
       ...includeImages && capabilities?.image_generate ? { include_images: true } : {}
     };
     try {
+      const body = { kind, params };
+      if (Array.isArray(params.source_ids) && params.source_ids.length > 0) {
+        body.source_ids = params.source_ids;
+      }
       const { job } = await api(`/notebooks/${encodeURIComponent(nbId)}/studio`, {
         method: "POST",
-        body: { kind, params }
+        body
       });
       cancelPollRef.current?.();
       cancelPollRef.current = pollJob(
@@ -8130,8 +9200,48 @@ function StudioPanel({
       onError?.(err.message || `Could not start ${kind}.`);
     }
   }
+  async function runSlideRevision(aid, revisionPrompt, params) {
+    if (!nbId || !aid || runningKind) return;
+    setRunningKind("slides");
+    setStage("Revising slide deck...");
+    try {
+      const { job } = await api(`/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(aid)}/revise`, {
+        method: "POST",
+        body: {
+          prompt: revisionPrompt,
+          params,
+          source_ids: params?.source_ids
+        }
+      });
+      cancelPollRef.current?.();
+      cancelPollRef.current = pollJob(
+        ctx,
+        job,
+        (j) => setStage(j.stage || "Revising..."),
+        async (result) => {
+          setRunningKind("");
+          setStage("");
+          await onRefresh();
+          if (result?.id) {
+            setActiveArt(result);
+            onSelectArtifact?.(result.id);
+          }
+        },
+        (err) => {
+          setRunningKind("");
+          setStage("");
+          onError?.(err.message || "Could not revise slide deck.");
+        }
+      );
+    } catch (err) {
+      setRunningKind("");
+      setStage("");
+      onError?.(err.message || "Could not start slide revision.");
+    }
+  }
   async function deleteArtifact(e, aid) {
-    e.stopPropagation();
+    e?.stopPropagation?.();
+    setOpenMenuId("");
     try {
       await api(`/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(aid)}`, { method: "DELETE" });
       if (selectedArtifactId === aid) {
@@ -8143,14 +9253,60 @@ function StudioPanel({
       onError?.(err.message || "Could not delete artifact.");
     }
   }
+  async function submitRename() {
+    if (!renameTarget || !renameValue.trim()) return;
+    try {
+      const updated = await api(`/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(renameTarget.id)}`, {
+        method: "PATCH",
+        body: { title: renameValue.trim() }
+      });
+      if (activeArt?.id === renameTarget.id) setActiveArt(updated);
+      setRenameTarget(null);
+      await onRefresh();
+    } catch (err) {
+      onError?.(err.message || "Could not rename artifact.");
+    }
+  }
+  async function quickDownloadSlideDeck(art, fmt) {
+    setOpenMenuId("");
+    try {
+      const theme = art?.spec?.theme || art?.params?.theme || "keynote";
+      const res = await api(
+        `/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(art.id)}/export-binary?fmt=${encodeURIComponent(fmt)}&theme=${encodeURIComponent(theme)}`
+      );
+      if (res?.b64) {
+        downloadBinaryBase64(res.filename || `${art.id}.${fmt}`, res.b64, res.media_type);
+        sdk.host?.notify?.({ kind: "success", title: "SourceBook", message: `Downloaded ${res.filename || fmt.toUpperCase()}.` });
+      }
+    } catch (err) {
+      onError?.(err.message || `Could not download ${fmt.toUpperCase()}.`);
+    }
+  }
+  function openCustomizeSlides(mode = "create", art = null) {
+    setOpenMenuId("");
+    setSlideModalMode(mode);
+    setSlideModalArt(art);
+    setSlideModalOpen(true);
+  }
+  function handleTileClick(kind) {
+    if (kind === "slides") {
+      openCustomizeSlides("create", null);
+      return;
+    }
+    runGenerator(kind);
+  }
+  function sourceNamesForArtifact(art) {
+    const map = Object.fromEntries((sources || []).map((s) => [s.id, s.title]));
+    return (art?.source_ids || []).map((sid) => map[sid] || sid);
+  }
   function renderViewer() {
-    if (loadingArt) return /* @__PURE__ */ jsx16("div", { className: "sb-empty", children: "Loading artifact..." });
+    if (loadingArt) return /* @__PURE__ */ jsx17("div", { className: "sb-empty", children: "Loading artifact..." });
     if (!activeArt) return null;
     switch (activeArt.kind) {
       case "report":
-        return /* @__PURE__ */ jsx16(StudyGuideView, { artifact: activeArt, onOpenChunk });
+        return /* @__PURE__ */ jsx17(StudyGuideView, { artifact: activeArt, onOpenChunk });
       case "audio":
-        return /* @__PURE__ */ jsx16(
+        return /* @__PURE__ */ jsx17(
           AudioOverviewView,
           {
             nbId,
@@ -8160,7 +9316,7 @@ function StudioPanel({
           }
         );
       case "flashcards":
-        return /* @__PURE__ */ jsx16(
+        return /* @__PURE__ */ jsx17(
           FlashcardsView,
           {
             nbId,
@@ -8171,236 +9327,426 @@ function StudioPanel({
           }
         );
       case "quiz":
-        return /* @__PURE__ */ jsx16(QuizView, { artifact: activeArt, onOpenChunk });
+        return /* @__PURE__ */ jsx17(QuizView, { artifact: activeArt, onOpenChunk });
       case "mindmap":
-        return /* @__PURE__ */ jsx16(MindMapView, { artifact: activeArt, onOpenChunk });
+        return /* @__PURE__ */ jsx17(MindMapView, { artifact: activeArt, onOpenChunk });
       case "infographic":
-        return /* @__PURE__ */ jsx16(InfographicView, { artifact: activeArt, onOpenChunk });
+        return /* @__PURE__ */ jsx17(InfographicView, { artifact: activeArt, onOpenChunk });
       case "table":
-        return /* @__PURE__ */ jsx16(DataTableView, { artifact: activeArt, onOpenChunk });
+        return /* @__PURE__ */ jsx17(DataTableView, { artifact: activeArt, onOpenChunk });
       case "slides":
-        return /* @__PURE__ */ jsx16(SlideDeckView, { nbId, artifact: activeArt, onOpenChunk });
+        return /* @__PURE__ */ jsx17(
+          SlideDeckView,
+          {
+            nbId,
+            artifact: activeArt,
+            autoPresent: autoPresentId === activeArt.id,
+            onClearAutoPresent: () => setAutoPresentId(""),
+            onOpenChunk,
+            onRequestRevise: (art) => openCustomizeSlides("revise", art),
+            onRequestRename: (art) => {
+              setRenameTarget(art);
+              setRenameValue(art.title || "");
+            },
+            onRequestInspect: (art) => setInspectTarget(art),
+            onRequestDelete: (aid) => deleteArtifact(null, aid)
+          }
+        );
       default:
-        return /* @__PURE__ */ jsx16("pre", { className: "sb-mono", style: { fontSize: 11 }, children: JSON.stringify(activeArt.spec, null, 2) });
+        return /* @__PURE__ */ jsx17("pre", { className: "sb-mono", style: { fontSize: 11 }, children: JSON.stringify(activeArt.spec, null, 2) });
     }
   }
-  return /* @__PURE__ */ jsx16("aside", { className: "sb-pane sb-pane-right", "aria-label": "Studio", children: selectedArtifactId && activeArt ? /* @__PURE__ */ jsxs14("div", { className: "sb-viewer", children: [
-    /* @__PURE__ */ jsxs14("div", { className: "sb-viewer-head", children: [
-      /* @__PURE__ */ jsxs14("div", { style: { display: "flex", alignItems: "center", gap: 6, minWidth: 0 }, children: [
-        /* @__PURE__ */ jsx16(
-          "button",
-          {
-            type: "button",
-            className: "sb-btn sb-btn-ghost sb-btn-icon",
-            title: "Back to Studio",
-            onClick: () => {
-              onSelectArtifact?.(null);
-              if (expanded) onToggleExpand?.();
-            },
-            children: /* @__PURE__ */ jsx16(Icon, { name: "ArrowLeft", size: 14 })
-          }
-        ),
-        /* @__PURE__ */ jsxs14("div", { style: { minWidth: 0 }, children: [
-          /* @__PURE__ */ jsx16("div", { className: "sb-src-title", title: activeArt.title, children: activeArt.title }),
-          /* @__PURE__ */ jsxs14("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)", display: "flex", gap: 6, alignItems: "center" }, children: [
-            /* @__PURE__ */ jsx16("span", { children: KIND_META[activeArt.kind]?.label || activeArt.kind }),
-            activeArt.grounding?.model ? /* @__PURE__ */ jsxs14("span", { children: [
-              "| ",
-              activeArt.grounding.model
-            ] }) : null,
-            !activeArt.grounding?.model && activeArt.grounding?.mode === "extractive" ? /* @__PURE__ */ jsx16("span", { children: "| Local extractive" }) : null,
-            activeArt.stale ? /* @__PURE__ */ jsx16("span", { className: "sb-verdict", "data-v": "partial", children: "Stale" }) : null
-          ] })
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxs14("div", { style: { display: "flex", gap: 4 }, children: [
-        activeArt.stale ? /* @__PURE__ */ jsxs14(
-          "button",
-          {
-            type: "button",
-            className: "sb-btn",
-            disabled: Boolean(runningKind),
-            onClick: () => runGenerator(activeArt.kind, activeArt.params || {}),
-            title: "Underlying source changed: regenerate artifact from updated sources",
-            children: [
-              /* @__PURE__ */ jsx16(Icon, { name: "RefreshCw", size: 12 }),
-              " Refresh"
-            ]
-          }
-        ) : null,
-        /* @__PURE__ */ jsx16(
-          "button",
-          {
-            type: "button",
-            className: "sb-btn sb-btn-icon",
-            title: expanded ? "Dock Studio rail" : "Expand Studio canvas",
-            onClick: onToggleExpand,
-            children: /* @__PURE__ */ jsx16(Icon, { name: expanded ? "Minimize2" : "Maximize2", size: 13 })
-          }
-        )
-      ] })
-    ] }),
-    /* @__PURE__ */ jsx16("div", { className: "sb-viewer-body sb-scroll", children: renderViewer() })
-  ] }) : /* @__PURE__ */ jsxs14(Fragment10, { children: [
-    /* @__PURE__ */ jsxs14("div", { className: "sb-pane-head", children: [
-      /* @__PURE__ */ jsx16("span", { className: "sb-pane-title", children: "Studio" }),
-      /* @__PURE__ */ jsxs14("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
-        /* @__PURE__ */ jsxs14(
-          "button",
-          {
-            type: "button",
-            className: "sb-btn sb-btn-ghost",
-            "data-active": showOpts,
-            onClick: () => setShowOpts((v) => !v),
-            title: "Configure report template, audio style, item count, language, and AI illustrations",
-            children: [
-              /* @__PURE__ */ jsx16(Icon, { name: "SlidersHorizontal", size: 12 }),
-              " Options"
-            ]
-          }
-        ),
-        /* @__PURE__ */ jsx16("span", { className: "sb-num", style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: artifacts.length })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxs14("div", { style: { padding: "10px 12px 0", display: "flex", flexDirection: "column", gap: 8 }, children: [
-      /* @__PURE__ */ jsx16(
-        "input",
-        {
-          className: "sb-input",
-          value: focusPrompt,
-          onChange: (e) => setFocusPrompt(e.target.value),
-          placeholder: "Optional focus topic for next artifact...",
-          "aria-label": "Studio focus topic"
-        }
-      ),
-      showOpts ? /* @__PURE__ */ jsxs14("div", { className: "sb-ledger-row", style: { gap: 7, padding: "8px 10px" }, children: [
-        /* @__PURE__ */ jsxs14("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }, children: [
-          /* @__PURE__ */ jsxs14("label", { className: "sb-field", children: [
-            /* @__PURE__ */ jsx16("span", { className: "sb-label", style: { fontSize: 10.5 }, children: "Report template" }),
-            /* @__PURE__ */ jsxs14("select", { className: "sb-select", value: template, onChange: (e) => setTemplate(e.target.value), children: [
-              /* @__PURE__ */ jsx16("option", { value: "briefing", children: "Briefing" }),
-              /* @__PURE__ */ jsx16("option", { value: "study_guide", children: "Study Guide" }),
-              /* @__PURE__ */ jsx16("option", { value: "faq", children: "FAQ" }),
-              /* @__PURE__ */ jsx16("option", { value: "timeline", children: "Timeline" }),
-              /* @__PURE__ */ jsx16("option", { value: "blog", children: "Blog Post" }),
-              /* @__PURE__ */ jsx16("option", { value: "exec_memo", children: "Exec Memo" })
-            ] })
-          ] }),
-          /* @__PURE__ */ jsxs14("label", { className: "sb-field", children: [
-            /* @__PURE__ */ jsx16("span", { className: "sb-label", style: { fontSize: 10.5 }, children: "Audio style" }),
-            /* @__PURE__ */ jsxs14("select", { className: "sb-select", value: audioStyle, onChange: (e) => setAudioStyle(e.target.value), children: [
-              /* @__PURE__ */ jsx16("option", { value: "deep_dive", children: "Deep Dive" }),
-              /* @__PURE__ */ jsx16("option", { value: "debate", children: "Debate" }),
-              /* @__PURE__ */ jsx16("option", { value: "brief", children: "Quick Brief" }),
-              /* @__PURE__ */ jsx16("option", { value: "critique", children: "Critique" })
-            ] })
-          ] }),
-          /* @__PURE__ */ jsxs14("label", { className: "sb-field", children: [
-            /* @__PURE__ */ jsx16("span", { className: "sb-label", style: { fontSize: 10.5 }, children: "Items / slides" }),
-            /* @__PURE__ */ jsxs14("select", { className: "sb-select", value: count, onChange: (e) => setCount(Number(e.target.value)), children: [
-              /* @__PURE__ */ jsx16("option", { value: 5, children: "5" }),
-              /* @__PURE__ */ jsx16("option", { value: 8, children: "8" }),
-              /* @__PURE__ */ jsx16("option", { value: 12, children: "12" })
-            ] })
-          ] }),
-          /* @__PURE__ */ jsxs14("label", { className: "sb-field", children: [
-            /* @__PURE__ */ jsx16("span", { className: "sb-label", style: { fontSize: 10.5 }, children: "Language" }),
-            /* @__PURE__ */ jsxs14("select", { className: "sb-select", value: language, onChange: (e) => setLanguage(e.target.value), children: [
-              /* @__PURE__ */ jsx16("option", { value: "English", children: "English" }),
-              /* @__PURE__ */ jsx16("option", { value: "Spanish", children: "Spanish" }),
-              /* @__PURE__ */ jsx16("option", { value: "French", children: "French" }),
-              /* @__PURE__ */ jsx16("option", { value: "German", children: "German" }),
-              /* @__PURE__ */ jsx16("option", { value: "Japanese", children: "Japanese" }),
-              /* @__PURE__ */ jsx16("option", { value: "Portuguese", children: "Portuguese" })
+  return /* @__PURE__ */ jsxs15("aside", { className: "sb-pane sb-pane-right", "aria-label": "Studio", children: [
+    selectedArtifactId && activeArt ? /* @__PURE__ */ jsxs15("div", { className: "sb-viewer", children: [
+      /* @__PURE__ */ jsxs15("div", { className: "sb-viewer-head", children: [
+        /* @__PURE__ */ jsxs15("div", { style: { display: "flex", alignItems: "center", gap: 6, minWidth: 0 }, children: [
+          /* @__PURE__ */ jsx17(
+            "button",
+            {
+              type: "button",
+              className: "sb-btn sb-btn-ghost sb-btn-icon",
+              title: "Back to Studio",
+              onClick: () => {
+                onSelectArtifact?.(null);
+                if (expanded) onToggleExpand?.();
+              },
+              children: /* @__PURE__ */ jsx17(Icon, { name: "ArrowLeft", size: 14 })
+            }
+          ),
+          /* @__PURE__ */ jsxs15("div", { style: { minWidth: 0 }, children: [
+            /* @__PURE__ */ jsx17("div", { className: "sb-src-title", title: activeArt.title, children: activeArt.title }),
+            /* @__PURE__ */ jsxs15("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)", display: "flex", gap: 6, alignItems: "center" }, children: [
+              /* @__PURE__ */ jsx17("span", { children: KIND_META[activeArt.kind]?.label || activeArt.kind }),
+              activeArt.grounding?.model ? /* @__PURE__ */ jsxs15("span", { children: [
+                "| ",
+                activeArt.grounding.model
+              ] }) : null,
+              !activeArt.grounding?.model && activeArt.grounding?.mode === "extractive" ? /* @__PURE__ */ jsx17("span", { children: "| Local extractive" }) : null,
+              activeArt.stale ? /* @__PURE__ */ jsx17("span", { className: "sb-verdict", "data-v": "partial", children: "Stale" }) : null
             ] })
           ] })
         ] }),
-        capabilities?.image_generate ? /* @__PURE__ */ jsxs14("label", { style: { display: "flex", alignItems: "center", gap: 7, fontSize: 11.5, color: "var(--ui-text-secondary)", cursor: "pointer" }, children: [
-          /* @__PURE__ */ jsx16(
-            "input",
+        /* @__PURE__ */ jsxs15("div", { style: { display: "flex", gap: 4 }, children: [
+          activeArt.stale ? /* @__PURE__ */ jsxs15(
+            "button",
             {
-              type: "checkbox",
-              className: "sb-checkbox",
-              checked: includeImages,
-              onChange: (e) => setIncludeImages(e.target.checked)
+              type: "button",
+              className: "sb-btn",
+              disabled: Boolean(runningKind),
+              onClick: () => runGenerator(activeArt.kind, activeArt.params || {}),
+              title: "Underlying source changed: regenerate artifact from updated sources",
+              children: [
+                /* @__PURE__ */ jsx17(Icon, { name: "RefreshCw", size: 12 }),
+                " Refresh"
+              ]
+            }
+          ) : null,
+          /* @__PURE__ */ jsx17(
+            "button",
+            {
+              type: "button",
+              className: "sb-btn sb-btn-icon",
+              title: expanded ? "Dock Studio rail" : "Expand Studio canvas",
+              onClick: onToggleExpand,
+              children: /* @__PURE__ */ jsx17(Icon, { name: expanded ? "Minimize2" : "Maximize2", size: 13 })
+            }
+          )
+        ] })
+      ] }),
+      runningKind ? /* @__PURE__ */ jsxs15("div", { style: { padding: "7px 14px", fontSize: 11.5, color: "var(--ui-text-secondary)", display: "flex", alignItems: "center", gap: 7, borderBottom: "1px solid var(--ui-stroke-tertiary)" }, children: [
+        /* @__PURE__ */ jsx17(HermesSpinner, { size: 12 }),
+        /* @__PURE__ */ jsx17("span", { children: stage })
+      ] }) : null,
+      /* @__PURE__ */ jsx17("div", { className: "sb-viewer-body sb-scroll", children: renderViewer() })
+    ] }) : /* @__PURE__ */ jsxs15(Fragment11, { children: [
+      /* @__PURE__ */ jsxs15("div", { className: "sb-pane-head", children: [
+        /* @__PURE__ */ jsx17("span", { className: "sb-pane-title", children: "Studio" }),
+        /* @__PURE__ */ jsxs15("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
+          /* @__PURE__ */ jsxs15(
+            "button",
+            {
+              type: "button",
+              className: "sb-btn sb-btn-ghost",
+              "data-active": showOpts,
+              onClick: () => setShowOpts((v) => !v),
+              title: "Configure report template, audio style, item count, language, and AI illustrations",
+              children: [
+                /* @__PURE__ */ jsx17(Icon, { name: "SlidersHorizontal", size: 12 }),
+                " Options"
+              ]
             }
           ),
-          "Generate AI illustrations for Slides & Infographics"
-        ] }) : null
-      ] }) : null
-    ] }),
-    /* @__PURE__ */ jsx16("div", { className: "sb-studio-grid", children: STUDIO_FORMATS.map((fmt) => /* @__PURE__ */ jsxs14(
-      "button",
-      {
-        type: "button",
-        className: "sb-studio-tile",
-        disabled: !hasActiveSources || Boolean(runningKind),
-        onClick: () => runGenerator(fmt.kind),
-        children: [
-          /* @__PURE__ */ jsx16(Icon, { name: fmt.icon, size: 14, style: { color: "var(--ui-accent)", flexShrink: 0 } }),
-          /* @__PURE__ */ jsx16("span", { children: runningKind === fmt.kind ? "Generating..." : fmt.label })
-        ]
-      },
-      fmt.kind
-    )) }),
-    runningKind ? /* @__PURE__ */ jsxs14("div", { style: { padding: "0 12px 8px", fontSize: 11.5, color: "var(--ui-text-secondary)", display: "flex", alignItems: "center", gap: 7 }, children: [
-      /* @__PURE__ */ jsx16(HermesSpinner, { size: 12 }),
-      /* @__PURE__ */ jsx16("span", { children: stage })
-    ] }) : null,
-    /* @__PURE__ */ jsx16("div", { className: "sb-pane-head", style: { borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: /* @__PURE__ */ jsx16("span", { className: "sb-pane-title", children: "Artifacts" }) }),
-    /* @__PURE__ */ jsx16("div", { className: "sb-art-list sb-scroll", children: artifacts.length === 0 ? /* @__PURE__ */ jsxs14("div", { className: "sb-empty", children: [
-      /* @__PURE__ */ jsx16(Icon, { name: "Layers", size: 22 }),
-      /* @__PURE__ */ jsx16("div", { style: { fontWeight: 600, color: "var(--ui-text-secondary)" }, children: "No artifacts yet" }),
-      /* @__PURE__ */ jsx16("div", { style: { fontSize: 11.5 }, children: "Pick any format above to turn your active sources into an interactive artifact or Audio Overview." })
-    ] }) : artifacts.map((art) => {
-      const meta = KIND_META[art.kind] || { label: art.kind, icon: "FileText" };
-      return /* @__PURE__ */ jsxs14(
-        "div",
-        {
-          className: "sb-art-item",
-          "data-active": selectedArtifactId === art.id,
-          role: "button",
-          tabIndex: 0,
-          onClick: () => onSelectArtifact?.(art.id),
-          onKeyDown: (e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              onSelectArtifact?.(art.id);
-            }
-          },
-          children: [
-            /* @__PURE__ */ jsxs14("div", { style: { display: "flex", alignItems: "center", gap: 9, minWidth: 0 }, children: [
-              /* @__PURE__ */ jsx16(Icon, { name: meta.icon, size: 14, style: { color: "var(--ui-accent)", flexShrink: 0 } }),
-              /* @__PURE__ */ jsxs14("div", { style: { minWidth: 0 }, children: [
-                /* @__PURE__ */ jsx16("div", { className: "sb-src-title", title: art.title, children: art.title }),
-                /* @__PURE__ */ jsxs14("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)", display: "flex", alignItems: "center", gap: 5 }, children: [
-                  /* @__PURE__ */ jsx16("span", { children: meta.label }),
-                  art.stale ? /* @__PURE__ */ jsx16("span", { className: "sb-verdict", "data-v": "partial", children: "Stale" }) : null
-                ] })
+          /* @__PURE__ */ jsx17("span", { className: "sb-num", style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: artifacts.length })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs15("div", { style: { padding: "10px 12px 0", display: "flex", flexDirection: "column", gap: 8 }, children: [
+        /* @__PURE__ */ jsx17(
+          "input",
+          {
+            className: "sb-input",
+            value: focusPrompt,
+            onChange: (e) => setFocusPrompt(e.target.value),
+            placeholder: "Optional focus topic for next artifact...",
+            "aria-label": "Studio focus topic"
+          }
+        ),
+        showOpts ? /* @__PURE__ */ jsxs15("div", { className: "sb-ledger-row", style: { gap: 7, padding: "8px 10px" }, children: [
+          /* @__PURE__ */ jsxs15("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }, children: [
+            /* @__PURE__ */ jsxs15("label", { className: "sb-field", children: [
+              /* @__PURE__ */ jsx17("span", { className: "sb-label", style: { fontSize: 10.5 }, children: "Report template" }),
+              /* @__PURE__ */ jsxs15("select", { className: "sb-select", value: template, onChange: (e) => setTemplate(e.target.value), children: [
+                /* @__PURE__ */ jsx17("option", { value: "briefing", children: "Briefing" }),
+                /* @__PURE__ */ jsx17("option", { value: "study_guide", children: "Study Guide" }),
+                /* @__PURE__ */ jsx17("option", { value: "faq", children: "FAQ" }),
+                /* @__PURE__ */ jsx17("option", { value: "timeline", children: "Timeline" }),
+                /* @__PURE__ */ jsx17("option", { value: "blog", children: "Blog Post" }),
+                /* @__PURE__ */ jsx17("option", { value: "exec_memo", children: "Exec Memo" })
               ] })
             ] }),
-            /* @__PURE__ */ jsx16(
-              "button",
+            /* @__PURE__ */ jsxs15("label", { className: "sb-field", children: [
+              /* @__PURE__ */ jsx17("span", { className: "sb-label", style: { fontSize: 10.5 }, children: "Audio style" }),
+              /* @__PURE__ */ jsxs15("select", { className: "sb-select", value: audioStyle, onChange: (e) => setAudioStyle(e.target.value), children: [
+                /* @__PURE__ */ jsx17("option", { value: "deep_dive", children: "Deep Dive" }),
+                /* @__PURE__ */ jsx17("option", { value: "debate", children: "Debate" }),
+                /* @__PURE__ */ jsx17("option", { value: "brief", children: "Quick Brief" }),
+                /* @__PURE__ */ jsx17("option", { value: "critique", children: "Critique" })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxs15("label", { className: "sb-field", children: [
+              /* @__PURE__ */ jsx17("span", { className: "sb-label", style: { fontSize: 10.5 }, children: "Items / slides" }),
+              /* @__PURE__ */ jsxs15("select", { className: "sb-select", value: count, onChange: (e) => setCount(Number(e.target.value)), children: [
+                /* @__PURE__ */ jsx17("option", { value: 5, children: "5" }),
+                /* @__PURE__ */ jsx17("option", { value: 8, children: "8" }),
+                /* @__PURE__ */ jsx17("option", { value: 12, children: "12" })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxs15("label", { className: "sb-field", children: [
+              /* @__PURE__ */ jsx17("span", { className: "sb-label", style: { fontSize: 10.5 }, children: "Language" }),
+              /* @__PURE__ */ jsxs15("select", { className: "sb-select", value: language, onChange: (e) => setLanguage(e.target.value), children: [
+                /* @__PURE__ */ jsx17("option", { value: "English", children: "English" }),
+                /* @__PURE__ */ jsx17("option", { value: "Spanish", children: "Spanish" }),
+                /* @__PURE__ */ jsx17("option", { value: "French", children: "French" }),
+                /* @__PURE__ */ jsx17("option", { value: "German", children: "German" }),
+                /* @__PURE__ */ jsx17("option", { value: "Japanese", children: "Japanese" }),
+                /* @__PURE__ */ jsx17("option", { value: "Portuguese", children: "Portuguese" })
+              ] })
+            ] })
+          ] }),
+          capabilities?.image_generate ? /* @__PURE__ */ jsxs15("label", { style: { display: "flex", alignItems: "center", gap: 7, fontSize: 11.5, color: "var(--ui-text-secondary)", cursor: "pointer" }, children: [
+            /* @__PURE__ */ jsx17(
+              "input",
               {
-                type: "button",
-                className: "sb-btn sb-btn-ghost sb-btn-icon sb-btn-danger",
-                title: "Delete artifact",
-                onClick: (e) => deleteArtifact(e, art.id),
-                children: /* @__PURE__ */ jsx16(Icon, { name: "Trash2", size: 13 })
+                type: "checkbox",
+                className: "sb-checkbox",
+                checked: includeImages,
+                onChange: (e) => setIncludeImages(e.target.checked)
               }
-            )
+            ),
+            "Generate AI illustrations for Slides & Infographics"
+          ] }) : null
+        ] }) : null
+      ] }),
+      /* @__PURE__ */ jsx17("div", { className: "sb-studio-grid", children: STUDIO_FORMATS.map((fmt) => /* @__PURE__ */ jsxs15(
+        "button",
+        {
+          type: "button",
+          className: "sb-studio-tile",
+          disabled: !hasActiveSources || Boolean(runningKind),
+          onClick: () => handleTileClick(fmt.kind),
+          title: fmt.kind === "slides" ? "Customize Slide Deck (format, sources, prompt, Hermes ImageGen, outline review)" : `Generate ${fmt.label}`,
+          children: [
+            /* @__PURE__ */ jsx17(Icon, { name: fmt.icon, size: 14, style: { color: "var(--ui-accent)", flexShrink: 0 } }),
+            /* @__PURE__ */ jsx17("span", { children: runningKind === fmt.kind ? "Generating..." : fmt.label })
           ]
         },
-        art.id
-      );
-    }) })
-  ] }) });
+        fmt.kind
+      )) }),
+      runningKind ? /* @__PURE__ */ jsxs15("div", { style: { padding: "0 12px 8px", fontSize: 11.5, color: "var(--ui-text-secondary)", display: "flex", alignItems: "center", gap: 7 }, children: [
+        /* @__PURE__ */ jsx17(HermesSpinner, { size: 12 }),
+        /* @__PURE__ */ jsx17("span", { children: stage })
+      ] }) : null,
+      /* @__PURE__ */ jsx17("div", { className: "sb-pane-head", style: { borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: /* @__PURE__ */ jsx17("span", { className: "sb-pane-title", children: "Artifacts" }) }),
+      /* @__PURE__ */ jsx17("div", { className: "sb-art-list sb-scroll", children: artifacts.length === 0 ? /* @__PURE__ */ jsxs15("div", { className: "sb-empty", children: [
+        /* @__PURE__ */ jsx17(Icon, { name: "Layers", size: 22 }),
+        /* @__PURE__ */ jsx17("div", { style: { fontWeight: 600, color: "var(--ui-text-secondary)" }, children: "No artifacts yet" }),
+        /* @__PURE__ */ jsx17("div", { style: { fontSize: 11.5 }, children: "Pick any format above to turn your active sources into an interactive artifact or Audio Overview." })
+      ] }) : artifacts.map((art) => {
+        const meta = KIND_META[art.kind] || { label: art.kind, icon: "FileText" };
+        const isSlides = art.kind === "slides";
+        const srcCount = (art.source_ids || []).length;
+        const menuOpen = openMenuId === art.id;
+        return /* @__PURE__ */ jsxs15(
+          "div",
+          {
+            className: "sb-art-item",
+            "data-active": selectedArtifactId === art.id,
+            style: { position: "relative" },
+            role: "button",
+            tabIndex: 0,
+            onClick: () => {
+              setOpenMenuId("");
+              onSelectArtifact?.(art.id);
+            },
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSelectArtifact?.(art.id);
+              }
+            },
+            children: [
+              /* @__PURE__ */ jsxs15("div", { style: { display: "flex", alignItems: "center", gap: 9, minWidth: 0 }, children: [
+                /* @__PURE__ */ jsx17(Icon, { name: meta.icon, size: 14, style: { color: "var(--ui-accent)", flexShrink: 0 } }),
+                /* @__PURE__ */ jsxs15("div", { style: { minWidth: 0 }, children: [
+                  /* @__PURE__ */ jsx17("div", { className: "sb-src-title", title: art.title, children: art.title }),
+                  /* @__PURE__ */ jsxs15("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)", display: "flex", alignItems: "center", gap: 5 }, children: [
+                    /* @__PURE__ */ jsx17("span", { children: meta.label }),
+                    srcCount > 0 ? /* @__PURE__ */ jsxs15("span", { children: [
+                      "\xB7 ",
+                      srcCount,
+                      " src"
+                    ] }) : null,
+                    art.stale ? /* @__PURE__ */ jsx17("span", { className: "sb-verdict", "data-v": "partial", children: "Stale" }) : null
+                  ] })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsx17("div", { style: { display: "flex", alignItems: "center", gap: 2 }, children: /* @__PURE__ */ jsx17(
+                "button",
+                {
+                  type: "button",
+                  className: "sb-btn sb-btn-ghost sb-btn-icon",
+                  title: "More options",
+                  "aria-label": `More options for ${art.title}`,
+                  onClick: (e) => {
+                    e.stopPropagation();
+                    setOpenMenuId((cur) => cur === art.id ? "" : art.id);
+                  },
+                  children: /* @__PURE__ */ jsx17(Icon, { name: "MoreVertical", size: 13 })
+                }
+              ) }),
+              menuOpen ? /* @__PURE__ */ jsxs15("div", { className: "sb-art-menu", style: { top: "calc(100% + 2px)", right: 8 }, onClick: (e) => e.stopPropagation(), children: [
+                /* @__PURE__ */ jsxs15(
+                  "button",
+                  {
+                    type: "button",
+                    className: "sb-art-menu-item",
+                    onClick: () => {
+                      setOpenMenuId("");
+                      setRenameTarget(art);
+                      setRenameValue(art.title || "");
+                    },
+                    children: [
+                      /* @__PURE__ */ jsx17(Icon, { name: "Edit3", size: 13 }),
+                      " Rename"
+                    ]
+                  }
+                ),
+                isSlides ? /* @__PURE__ */ jsxs15(Fragment11, { children: [
+                  /* @__PURE__ */ jsxs15("button", { type: "button", className: "sb-art-menu-item", onClick: () => quickDownloadSlideDeck(art, "pdf"), children: [
+                    /* @__PURE__ */ jsx17(Icon, { name: "FileText", size: 13 }),
+                    " Download PDF Document (.pdf)"
+                  ] }),
+                  /* @__PURE__ */ jsxs15("button", { type: "button", className: "sb-art-menu-item", onClick: () => quickDownloadSlideDeck(art, "pptx"), children: [
+                    /* @__PURE__ */ jsx17(Icon, { name: "Presentation", size: 13 }),
+                    " Download PowerPoint (.pptx)"
+                  ] }),
+                  /* @__PURE__ */ jsxs15(
+                    "button",
+                    {
+                      type: "button",
+                      className: "sb-art-menu-item",
+                      onClick: () => {
+                        setOpenMenuId("");
+                        setAutoPresentId(art.id);
+                        onSelectArtifact?.(art.id);
+                      },
+                      children: [
+                        /* @__PURE__ */ jsx17(Icon, { name: "Play", size: 13 }),
+                        " Start slideshow"
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxs15("button", { type: "button", className: "sb-art-menu-item", onClick: () => openCustomizeSlides("revise", art), children: [
+                    /* @__PURE__ */ jsx17(Icon, { name: "Sparkles", size: 13 }),
+                    " Revise"
+                  ] })
+                ] }) : null,
+                /* @__PURE__ */ jsxs15(
+                  "button",
+                  {
+                    type: "button",
+                    className: "sb-art-menu-item",
+                    onClick: () => {
+                      setOpenMenuId("");
+                      setInspectTarget(art);
+                    },
+                    children: [
+                      /* @__PURE__ */ jsx17(Icon, { name: "Info", size: 13 }),
+                      " View prompt and sources"
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsx17("div", { className: "sb-art-menu-sep" }),
+                /* @__PURE__ */ jsxs15("button", { type: "button", className: "sb-art-menu-item sb-art-menu-danger", onClick: (e) => deleteArtifact(e, art.id), children: [
+                  /* @__PURE__ */ jsx17(Icon, { name: "Trash2", size: 13 }),
+                  " Delete"
+                ] })
+              ] }) : null
+            ]
+          },
+          art.id
+        );
+      }) })
+    ] }),
+    /* @__PURE__ */ jsx17(
+      SlideDeckModal,
+      {
+        open: slideModalOpen,
+        nbId,
+        sources,
+        capabilities,
+        initialFocus: focusPrompt,
+        initialArtifact: slideModalArt,
+        mode: slideModalMode,
+        onClose: () => setSlideModalOpen(false),
+        onGenerate: (params) => runGenerator("slides", params),
+        onRevise: runSlideRevision
+      }
+    ),
+    renameTarget ? /* @__PURE__ */ jsx17("div", { className: "sb-modal-backdrop", onClick: () => setRenameTarget(null), children: /* @__PURE__ */ jsxs15("div", { className: "sb-modal", onClick: (e) => e.stopPropagation(), children: [
+      /* @__PURE__ */ jsxs15("div", { className: "sb-modal-head", children: [
+        /* @__PURE__ */ jsxs15("span", { children: [
+          "Rename ",
+          KIND_META[renameTarget.kind]?.label || "Artifact"
+        ] }),
+        /* @__PURE__ */ jsx17("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setRenameTarget(null), children: /* @__PURE__ */ jsx17(Icon, { name: "X", size: 14 }) })
+      ] }),
+      /* @__PURE__ */ jsx17("div", { className: "sb-modal-body", children: /* @__PURE__ */ jsx17(
+        "input",
+        {
+          className: "sb-input",
+          value: renameValue,
+          onChange: (e) => setRenameValue(e.target.value),
+          onKeyDown: (e) => {
+            if (e.key === "Enter") submitRename();
+          },
+          autoFocus: true
+        }
+      ) }),
+      /* @__PURE__ */ jsxs15("div", { className: "sb-modal-foot", children: [
+        /* @__PURE__ */ jsx17("button", { type: "button", className: "sb-btn", onClick: () => setRenameTarget(null), children: "Cancel" }),
+        /* @__PURE__ */ jsx17("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: submitRename, children: "Save" })
+      ] })
+    ] }) }) : null,
+    inspectTarget ? /* @__PURE__ */ jsx17("div", { className: "sb-modal-backdrop", onClick: () => setInspectTarget(null), children: /* @__PURE__ */ jsxs15("div", { className: "sb-modal", onClick: (e) => e.stopPropagation(), children: [
+      /* @__PURE__ */ jsxs15("div", { className: "sb-modal-head", children: [
+        /* @__PURE__ */ jsx17("span", { children: "Prompt & Sources" }),
+        /* @__PURE__ */ jsx17("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setInspectTarget(null), children: /* @__PURE__ */ jsx17(Icon, { name: "X", size: 14 }) })
+      ] }),
+      /* @__PURE__ */ jsxs15("div", { className: "sb-modal-body", style: { gap: 12 }, children: [
+        /* @__PURE__ */ jsxs15("div", { children: [
+          /* @__PURE__ */ jsx17("div", { className: "sb-label", style: { marginBottom: 4 }, children: "Title" }),
+          /* @__PURE__ */ jsx17("div", { style: { fontSize: 13.5, fontWeight: 650, color: "var(--ui-text-primary)" }, children: inspectTarget.title })
+        ] }),
+        /* @__PURE__ */ jsxs15("div", { children: [
+          /* @__PURE__ */ jsx17("div", { className: "sb-label", style: { marginBottom: 4 }, children: "Prompt / Instructions" }),
+          /* @__PURE__ */ jsx17("div", { className: "sb-quote-box", style: { fontSize: 12 }, children: inspectTarget.params?.instructions || inspectTarget.params?.focus || "Default notebook synthesis" })
+        ] }),
+        /* @__PURE__ */ jsxs15("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 }, children: [
+          inspectTarget.params?.deck_format ? /* @__PURE__ */ jsxs15("span", { className: "sb-kind-tag", children: [
+            "Format: ",
+            inspectTarget.params.deck_format
+          ] }) : null,
+          inspectTarget.params?.deck_purpose ? /* @__PURE__ */ jsxs15("span", { className: "sb-kind-tag", children: [
+            "Style: ",
+            inspectTarget.params.deck_purpose
+          ] }) : null,
+          inspectTarget.params?.language ? /* @__PURE__ */ jsxs15("span", { className: "sb-kind-tag", children: [
+            "Lang: ",
+            inspectTarget.params.language
+          ] }) : null,
+          inspectTarget.params?.include_images ? /* @__PURE__ */ jsxs15("span", { className: "sb-kind-tag", children: [
+            "ImageGen: ",
+            inspectTarget.params.image_mode || "on"
+          ] }) : /* @__PURE__ */ jsx17("span", { className: "sb-kind-tag", children: "Native Vector Slides" })
+        ] }),
+        /* @__PURE__ */ jsxs15("div", { children: [
+          /* @__PURE__ */ jsxs15("div", { className: "sb-label", style: { marginBottom: 6 }, children: [
+            "Included Sources (",
+            sourceNamesForArtifact(inspectTarget).length,
+            ")"
+          ] }),
+          /* @__PURE__ */ jsx17("div", { style: { display: "flex", flexDirection: "column", gap: 5 }, children: sourceNamesForArtifact(inspectTarget).map((name, i) => /* @__PURE__ */ jsx17("div", { className: "sb-ledger-row", style: { padding: "6px 9px", fontSize: 12 }, children: name }, i)) })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsx17("div", { className: "sb-modal-foot", children: /* @__PURE__ */ jsx17("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => setInspectTarget(null), children: "Done" }) })
+    ] }) }) : null
+  ] });
 }
 
 // desktop-src/components/BrandMark.jsx
-import { jsx as jsx17, jsxs as jsxs15 } from "react/jsx-runtime";
+import { jsx as jsx18, jsxs as jsxs16 } from "react/jsx-runtime";
 function BrandMark({ size = 16, accent = "var(--ui-accent, #3b82f6)", className = "", style }) {
-  return /* @__PURE__ */ jsxs15(
+  return /* @__PURE__ */ jsxs16(
     "svg",
     {
       xmlns: "http://www.w3.org/2000/svg",
@@ -8411,53 +9757,53 @@ function BrandMark({ size = 16, accent = "var(--ui-accent, #3b82f6)", className 
       style: { display: "block", flexShrink: 0, ...style },
       "aria-hidden": "true",
       children: [
-        /* @__PURE__ */ jsx17("polygon", { points: "59,10 74,10 74,34 66.5,26.5 59,34", fill: accent }),
-        /* @__PURE__ */ jsx17("polygon", { points: "79.5,10 100,10 100,37.5 79.5,48.5", fill: "currentColor" }),
-        /* @__PURE__ */ jsx17("polygon", { points: "47,10 53.5,10 53.5,30.5 44.5,30.5 100,70.5 100,95 24,22", fill: "currentColor" }),
-        /* @__PURE__ */ jsx17("polygon", { points: "20,24.5 95.5,97.5 72.5,110 48,110 20,90 20,82.5 36.5,73.5 58,89 74.5,89 20,50", fill: "currentColor" })
+        /* @__PURE__ */ jsx18("polygon", { points: "59,10 74,10 74,34 66.5,26.5 59,34", fill: accent }),
+        /* @__PURE__ */ jsx18("polygon", { points: "79.5,10 100,10 100,37.5 79.5,48.5", fill: "currentColor" }),
+        /* @__PURE__ */ jsx18("polygon", { points: "47,10 53.5,10 53.5,30.5 44.5,30.5 100,70.5 100,95 24,22", fill: "currentColor" }),
+        /* @__PURE__ */ jsx18("polygon", { points: "20,24.5 95.5,97.5 72.5,110 48,110 20,90 20,82.5 36.5,73.5 58,89 74.5,89 20,50", fill: "currentColor" })
       ]
     }
   );
 }
 
 // desktop-src/SourceBookWorkspace.jsx
-import { Fragment as Fragment11, jsx as jsx18, jsxs as jsxs16 } from "react/jsx-runtime";
+import { Fragment as Fragment12, jsx as jsx19, jsxs as jsxs17 } from "react/jsx-runtime";
 function SourceBookWorkspace({ ctx, externalState }) {
   const profile = typeof sdk.useValue === "function" && sdk.host?.state?.profile ? sdk.useValue(sdk.host.state.profile) : "default";
   const connectionId = typeof sdk.useValue === "function" && sdk.host?.state?.connectionId ? sdk.useValue(sdk.host.state.connectionId) : "local";
   const epoch = typeof sdk.useGatewayActivationEpoch === "function" ? sdk.useGatewayActivationEpoch() : 0;
   const liveHostModel = typeof sdk.useValue === "function" && sdk.host?.state?.model ? sdk.useValue(sdk.host.state.model) : "";
-  const [notebooks, setNotebooks] = useState12([]);
-  const [nbId, setNbId] = useState12("");
-  const [notebook, setNotebook] = useState12(null);
-  const [sources, setSources] = useState12([]);
-  const [notes, setNotes] = useState12([]);
-  const [messages, setMessages] = useState12([]);
-  const [claims, setClaims] = useState12([]);
-  const [contradictions, setContradictions] = useState12(null);
-  const [coverage, setCoverage] = useState12(null);
-  const [artifacts, setArtifacts] = useState12([]);
-  const [modelsInfo, setModelsInfo] = useState12(null);
-  const [gatewayModelCatalog, setGatewayModelCatalog] = useState12([]);
-  const [capabilities, setCapabilities] = useState12(null);
-  const [centerTab, setCenterTab] = useState12("chat");
-  const [selectedArtifactId, setSelectedArtifactId] = useState12(null);
-  const [inspectorTarget, setInspectorTarget] = useState12(null);
-  const [leftCollapsed, setLeftCollapsed] = useState12(false);
-  const [studioExpanded, setStudioExpanded] = useState12(false);
-  const [nbMenuOpen, setNbMenuOpen] = useState12(false);
-  const [modelMenuOpen, setModelMenuOpen] = useState12(false);
-  const [modelSearch, setModelSearch] = useState12("");
-  const [showCustomModel, setShowCustomModel] = useState12(false);
-  const [customProvider, setCustomProvider] = useState12("");
-  const [customModel, setCustomModel] = useState12("");
-  const [createOpen, setCreateOpen] = useState12(false);
-  const [newTitle, setNewTitle] = useState12("");
-  const [searchOpen, setSearchOpen] = useState12(false);
-  const [searchQuery, setSearchQuery] = useState12("");
-  const [searchHits, setSearchHits] = useState12([]);
-  const [loading, setLoading] = useState12(true);
-  const [error, setError] = useState12("");
+  const [notebooks, setNotebooks] = useState13([]);
+  const [nbId, setNbId] = useState13("");
+  const [notebook, setNotebook] = useState13(null);
+  const [sources, setSources] = useState13([]);
+  const [notes, setNotes] = useState13([]);
+  const [messages, setMessages] = useState13([]);
+  const [claims, setClaims] = useState13([]);
+  const [contradictions, setContradictions] = useState13(null);
+  const [coverage, setCoverage] = useState13(null);
+  const [artifacts, setArtifacts] = useState13([]);
+  const [modelsInfo, setModelsInfo] = useState13(null);
+  const [gatewayModelCatalog, setGatewayModelCatalog] = useState13([]);
+  const [capabilities, setCapabilities] = useState13(null);
+  const [centerTab, setCenterTab] = useState13("chat");
+  const [selectedArtifactId, setSelectedArtifactId] = useState13(null);
+  const [inspectorTarget, setInspectorTarget] = useState13(null);
+  const [leftCollapsed, setLeftCollapsed] = useState13(false);
+  const [studioExpanded, setStudioExpanded] = useState13(false);
+  const [nbMenuOpen, setNbMenuOpen] = useState13(false);
+  const [modelMenuOpen, setModelMenuOpen] = useState13(false);
+  const [modelSearch, setModelSearch] = useState13("");
+  const [showCustomModel, setShowCustomModel] = useState13(false);
+  const [customProvider, setCustomProvider] = useState13("");
+  const [customModel, setCustomModel] = useState13("");
+  const [createOpen, setCreateOpen] = useState13(false);
+  const [newTitle, setNewTitle] = useState13("");
+  const [searchOpen, setSearchOpen] = useState13(false);
+  const [searchQuery, setSearchQuery] = useState13("");
+  const [searchHits, setSearchHits] = useState13([]);
+  const [loading, setLoading] = useState13(true);
+  const [error, setError] = useState13("");
   const reqSeqRef = useRef9(0);
   const storageKey = `activeNotebook::${connectionId || "local"}::${profile || "default"}`;
   const loadGatewayCatalog = useCallback(async () => {
@@ -8561,12 +9907,12 @@ function SourceBookWorkspace({ ctx, externalState }) {
       setLoading(false);
     }
   }, [ctx, storageKey, loadNotebookData, loadGatewayCatalog]);
-  useEffect9(() => {
+  useEffect10(() => {
     setSelectedArtifactId(null);
     setInspectorTarget(null);
     loadNotebooks();
   }, [profile, connectionId, epoch, loadNotebooks]);
-  useEffect9(() => {
+  useEffect10(() => {
     if (!ctx?.onEvent) return void 0;
     return ctx.onEvent("plugin.sourcebook.notebook.changed", (ev) => {
       const target = ev?.payload?.nb || ev?.nb;
@@ -8575,7 +9921,7 @@ function SourceBookWorkspace({ ctx, externalState }) {
       }
     });
   }, [ctx, nbId, loadNotebookData]);
-  useEffect9(() => {
+  useEffect10(() => {
     if (!ctx?.addEventListener) return void 0;
     return ctx.addEventListener(window, "keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
@@ -8590,7 +9936,7 @@ function SourceBookWorkspace({ ctx, externalState }) {
       }
     });
   }, [ctx]);
-  useEffect9(() => {
+  useEffect10(() => {
     const pending = externalState?.get?.()?.pendingJump;
     if (pending && pending.nb) {
       externalState.set({ ...externalState.get(), pendingJump: null });
@@ -8754,26 +10100,26 @@ Cited chunk: \`${chunk.id}\``,
   const hasActiveSources = sources.some((s) => s.enabled);
   const defaultModelName = modelsInfo?.active?.model || liveHostModel || "";
   const activeModelLabel = notebook?.model ? notebook.model : defaultModelName ? `Auto: ${defaultModelName}` : "Auto (Hermes)";
-  return /* @__PURE__ */ jsxs16("div", { className: "sb-root", style: { position: "relative" }, children: [
-    /* @__PURE__ */ jsx18(Styles, {}),
-    /* @__PURE__ */ jsxs16("header", { className: "sb-topbar", children: [
-      /* @__PURE__ */ jsxs16("div", { className: "sb-topbar-left", children: [
-        /* @__PURE__ */ jsxs16("div", { className: "sb-brand", children: [
-          /* @__PURE__ */ jsx18("span", { className: "sb-brand-mark", children: /* @__PURE__ */ jsx18(BrandMark, { size: 15 }) }),
-          /* @__PURE__ */ jsx18("span", { children: "SourceBook" })
+  return /* @__PURE__ */ jsxs17("div", { className: "sb-root", style: { position: "relative" }, children: [
+    /* @__PURE__ */ jsx19(Styles, {}),
+    /* @__PURE__ */ jsxs17("header", { className: "sb-topbar", children: [
+      /* @__PURE__ */ jsxs17("div", { className: "sb-topbar-left", children: [
+        /* @__PURE__ */ jsxs17("div", { className: "sb-brand", children: [
+          /* @__PURE__ */ jsx19("span", { className: "sb-brand-mark", children: /* @__PURE__ */ jsx19(BrandMark, { size: 15 }) }),
+          /* @__PURE__ */ jsx19("span", { children: "SourceBook" })
         ] }),
-        /* @__PURE__ */ jsx18(
+        /* @__PURE__ */ jsx19(
           "button",
           {
             type: "button",
             className: "sb-btn sb-btn-ghost sb-btn-icon",
             title: leftCollapsed ? "Show Sources rail" : "Hide Sources rail",
             onClick: () => setLeftCollapsed((v) => !v),
-            children: /* @__PURE__ */ jsx18(Icon, { name: "PanelLeft", size: 14 })
+            children: /* @__PURE__ */ jsx19(Icon, { name: "PanelLeft", size: 14 })
           }
         ),
-        /* @__PURE__ */ jsxs16("div", { style: { position: "relative" }, children: [
-          /* @__PURE__ */ jsxs16(
+        /* @__PURE__ */ jsxs17("div", { style: { position: "relative" }, children: [
+          /* @__PURE__ */ jsxs17(
             "button",
             {
               type: "button",
@@ -8784,13 +10130,13 @@ Cited chunk: \`${chunk.id}\``,
               },
               "aria-expanded": nbMenuOpen,
               children: [
-                /* @__PURE__ */ jsx18("span", { className: "sb-nb-select-label", children: notebook?.title || (loading ? "Loading..." : "Select notebook") }),
-                /* @__PURE__ */ jsx18(Icon, { name: "ChevronDown", size: 13 })
+                /* @__PURE__ */ jsx19("span", { className: "sb-nb-select-label", children: notebook?.title || (loading ? "Loading..." : "Select notebook") }),
+                /* @__PURE__ */ jsx19(Icon, { name: "ChevronDown", size: 13 })
               ]
             }
           ),
-          nbMenuOpen ? /* @__PURE__ */ jsxs16("div", { className: "sb-model-menu", style: { left: 0, right: "auto", width: 280 }, children: [
-            notebooks.map((nb) => /* @__PURE__ */ jsxs16(
+          nbMenuOpen ? /* @__PURE__ */ jsxs17("div", { className: "sb-model-menu", style: { left: 0, right: "auto", width: 280 }, children: [
+            notebooks.map((nb) => /* @__PURE__ */ jsxs17(
               "div",
               {
                 style: {
@@ -8805,16 +10151,16 @@ Cited chunk: \`${chunk.id}\``,
                 },
                 onClick: () => selectNotebook(nb.id),
                 children: [
-                  /* @__PURE__ */ jsxs16("div", { style: { minWidth: 0 }, children: [
-                    /* @__PURE__ */ jsx18("div", { className: "sb-src-title", children: nb.title }),
-                    /* @__PURE__ */ jsxs16("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: [
-                      /* @__PURE__ */ jsx18("span", { className: "sb-num", children: nb.source_count || 0 }),
+                  /* @__PURE__ */ jsxs17("div", { style: { minWidth: 0 }, children: [
+                    /* @__PURE__ */ jsx19("div", { className: "sb-src-title", children: nb.title }),
+                    /* @__PURE__ */ jsxs17("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: [
+                      /* @__PURE__ */ jsx19("span", { className: "sb-num", children: nb.source_count || 0 }),
                       " sources | ",
-                      /* @__PURE__ */ jsx18("span", { className: "sb-num", children: nb.artifact_count || 0 }),
+                      /* @__PURE__ */ jsx19("span", { className: "sb-num", children: nb.artifact_count || 0 }),
                       " artifacts"
                     ] })
                   ] }),
-                  notebooks.length > 1 ? /* @__PURE__ */ jsx18(
+                  notebooks.length > 1 ? /* @__PURE__ */ jsx19(
                     "button",
                     {
                       type: "button",
@@ -8824,14 +10170,14 @@ Cited chunk: \`${chunk.id}\``,
                         e.stopPropagation();
                         handleDeleteNotebook(nb.id);
                       },
-                      children: /* @__PURE__ */ jsx18(Icon, { name: "Trash2", size: 12 })
+                      children: /* @__PURE__ */ jsx19(Icon, { name: "Trash2", size: 12 })
                     }
                   ) : null
                 ]
               },
               nb.id
             )),
-            /* @__PURE__ */ jsx18("div", { style: { borderTop: "1px solid var(--ui-stroke-tertiary)", marginTop: 4, paddingTop: 4 }, children: /* @__PURE__ */ jsxs16(
+            /* @__PURE__ */ jsx19("div", { style: { borderTop: "1px solid var(--ui-stroke-tertiary)", marginTop: 4, paddingTop: 4 }, children: /* @__PURE__ */ jsxs17(
               "button",
               {
                 type: "button",
@@ -8842,25 +10188,25 @@ Cited chunk: \`${chunk.id}\``,
                   setCreateOpen(true);
                 },
                 children: [
-                  /* @__PURE__ */ jsx18(Icon, { name: "Plus", size: 13 }),
+                  /* @__PURE__ */ jsx19(Icon, { name: "Plus", size: 13 }),
                   " New notebook"
                 ]
               }
             ) })
           ] }) : null
         ] }),
-        /* @__PURE__ */ jsxs16("button", { type: "button", className: "sb-btn", onClick: () => setCreateOpen(true), children: [
-          /* @__PURE__ */ jsx18(Icon, { name: "Plus", size: 13 }),
+        /* @__PURE__ */ jsxs17("button", { type: "button", className: "sb-btn", onClick: () => setCreateOpen(true), children: [
+          /* @__PURE__ */ jsx19(Icon, { name: "Plus", size: 13 }),
           " New"
         ] })
       ] }),
-      /* @__PURE__ */ jsxs16("div", { className: "sb-topbar-right", children: [
-        notebook ? /* @__PURE__ */ jsxs16(Fragment11, { children: [
-          hasNativeCatalogMenu && nativeModelController ? /* @__PURE__ */ jsxs16(NativeDropdownMenu, { open: modelMenuOpen, onOpenChange: (open) => {
+      /* @__PURE__ */ jsxs17("div", { className: "sb-topbar-right", children: [
+        notebook ? /* @__PURE__ */ jsxs17(Fragment12, { children: [
+          hasNativeCatalogMenu && nativeModelController ? /* @__PURE__ */ jsxs17(NativeDropdownMenu, { open: modelMenuOpen, onOpenChange: (open) => {
             setNbMenuOpen(false);
             setModelMenuOpen(open);
           }, children: [
-            /* @__PURE__ */ jsx18(NativeDropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsxs16(
+            /* @__PURE__ */ jsx19(NativeDropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsxs17(
               "button",
               {
                 type: "button",
@@ -8868,36 +10214,36 @@ Cited chunk: \`${chunk.id}\``,
                 "data-active": Boolean(notebook.model),
                 title: "Choose which Hermes model runs this notebook (supports every authenticated provider in your Hermes agent)",
                 children: [
-                  /* @__PURE__ */ jsx18(Icon, { name: "Cpu", size: 12 }),
-                  /* @__PURE__ */ jsx18("span", { style: { maxWidth: 158, overflow: "hidden", textOverflow: "ellipsis" }, children: activeModelLabel }),
-                  /* @__PURE__ */ jsx18(Icon, { name: "ChevronDown", size: 11 })
+                  /* @__PURE__ */ jsx19(Icon, { name: "Cpu", size: 12 }),
+                  /* @__PURE__ */ jsx19("span", { style: { maxWidth: 158, overflow: "hidden", textOverflow: "ellipsis" }, children: activeModelLabel }),
+                  /* @__PURE__ */ jsx19(Icon, { name: "ChevronDown", size: 11 })
                 ]
               }
             ) }),
-            /* @__PURE__ */ jsxs16(NativeDropdownMenuContent, { align: "end", style: { width: 320, padding: 0 }, children: [
-              NativeDropdownMenuItem ? /* @__PURE__ */ jsx18("div", { style: { padding: "4px 4px 0" }, children: /* @__PURE__ */ jsx18(
+            /* @__PURE__ */ jsxs17(NativeDropdownMenuContent, { align: "end", style: { width: 320, padding: 0 }, children: [
+              NativeDropdownMenuItem ? /* @__PURE__ */ jsx19("div", { style: { padding: "4px 4px 0" }, children: /* @__PURE__ */ jsx19(
                 NativeDropdownMenuItem,
                 {
                   onSelect: async () => {
                     await patchNotebook({ provider: "", model: "" });
                     setModelMenuOpen(false);
                   },
-                  children: /* @__PURE__ */ jsxs16("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", gap: 8 }, children: [
-                    /* @__PURE__ */ jsx18("span", { style: { fontWeight: !notebook.model ? 650 : 500 }, children: "Auto (Active Hermes)" }),
-                    /* @__PURE__ */ jsx18("span", { className: "sb-mono", style: { fontSize: 10.5, opacity: 0.72, maxWidth: 136, overflow: "hidden", textOverflow: "ellipsis" }, children: defaultModelName || "default" })
+                  children: /* @__PURE__ */ jsxs17("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", gap: 8 }, children: [
+                    /* @__PURE__ */ jsx19("span", { style: { fontWeight: !notebook.model ? 650 : 500 }, children: "Auto (Active Hermes)" }),
+                    /* @__PURE__ */ jsx19("span", { className: "sb-mono", style: { fontSize: 10.5, opacity: 0.72, maxWidth: 136, overflow: "hidden", textOverflow: "ellipsis" }, children: defaultModelName || "default" })
                   ] })
                 }
               ) }) : null,
-              NativeDropdownMenuSeparator ? /* @__PURE__ */ jsx18(NativeDropdownMenuSeparator, {}) : null,
-              /* @__PURE__ */ jsx18(NativeModelMenuCloseContext.Provider, { value: () => setModelMenuOpen(false), children: /* @__PURE__ */ jsx18(NativeModelCatalogMenu, { controller: nativeModelController }) }),
-              modelsInfo && !modelsInfo.override_ready ? /* @__PURE__ */ jsxs16("div", { style: { padding: "6px 10px 8px", fontSize: 10.5, color: "var(--ui-text-tertiary)", borderTop: "1px solid var(--ui-stroke-tertiary)", lineHeight: 1.4 }, children: [
+              NativeDropdownMenuSeparator ? /* @__PURE__ */ jsx19(NativeDropdownMenuSeparator, {}) : null,
+              /* @__PURE__ */ jsx19(NativeModelMenuCloseContext.Provider, { value: () => setModelMenuOpen(false), children: /* @__PURE__ */ jsx19(NativeModelCatalogMenu, { controller: nativeModelController }) }),
+              modelsInfo && !modelsInfo.override_ready ? /* @__PURE__ */ jsxs17("div", { style: { padding: "6px 10px 8px", fontSize: 10.5, color: "var(--ui-text-tertiary)", borderTop: "1px solid var(--ui-stroke-tertiary)", lineHeight: 1.4 }, children: [
                 "Enable ",
-                /* @__PURE__ */ jsx18("span", { className: "sb-mono", children: "allow_model_override" }),
+                /* @__PURE__ */ jsx19("span", { className: "sb-mono", children: "allow_model_override" }),
                 " in Hermes config to pin overrides (see Settings)."
               ] }) : null
             ] })
-          ] }) : /* @__PURE__ */ jsxs16("div", { style: { position: "relative" }, children: [
-            /* @__PURE__ */ jsxs16(
+          ] }) : /* @__PURE__ */ jsxs17("div", { style: { position: "relative" }, children: [
+            /* @__PURE__ */ jsxs17(
               "button",
               {
                 type: "button",
@@ -8913,18 +10259,18 @@ Cited chunk: \`${chunk.id}\``,
                 },
                 title: "Choose which Hermes model runs this notebook (supports every authenticated provider in your Hermes agent)",
                 children: [
-                  /* @__PURE__ */ jsx18(Icon, { name: "Cpu", size: 12 }),
-                  /* @__PURE__ */ jsx18("span", { style: { maxWidth: 158, overflow: "hidden", textOverflow: "ellipsis" }, children: activeModelLabel }),
-                  /* @__PURE__ */ jsx18(Icon, { name: "ChevronDown", size: 11 })
+                  /* @__PURE__ */ jsx19(Icon, { name: "Cpu", size: 12 }),
+                  /* @__PURE__ */ jsx19("span", { style: { maxWidth: 158, overflow: "hidden", textOverflow: "ellipsis" }, children: activeModelLabel }),
+                  /* @__PURE__ */ jsx19(Icon, { name: "ChevronDown", size: 11 })
                 ]
               }
             ),
-            modelMenuOpen ? /* @__PURE__ */ jsxs16("div", { className: "sb-model-menu", style: { width: 324 }, children: [
-              /* @__PURE__ */ jsxs16("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 8px 2px" }, children: [
-                /* @__PURE__ */ jsx18("span", { style: { fontSize: 10.5, fontWeight: 650, color: "var(--ui-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em" }, children: "Hermes Model Picker" }),
-                modelsInfo?.override_ready ? /* @__PURE__ */ jsx18("span", { className: "sb-verdict", "data-v": "supported", style: { fontSize: 10, padding: "1px 6px" }, children: "Any model ready" }) : null
+            modelMenuOpen ? /* @__PURE__ */ jsxs17("div", { className: "sb-model-menu", style: { width: 324 }, children: [
+              /* @__PURE__ */ jsxs17("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 8px 2px" }, children: [
+                /* @__PURE__ */ jsx19("span", { style: { fontSize: 10.5, fontWeight: 650, color: "var(--ui-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em" }, children: "Hermes Model Picker" }),
+                modelsInfo?.override_ready ? /* @__PURE__ */ jsx19("span", { className: "sb-verdict", "data-v": "supported", style: { fontSize: 10, padding: "1px 6px" }, children: "Any model ready" }) : null
               ] }),
-              /* @__PURE__ */ jsxs16(
+              /* @__PURE__ */ jsxs17(
                 "button",
                 {
                   type: "button",
@@ -8936,13 +10282,13 @@ Cited chunk: \`${chunk.id}\``,
                     setModelMenuOpen(false);
                   },
                   children: [
-                    /* @__PURE__ */ jsx18("span", { children: "Auto (Active Hermes)" }),
-                    /* @__PURE__ */ jsx18("span", { className: "sb-mono", style: { fontSize: 10.5, opacity: 0.72, maxWidth: 148, overflow: "hidden", textOverflow: "ellipsis" }, children: defaultModelName || "default" })
+                    /* @__PURE__ */ jsx19("span", { children: "Auto (Active Hermes)" }),
+                    /* @__PURE__ */ jsx19("span", { className: "sb-mono", style: { fontSize: 10.5, opacity: 0.72, maxWidth: 148, overflow: "hidden", textOverflow: "ellipsis" }, children: defaultModelName || "default" })
                   ]
                 }
               ),
-              mergedCatalog.length > 0 ? /* @__PURE__ */ jsxs16("div", { style: { padding: "4px 4px 2px", display: "flex", flexDirection: "column", gap: 4 }, children: [
-                /* @__PURE__ */ jsx18(
+              mergedCatalog.length > 0 ? /* @__PURE__ */ jsxs17("div", { style: { padding: "4px 4px 2px", display: "flex", flexDirection: "column", gap: 4 }, children: [
+                /* @__PURE__ */ jsx19(
                   "input",
                   {
                     className: "sb-input",
@@ -8952,8 +10298,8 @@ Cited chunk: \`${chunk.id}\``,
                     placeholder: `Search ${mergedCatalog.length} Hermes models...`
                   }
                 ),
-                /* @__PURE__ */ jsx18("div", { className: "sb-scroll", style: { maxHeight: 240, display: "flex", flexDirection: "column", gap: 6, paddingRight: 2 }, children: groupedCatalog.map((grp) => /* @__PURE__ */ jsxs16("div", { style: { display: "flex", flexDirection: "column", gap: 2 }, children: [
-                  /* @__PURE__ */ jsxs16("div", { style: { fontSize: 10, fontWeight: 650, color: "var(--ui-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", padding: "2px 6px" }, children: [
+                /* @__PURE__ */ jsx19("div", { className: "sb-scroll", style: { maxHeight: 240, display: "flex", flexDirection: "column", gap: 6, paddingRight: 2 }, children: groupedCatalog.map((grp) => /* @__PURE__ */ jsxs17("div", { style: { display: "flex", flexDirection: "column", gap: 2 }, children: [
+                  /* @__PURE__ */ jsxs17("div", { style: { fontSize: 10, fontWeight: 650, color: "var(--ui-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", padding: "2px 6px" }, children: [
                     grp.label,
                     " (",
                     grp.items.length,
@@ -8961,7 +10307,7 @@ Cited chunk: \`${chunk.id}\``,
                   ] }),
                   grp.items.slice(0, 24).map((opt) => {
                     const active = notebook.model === opt.model && (notebook.provider || "") === (opt.provider || "");
-                    return /* @__PURE__ */ jsxs16(
+                    return /* @__PURE__ */ jsxs17(
                       "button",
                       {
                         type: "button",
@@ -8973,8 +10319,8 @@ Cited chunk: \`${chunk.id}\``,
                           setModelMenuOpen(false);
                         },
                         children: [
-                          /* @__PURE__ */ jsx18("span", { className: "sb-src-title", style: { fontSize: 12 }, children: opt.model }),
-                          active ? /* @__PURE__ */ jsx18(Icon, { name: "Check", size: 12, style: { color: "var(--ui-accent)" } }) : null
+                          /* @__PURE__ */ jsx19("span", { className: "sb-src-title", style: { fontSize: 12 }, children: opt.model }),
+                          active ? /* @__PURE__ */ jsx19(Icon, { name: "Check", size: 12, style: { color: "var(--ui-accent)" } }) : null
                         ]
                       },
                       `${opt.provider}:${opt.model}`
@@ -8982,8 +10328,8 @@ Cited chunk: \`${chunk.id}\``,
                   })
                 ] }, grp.slug)) })
               ] }) : null,
-              /* @__PURE__ */ jsxs16("div", { style: { borderTop: "1px solid var(--ui-stroke-tertiary)", marginTop: 4, paddingTop: 4 }, children: [
-                /* @__PURE__ */ jsxs16(
+              /* @__PURE__ */ jsxs17("div", { style: { borderTop: "1px solid var(--ui-stroke-tertiary)", marginTop: 4, paddingTop: 4 }, children: [
+                /* @__PURE__ */ jsxs17(
                   "button",
                   {
                     type: "button",
@@ -8991,12 +10337,12 @@ Cited chunk: \`${chunk.id}\``,
                     style: { width: "100%", justifyContent: "space-between", fontSize: 11 },
                     onClick: () => setShowCustomModel((v) => !v),
                     children: [
-                      /* @__PURE__ */ jsx18("span", { children: "Custom provider / model ID" }),
-                      /* @__PURE__ */ jsx18(Icon, { name: showCustomModel ? "ChevronDown" : "ChevronRight", size: 11 })
+                      /* @__PURE__ */ jsx19("span", { children: "Custom provider / model ID" }),
+                      /* @__PURE__ */ jsx19(Icon, { name: showCustomModel ? "ChevronDown" : "ChevronRight", size: 11 })
                     ]
                   }
                 ),
-                showCustomModel ? /* @__PURE__ */ jsxs16(
+                showCustomModel ? /* @__PURE__ */ jsxs17(
                   "form",
                   {
                     style: { padding: "6px 4px 4px", display: "flex", flexDirection: "column", gap: 6 },
@@ -9006,7 +10352,7 @@ Cited chunk: \`${chunk.id}\``,
                       setModelMenuOpen(false);
                     },
                     children: [
-                      /* @__PURE__ */ jsx18(
+                      /* @__PURE__ */ jsx19(
                         "input",
                         {
                           className: "sb-input",
@@ -9015,7 +10361,7 @@ Cited chunk: \`${chunk.id}\``,
                           placeholder: "Provider (e.g. openrouter, ollama, anthropic)"
                         }
                       ),
-                      /* @__PURE__ */ jsx18(
+                      /* @__PURE__ */ jsx19(
                         "input",
                         {
                           className: "sb-input",
@@ -9024,19 +10370,19 @@ Cited chunk: \`${chunk.id}\``,
                           placeholder: "Model ID (e.g. claude-opus-5-5, qwen3:32b)"
                         }
                       ),
-                      /* @__PURE__ */ jsx18("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: !customModel.trim(), children: "Apply model" })
+                      /* @__PURE__ */ jsx19("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: !customModel.trim(), children: "Apply model" })
                     ]
                   }
                 ) : null,
-                modelsInfo && !modelsInfo.override_ready ? /* @__PURE__ */ jsxs16("div", { style: { padding: "4px 6px", fontSize: 10.5, color: "var(--ui-text-tertiary)", lineHeight: 1.4 }, children: [
+                modelsInfo && !modelsInfo.override_ready ? /* @__PURE__ */ jsxs17("div", { style: { padding: "4px 6px", fontSize: 10.5, color: "var(--ui-text-tertiary)", lineHeight: 1.4 }, children: [
                   "Enable ",
-                  /* @__PURE__ */ jsx18("span", { className: "sb-mono", children: "allow_model_override" }),
+                  /* @__PURE__ */ jsx19("span", { className: "sb-mono", children: "allow_model_override" }),
                   " in Hermes config to pin overrides (see Settings)."
                 ] }) : null
               ] })
             ] }) : null
           ] }),
-          /* @__PURE__ */ jsxs16(
+          /* @__PURE__ */ jsxs17(
             "button",
             {
               type: "button",
@@ -9044,16 +10390,16 @@ Cited chunk: \`${chunk.id}\``,
               title: "Open Coverage Map",
               onClick: () => setCenterTab("coverage"),
               children: [
-                /* @__PURE__ */ jsx18("span", { children: "Coverage" }),
-                /* @__PURE__ */ jsx18("span", { className: "sb-cov-track", children: /* @__PURE__ */ jsx18("span", { className: "sb-cov-fill sb-dither-fill", style: { width: `${covPct}%` } }) }),
-                /* @__PURE__ */ jsxs16("span", { className: "sb-mono", style: { fontWeight: 600 }, children: [
+                /* @__PURE__ */ jsx19("span", { children: "Coverage" }),
+                /* @__PURE__ */ jsx19("span", { className: "sb-cov-track", children: /* @__PURE__ */ jsx19("span", { className: "sb-cov-fill sb-dither-fill", style: { width: `${covPct}%` } }) }),
+                /* @__PURE__ */ jsxs17("span", { className: "sb-mono", style: { fontWeight: 600 }, children: [
                   covPct,
                   "%"
                 ] })
               ]
             }
           ),
-          /* @__PURE__ */ jsxs16(
+          /* @__PURE__ */ jsxs17(
             "button",
             {
               type: "button",
@@ -9062,14 +10408,14 @@ Cited chunk: \`${chunk.id}\``,
               onClick: () => patchNotebook({ strict: !notebook.strict }),
               title: "Strict grounding refuses any claim unsupported by active sources",
               children: [
-                /* @__PURE__ */ jsx18(Icon, { name: "Lock", size: 12 }),
+                /* @__PURE__ */ jsx19(Icon, { name: "Lock", size: 12 }),
                 " ",
                 notebook.strict ? "Strict" : "Grounded"
               ]
             }
           )
         ] }) : null,
-        /* @__PURE__ */ jsxs16(
+        /* @__PURE__ */ jsxs17(
           "button",
           {
             type: "button",
@@ -9081,19 +10427,19 @@ Cited chunk: \`${chunk.id}\``,
             },
             title: "Search across all notebooks (Ctrl+K)",
             children: [
-              /* @__PURE__ */ jsx18(Icon, { name: "Search", size: 12 }),
+              /* @__PURE__ */ jsx19(Icon, { name: "Search", size: 12 }),
               " Search"
             ]
           }
         )
       ] })
     ] }),
-    error ? /* @__PURE__ */ jsxs16("div", { className: "sb-error-bar", role: "alert", children: [
-      /* @__PURE__ */ jsx18("span", { children: error }),
-      /* @__PURE__ */ jsx18("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setError(""), children: /* @__PURE__ */ jsx18(Icon, { name: "X", size: 13 }) })
+    error ? /* @__PURE__ */ jsxs17("div", { className: "sb-error-bar", role: "alert", children: [
+      /* @__PURE__ */ jsx19("span", { children: error }),
+      /* @__PURE__ */ jsx19("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setError(""), children: /* @__PURE__ */ jsx19(Icon, { name: "X", size: 13 }) })
     ] }) : null,
-    !loading && !nbId ? /* @__PURE__ */ jsxs16("div", { className: "sb-empty", style: { flex: 1, justifyContent: "center", position: "relative", overflow: "hidden" }, children: [
-      /* @__PURE__ */ jsx18(
+    !loading && !nbId ? /* @__PURE__ */ jsxs17("div", { className: "sb-empty", style: { flex: 1, justifyContent: "center", position: "relative", overflow: "hidden" }, children: [
+      /* @__PURE__ */ jsx19(
         DitherCanvas,
         {
           variant: "aurora",
@@ -9102,21 +10448,21 @@ Cited chunk: \`${chunk.id}\``,
           style: { position: "absolute", inset: "0 0 auto 0", width: "100%", height: 150, pointerEvents: "none" }
         }
       ),
-      /* @__PURE__ */ jsx18(BrandMark, { size: 38, style: { color: "var(--ui-text-primary)", position: "relative" } }),
-      /* @__PURE__ */ jsx18("div", { style: { fontSize: 16, fontWeight: 650, color: "var(--ui-text-primary)", position: "relative" }, children: "Create your first research notebook" }),
-      /* @__PURE__ */ jsx18("div", { style: { maxWidth: 440, fontSize: 13, position: "relative" }, children: "Collect PDFs, DOCX files, Markdown, CSV tables, YouTube videos, local folders, and web URLs in one workspace. Every answer cites exact passages and runs on any model configured in Hermes." }),
-      /* @__PURE__ */ jsxs16("button", { type: "button", className: "sb-btn sb-btn-primary", style: { position: "relative" }, onClick: () => setCreateOpen(true), children: [
-        /* @__PURE__ */ jsx18(Icon, { name: "Plus", size: 13 }),
+      /* @__PURE__ */ jsx19(BrandMark, { size: 38, style: { color: "var(--ui-text-primary)", position: "relative" } }),
+      /* @__PURE__ */ jsx19("div", { style: { fontSize: 16, fontWeight: 650, color: "var(--ui-text-primary)", position: "relative" }, children: "Create your first research notebook" }),
+      /* @__PURE__ */ jsx19("div", { style: { maxWidth: 440, fontSize: 13, position: "relative" }, children: "Collect PDFs, DOCX files, Markdown, CSV tables, YouTube videos, local folders, and web URLs in one workspace. Every answer cites exact passages and runs on any model configured in Hermes." }),
+      /* @__PURE__ */ jsxs17("button", { type: "button", className: "sb-btn sb-btn-primary", style: { position: "relative" }, onClick: () => setCreateOpen(true), children: [
+        /* @__PURE__ */ jsx19(Icon, { name: "Plus", size: 13 }),
         " New notebook"
       ] })
-    ] }) : /* @__PURE__ */ jsxs16(
+    ] }) : /* @__PURE__ */ jsxs17(
       "div",
       {
         className: "sb-workbench",
         "data-left-collapsed": leftCollapsed,
         "data-studio-expanded": studioExpanded,
         children: [
-          /* @__PURE__ */ jsx18(
+          /* @__PURE__ */ jsx19(
             SidebarSources,
             {
               nbId,
@@ -9129,7 +10475,7 @@ Cited chunk: \`${chunk.id}\``,
               onError: setError
             }
           ),
-          /* @__PURE__ */ jsx18(
+          /* @__PURE__ */ jsx19(
             ChatPanel,
             {
               ctx,
@@ -9148,11 +10494,12 @@ Cited chunk: \`${chunk.id}\``,
               onError: setError
             }
           ),
-          /* @__PURE__ */ jsx18(
+          /* @__PURE__ */ jsx19(
             StudioPanel,
             {
               ctx,
               nbId,
+              sources,
               hasActiveSources,
               capabilities,
               artifacts,
@@ -9168,7 +10515,7 @@ Cited chunk: \`${chunk.id}\``,
         ]
       }
     ),
-    /* @__PURE__ */ jsx18(
+    /* @__PURE__ */ jsx19(
       SourceInspector,
       {
         nbId,
@@ -9177,14 +10524,14 @@ Cited chunk: \`${chunk.id}\``,
         onPromoteQuote: handlePromoteQuote
       }
     ),
-    createOpen ? /* @__PURE__ */ jsx18("div", { className: "sb-modal-backdrop", onClick: () => setCreateOpen(false), children: /* @__PURE__ */ jsxs16("form", { className: "sb-modal", onClick: (e) => e.stopPropagation(), onSubmit: handleCreateNotebook, children: [
-      /* @__PURE__ */ jsxs16("div", { className: "sb-modal-head", children: [
-        /* @__PURE__ */ jsx18("span", { children: "New research notebook" }),
-        /* @__PURE__ */ jsx18("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setCreateOpen(false), children: /* @__PURE__ */ jsx18(Icon, { name: "X", size: 14 }) })
+    createOpen ? /* @__PURE__ */ jsx19("div", { className: "sb-modal-backdrop", onClick: () => setCreateOpen(false), children: /* @__PURE__ */ jsxs17("form", { className: "sb-modal", onClick: (e) => e.stopPropagation(), onSubmit: handleCreateNotebook, children: [
+      /* @__PURE__ */ jsxs17("div", { className: "sb-modal-head", children: [
+        /* @__PURE__ */ jsx19("span", { children: "New research notebook" }),
+        /* @__PURE__ */ jsx19("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setCreateOpen(false), children: /* @__PURE__ */ jsx19(Icon, { name: "X", size: 14 }) })
       ] }),
-      /* @__PURE__ */ jsx18("div", { className: "sb-modal-body", children: /* @__PURE__ */ jsxs16("label", { className: "sb-field", children: [
-        /* @__PURE__ */ jsx18("span", { className: "sb-label", children: "Notebook title" }),
-        /* @__PURE__ */ jsx18(
+      /* @__PURE__ */ jsx19("div", { className: "sb-modal-body", children: /* @__PURE__ */ jsxs17("label", { className: "sb-field", children: [
+        /* @__PURE__ */ jsx19("span", { className: "sb-label", children: "Notebook title" }),
+        /* @__PURE__ */ jsx19(
           "input",
           {
             className: "sb-input",
@@ -9196,18 +10543,18 @@ Cited chunk: \`${chunk.id}\``,
           }
         )
       ] }) }),
-      /* @__PURE__ */ jsxs16("div", { className: "sb-modal-foot", children: [
-        /* @__PURE__ */ jsx18("button", { type: "button", className: "sb-btn", onClick: () => setCreateOpen(false), children: "Cancel" }),
-        /* @__PURE__ */ jsx18("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: !newTitle.trim(), children: "Create" })
+      /* @__PURE__ */ jsxs17("div", { className: "sb-modal-foot", children: [
+        /* @__PURE__ */ jsx19("button", { type: "button", className: "sb-btn", onClick: () => setCreateOpen(false), children: "Cancel" }),
+        /* @__PURE__ */ jsx19("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: !newTitle.trim(), children: "Create" })
       ] })
     ] }) }) : null,
-    searchOpen ? /* @__PURE__ */ jsx18("div", { className: "sb-modal-backdrop", onClick: () => setSearchOpen(false), children: /* @__PURE__ */ jsxs16("div", { className: "sb-modal", onClick: (e) => e.stopPropagation(), children: [
-      /* @__PURE__ */ jsxs16("div", { className: "sb-modal-head", children: [
-        /* @__PURE__ */ jsx18("span", { children: "Search across all notebooks" }),
-        /* @__PURE__ */ jsx18("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setSearchOpen(false), children: /* @__PURE__ */ jsx18(Icon, { name: "X", size: 14 }) })
+    searchOpen ? /* @__PURE__ */ jsx19("div", { className: "sb-modal-backdrop", onClick: () => setSearchOpen(false), children: /* @__PURE__ */ jsxs17("div", { className: "sb-modal", onClick: (e) => e.stopPropagation(), children: [
+      /* @__PURE__ */ jsxs17("div", { className: "sb-modal-head", children: [
+        /* @__PURE__ */ jsx19("span", { children: "Search across all notebooks" }),
+        /* @__PURE__ */ jsx19("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setSearchOpen(false), children: /* @__PURE__ */ jsx19(Icon, { name: "X", size: 14 }) })
       ] }),
-      /* @__PURE__ */ jsxs16("div", { className: "sb-modal-body", children: [
-        /* @__PURE__ */ jsx18(
+      /* @__PURE__ */ jsxs17("div", { className: "sb-modal-body", children: [
+        /* @__PURE__ */ jsx19(
           "input",
           {
             className: "sb-input",
@@ -9217,8 +10564,8 @@ Cited chunk: \`${chunk.id}\``,
             autoFocus: true
           }
         ),
-        searchHits.length === 0 && searchQuery.trim() ? /* @__PURE__ */ jsx18("div", { className: "sb-empty", children: "No matching passages found." }) : null,
-        searchHits.map((hit) => /* @__PURE__ */ jsxs16(
+        searchHits.length === 0 && searchQuery.trim() ? /* @__PURE__ */ jsx19("div", { className: "sb-empty", children: "No matching passages found." }) : null,
+        searchHits.map((hit) => /* @__PURE__ */ jsxs17(
           "div",
           {
             className: "sb-ledger-row",
@@ -9229,15 +10576,15 @@ Cited chunk: \`${chunk.id}\``,
               setInspectorTarget({ sourceId: hit.source_id, chunkId: hit.chunk_id, highlight: searchQuery.trim() });
             },
             children: [
-              /* @__PURE__ */ jsxs16("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 11.5 }, children: [
-                /* @__PURE__ */ jsxs16("strong", { children: [
+              /* @__PURE__ */ jsxs17("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 11.5 }, children: [
+                /* @__PURE__ */ jsxs17("strong", { children: [
                   hit.notebook_title,
                   " / ",
                   hit.source_title
                 ] }),
-                /* @__PURE__ */ jsx18("span", { className: "sb-mono", style: { color: "var(--ui-accent)" }, children: hit.chunk_id })
+                /* @__PURE__ */ jsx19("span", { className: "sb-mono", style: { color: "var(--ui-accent)" }, children: hit.chunk_id })
               ] }),
-              /* @__PURE__ */ jsx18("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: hit.snippet })
+              /* @__PURE__ */ jsx19("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: hit.snippet })
             ]
           },
           `${hit.notebook_id}-${hit.chunk_id}`
@@ -9248,13 +10595,13 @@ Cited chunk: \`${chunk.id}\``,
 }
 
 // desktop-src/SettingsPage.jsx
-import { useEffect as useEffect10, useState as useState13 } from "react";
-import { jsx as jsx19, jsxs as jsxs17 } from "react/jsx-runtime";
+import { useEffect as useEffect11, useState as useState14 } from "react";
+import { jsx as jsx20, jsxs as jsxs18 } from "react/jsx-runtime";
 function SettingsPage() {
-  const [caps, setCaps] = useState13(null);
-  const [modelsInfo, setModelsInfo] = useState13(null);
-  const [err, setErr] = useState13("");
-  useEffect10(() => {
+  const [caps, setCaps] = useState14(null);
+  const [modelsInfo, setModelsInfo] = useState14(null);
+  const [err, setErr] = useState14("");
+  useEffect11(() => {
     let alive = true;
     Promise.all([api("/capabilities"), api("/models").catch(() => null)]).then(([c, m]) => {
       if (!alive) return;
@@ -9284,37 +10631,37 @@ function SettingsPage() {
     "hermes config set plugins.entries.sourcebook.llm.allow_model_override true",
     "hermes config set plugins.entries.sourcebook.llm.allow_provider_override true"
   ]).join("\n");
-  return /* @__PURE__ */ jsxs17("div", { className: "sb-root", style: { height: "auto", overflow: "visible", background: "transparent" }, children: [
-    /* @__PURE__ */ jsx19(Styles, {}),
-    /* @__PURE__ */ jsxs17("div", { style: { display: "flex", flexDirection: "column", gap: 14, maxWidth: 680 }, children: [
-      /* @__PURE__ */ jsxs17("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }, children: [
-        /* @__PURE__ */ jsxs17("div", { style: { display: "flex", alignItems: "center", gap: 10 }, children: [
-          /* @__PURE__ */ jsx19("span", { className: "sb-brand-mark", style: { width: 32, height: 32, borderRadius: 8 }, children: /* @__PURE__ */ jsx19(BrandMark, { size: 20 }) }),
-          /* @__PURE__ */ jsxs17("div", { children: [
-            /* @__PURE__ */ jsx19("div", { style: { fontWeight: 650, fontSize: 14 }, children: "SourceBook Research Notebooks" }),
-            /* @__PURE__ */ jsx19("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", marginTop: 2 }, children: "Universal Hermes model routing, hybrid search, Claim Ledger contradictions, and 8 Studio formats including Audio Overviews." })
+  return /* @__PURE__ */ jsxs18("div", { className: "sb-root", style: { height: "auto", overflow: "visible", background: "transparent" }, children: [
+    /* @__PURE__ */ jsx20(Styles, {}),
+    /* @__PURE__ */ jsxs18("div", { style: { display: "flex", flexDirection: "column", gap: 14, maxWidth: 680 }, children: [
+      /* @__PURE__ */ jsxs18("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }, children: [
+        /* @__PURE__ */ jsxs18("div", { style: { display: "flex", alignItems: "center", gap: 10 }, children: [
+          /* @__PURE__ */ jsx20("span", { className: "sb-brand-mark", style: { width: 32, height: 32, borderRadius: 8 }, children: /* @__PURE__ */ jsx20(BrandMark, { size: 20 }) }),
+          /* @__PURE__ */ jsxs18("div", { children: [
+            /* @__PURE__ */ jsx20("div", { style: { fontWeight: 650, fontSize: 14 }, children: "SourceBook Research Notebooks" }),
+            /* @__PURE__ */ jsx20("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", marginTop: 2 }, children: "Universal Hermes model routing, hybrid search, Claim Ledger contradictions, and 8 Studio formats including Audio Overviews." })
           ] })
         ] }),
-        /* @__PURE__ */ jsxs17("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => sdk.host?.navigate?.("/sourcebook"), children: [
-          /* @__PURE__ */ jsx19(BrandMark, { size: 13, accent: "rgba(255,255,255,0.72)" }),
+        /* @__PURE__ */ jsxs18("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => sdk.host?.navigate?.("/sourcebook"), children: [
+          /* @__PURE__ */ jsx20(BrandMark, { size: 13, accent: "rgba(255,255,255,0.72)" }),
           " Open SourceBook"
         ] })
       ] }),
-      err ? /* @__PURE__ */ jsx19("div", { className: "sb-error-bar", style: { margin: 0 }, children: err }) : null,
-      /* @__PURE__ */ jsx19("div", { className: "sb-table-wrap", children: /* @__PURE__ */ jsxs17("table", { className: "sb-table", children: [
-        /* @__PURE__ */ jsx19("thead", { children: /* @__PURE__ */ jsxs17("tr", { children: [
-          /* @__PURE__ */ jsx19("th", { children: "Capability" }),
-          /* @__PURE__ */ jsx19("th", { children: "Status" })
+      err ? /* @__PURE__ */ jsx20("div", { className: "sb-error-bar", style: { margin: 0 }, children: err }) : null,
+      /* @__PURE__ */ jsx20("div", { className: "sb-table-wrap", children: /* @__PURE__ */ jsxs18("table", { className: "sb-table", children: [
+        /* @__PURE__ */ jsx20("thead", { children: /* @__PURE__ */ jsxs18("tr", { children: [
+          /* @__PURE__ */ jsx20("th", { children: "Capability" }),
+          /* @__PURE__ */ jsx20("th", { children: "Status" })
         ] }) }),
-        /* @__PURE__ */ jsx19("tbody", { children: rows.map(([label, status]) => /* @__PURE__ */ jsxs17("tr", { children: [
-          /* @__PURE__ */ jsx19("td", { style: { fontWeight: 550 }, children: label }),
-          /* @__PURE__ */ jsx19("td", { style: { color: "var(--ui-text-secondary)" }, children: caps ? status : "Checking..." })
+        /* @__PURE__ */ jsx20("tbody", { children: rows.map(([label, status]) => /* @__PURE__ */ jsxs18("tr", { children: [
+          /* @__PURE__ */ jsx20("td", { style: { fontWeight: 550 }, children: label }),
+          /* @__PURE__ */ jsx20("td", { style: { color: "var(--ui-text-secondary)" }, children: caps ? status : "Checking..." })
         ] }, label)) })
       ] }) }),
-      /* @__PURE__ */ jsxs17("div", { className: "sb-ledger-row", children: [
-        /* @__PURE__ */ jsxs17("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
-          /* @__PURE__ */ jsx19("strong", { style: { fontSize: 12 }, children: "Use any Hermes model per notebook" }),
-          /* @__PURE__ */ jsxs17(
+      /* @__PURE__ */ jsxs18("div", { className: "sb-ledger-row", children: [
+        /* @__PURE__ */ jsxs18("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
+          /* @__PURE__ */ jsx20("strong", { style: { fontSize: 12 }, children: "Use any Hermes model per notebook" }),
+          /* @__PURE__ */ jsxs18(
             "button",
             {
               type: "button",
@@ -9324,40 +10671,40 @@ function SettingsPage() {
                 sdk.host?.notify?.({ kind: "success", title: "SourceBook", message: "Copied Hermes config commands." });
               },
               children: [
-                /* @__PURE__ */ jsx19(Icon, { name: "Copy", size: 12 }),
+                /* @__PURE__ */ jsx20(Icon, { name: "Copy", size: 12 }),
                 " Copy commands"
               ]
             }
           )
         ] }),
-        /* @__PURE__ */ jsxs17("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: [
+        /* @__PURE__ */ jsxs18("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: [
           "SourceBook automatically works with your active Hermes model or auxiliary task slots (",
-          /* @__PURE__ */ jsx19("span", { className: "sb-mono", children: "sourcebook_chat" }),
+          /* @__PURE__ */ jsx20("span", { className: "sb-mono", children: "sourcebook_chat" }),
           ", ",
-          /* @__PURE__ */ jsx19("span", { className: "sb-mono", children: "sourcebook_studio" }),
+          /* @__PURE__ */ jsx20("span", { className: "sb-mono", children: "sourcebook_studio" }),
           ", ",
-          /* @__PURE__ */ jsx19("span", { className: "sb-mono", children: "sourcebook_audio" }),
+          /* @__PURE__ */ jsx20("span", { className: "sb-mono", children: "sourcebook_audio" }),
           ", ",
-          /* @__PURE__ */ jsx19("span", { className: "sb-mono", children: "sourcebook_ingest" }),
+          /* @__PURE__ */ jsx20("span", { className: "sb-mono", children: "sourcebook_ingest" }),
           "). To pick any provider or model per notebook directly inside SourceBook, run:"
         ] }),
-        /* @__PURE__ */ jsx19("pre", { className: "sb-mono sb-code-pre", style: { borderRadius: 7, border: "1px solid var(--ui-stroke-tertiary)" }, children: setupCmd })
+        /* @__PURE__ */ jsx20("pre", { className: "sb-mono sb-code-pre", style: { borderRadius: 7, border: "1px solid var(--ui-stroke-tertiary)" }, children: setupCmd })
       ] }),
-      /* @__PURE__ */ jsxs17("div", { className: "sb-ledger-row", children: [
-        /* @__PURE__ */ jsx19("strong", { style: { fontSize: 12 }, children: "Slash commands" }),
-        /* @__PURE__ */ jsxs17("div", { className: "sb-mono", style: { fontSize: 11.5, color: "var(--ui-text-secondary)", lineHeight: 1.7 }, children: [
+      /* @__PURE__ */ jsxs18("div", { className: "sb-ledger-row", children: [
+        /* @__PURE__ */ jsx20("strong", { style: { fontSize: 12 }, children: "Slash commands" }),
+        /* @__PURE__ */ jsxs18("div", { className: "sb-mono", style: { fontSize: 11.5, color: "var(--ui-text-secondary)", lineHeight: 1.7 }, children: [
           "/sourcebook list",
-          /* @__PURE__ */ jsx19("br", {}),
+          /* @__PURE__ */ jsx20("br", {}),
           "/sourcebook use <nb_id>",
-          /* @__PURE__ */ jsx19("br", {}),
+          /* @__PURE__ */ jsx20("br", {}),
           "/sourcebook model <nb_id> <provider/model|auto>",
-          /* @__PURE__ */ jsx19("br", {}),
+          /* @__PURE__ */ jsx20("br", {}),
           "/sourcebook sync <nb_id> <local_path>",
-          /* @__PURE__ */ jsx19("br", {}),
+          /* @__PURE__ */ jsx20("br", {}),
           "/sourcebook add <nb_id> <url or text>",
-          /* @__PURE__ */ jsx19("br", {}),
+          /* @__PURE__ */ jsx20("br", {}),
           "/sourcebook ask <nb_id> <question>",
-          /* @__PURE__ */ jsx19("br", {}),
+          /* @__PURE__ */ jsx20("br", {}),
           "/sourcebook make <nb_id> <kind> [focus]"
         ] })
       ] })
@@ -9366,12 +10713,12 @@ function SettingsPage() {
 }
 
 // desktop-src/plugin.jsx
-import { jsx as jsx20, jsxs as jsxs18 } from "react/jsx-runtime";
+import { jsx as jsx21, jsxs as jsxs19 } from "react/jsx-runtime";
 var ROUTE = "/sourcebook";
 function StatusChip({ externalState }) {
   const state = typeof sdk.useValue === "function" && externalState ? sdk.useValue(externalState) : null;
   if (!state?.title) return null;
-  return /* @__PURE__ */ jsxs18(
+  return /* @__PURE__ */ jsxs19(
     "button",
     {
       type: "button",
@@ -9379,9 +10726,9 @@ function StatusChip({ externalState }) {
       onClick: () => sdk.host?.navigate?.(ROUTE),
       title: `Open SourceBook: ${state.title}`,
       children: [
-        /* @__PURE__ */ jsx20(BrandMark, { size: 13 }),
-        /* @__PURE__ */ jsx20("span", { children: state.title }),
-        state.dueCards > 0 ? /* @__PURE__ */ jsxs18("span", { className: "sb-mono", children: [
+        /* @__PURE__ */ jsx21(BrandMark, { size: 13 }),
+        /* @__PURE__ */ jsx21("span", { children: state.title }),
+        state.dueCards > 0 ? /* @__PURE__ */ jsxs19("span", { className: "sb-mono", children: [
           "(",
           state.dueCards,
           " due)"
@@ -9393,7 +10740,7 @@ function StatusChip({ externalState }) {
 function CiteDirective({ props, externalState }) {
   const nb = props?.nb || "";
   const chunk = props?.chunk || "";
-  return /* @__PURE__ */ jsxs18(
+  return /* @__PURE__ */ jsxs19(
     "button",
     {
       type: "button",
@@ -9405,9 +10752,9 @@ function CiteDirective({ props, externalState }) {
         sdk.host?.navigate?.(ROUTE);
       },
       children: [
-        /* @__PURE__ */ jsx20(BrandMark, { size: 14 }),
-        /* @__PURE__ */ jsx20("span", { children: "SourceBook source" }),
-        chunk ? /* @__PURE__ */ jsx20("span", { className: "sb-mono", children: chunk }) : null
+        /* @__PURE__ */ jsx21(BrandMark, { size: 14 }),
+        /* @__PURE__ */ jsx21("span", { children: "SourceBook source" }),
+        chunk ? /* @__PURE__ */ jsx21("span", { className: "sb-mono", children: chunk }) : null
       ]
     }
   );
@@ -9423,7 +10770,7 @@ var plugin_default = {
       id: "page",
       area: sdk.ROUTES_AREA,
       data: { path: ROUTE },
-      render: () => /* @__PURE__ */ jsx20(SourceBookWorkspace, { ctx, externalState })
+      render: () => /* @__PURE__ */ jsx21(SourceBookWorkspace, { ctx, externalState })
     });
     ctx.register({
       id: "nav",
@@ -9446,7 +10793,7 @@ var plugin_default = {
       ctx.register({
         id: "status",
         area: sdk.STATUSBAR_AREAS.right,
-        render: () => /* @__PURE__ */ jsx20(StatusChip, { externalState })
+        render: () => /* @__PURE__ */ jsx21(StatusChip, { externalState })
       });
     }
     if (sdk.TRANSCRIPT_DIRECTIVE_AREA) {
@@ -9454,7 +10801,7 @@ var plugin_default = {
         id: "cite-directive",
         area: sdk.TRANSCRIPT_DIRECTIVE_AREA,
         data: { name: "cite" },
-        render: (props) => /* @__PURE__ */ jsx20(CiteDirective, { props, externalState })
+        render: (props) => /* @__PURE__ */ jsx21(CiteDirective, { props, externalState })
       });
     }
     if (typeof ctx.registerSettingsPage === "function") {
@@ -9462,7 +10809,7 @@ var plugin_default = {
         id: "sourcebook",
         title: "SourceBook",
         description: "Source-grounded research notebooks and Studio.",
-        render: () => /* @__PURE__ */ jsx20(SettingsPage, {})
+        render: () => /* @__PURE__ */ jsx21(SettingsPage, {})
       });
     }
   }

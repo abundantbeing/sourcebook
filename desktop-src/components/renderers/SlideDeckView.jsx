@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Icon, sdk } from '../../sdk.js'
-import { api, copyText, downloadTextFile, getContext } from '../../api.js'
-import { DitherCanvas } from '../DitherSurface.jsx'
+import { api, copyText, downloadBinaryBase64, downloadTextFile, getContext, loadArtifactMediaDataUrl } from '../../api.js'
+import { DitherCanvas, HermesSpinner } from '../DitherSurface.jsx'
 
 const SLIDE_THEMES = {
   editorial: {
@@ -53,9 +53,14 @@ const SLIDE_THEMES = {
 const LAYOUT_ACCENTS = {
   title: '#3b82f6',
   stat: '#10b981',
+  bento: '#6366f1',
+  comparison: '#f59e0b',
+  timeline: '#06b6d4',
   'two-col': '#38bdf8',
   bullets: '#3b82f6',
   quote: '#f59e0b',
+  'image-left': '#8b5cf6',
+  'image-full': '#3b82f6',
   section: '#8b5cf6',
   closing: '#10b981'
 }
@@ -67,20 +72,76 @@ function parsePct(val) {
   return Number.isFinite(n) ? Math.max(0.05, Math.min(1, n / 100)) : null
 }
 
-export function SlideDeckView({ nbId, artifact, onOpenChunk }) {
+function normalizeThemeKey(t) {
+  const k = String(t || 'editorial').toLowerCase()
+  if (SLIDE_THEMES[k]) return k
+  if (k === 'bold' || k === 'noir') return 'keynote'
+  return 'editorial'
+}
+
+export function SlideDeckView({
+  nbId,
+  artifact,
+  autoPresent = false,
+  onClearAutoPresent,
+  onOpenChunk,
+  onRequestRevise,
+  onRequestRename,
+  onRequestInspect,
+  onRequestDelete
+}) {
   const slides = artifact?.spec?.slides || []
   const [idx, setIdx] = useState(0)
   const [showNotes, setShowNotes] = useState(true)
   const [presenting, setPresenting] = useState(false)
   const [viewMode, setViewMode] = useState('stage')
-  const [themeKey, setThemeKey] = useState('editorial')
+  const [themeKey, setThemeKey] = useState(() => normalizeThemeKey(artifact?.spec?.theme || artifact?.params?.theme))
   const [elapsedSec, setElapsedSec] = useState(0)
+  const [exportingFmt, setExportingFmt] = useState('')
+  const [moreOpen, setMoreOpen] = useState(false)
+  const [showArtOverlay, setShowArtOverlay] = useState(false)
+  const [mediaUrls, setMediaUrls] = useState({})
 
   useEffect(() => {
     setIdx(0)
-    setPresenting(false)
     setViewMode('stage')
-  }, [artifact?.id])
+    setMoreOpen(false)
+    setThemeKey(normalizeThemeKey(artifact?.spec?.theme || artifact?.params?.theme))
+    if (autoPresent) {
+      setPresenting(true)
+      onClearAutoPresent?.()
+    } else {
+      setPresenting(false)
+    }
+  }, [artifact?.id, autoPresent])
+
+  // Load any locally cached Hermes ImageGen media files cleanly through plugin host
+  useEffect(() => {
+    if (!nbId || !artifact?.id || !slides.length) return undefined
+    let alive = true
+    const files = slides.map(s => s.image_file).filter(Boolean)
+    if (!files.length) return undefined
+    Promise.all(
+      files.map(async fname => {
+        try {
+          const dataUrl = await loadArtifactMediaDataUrl(nbId, artifact.id, fname)
+          return [fname, dataUrl]
+        } catch {
+          return [fname, null]
+        }
+      })
+    ).then(entries => {
+      if (!alive) return
+      const next = {}
+      entries.forEach(([k, v]) => {
+        if (v) next[k] = v
+      })
+      setMediaUrls(next)
+    })
+    return () => {
+      alive = false
+    }
+  }, [nbId, artifact?.id, slides.length])
 
   useEffect(() => {
     if (!presenting) {
@@ -104,6 +165,12 @@ export function SlideDeckView({ nbId, artifact, onOpenChunk }) {
   const mins = String(Math.floor(elapsedSec / 60)).padStart(2, '0')
   const secs = String(elapsedSec % 60).padStart(2, '0')
 
+  function resolveSlideImage(slide) {
+    if (slide?.image_file && mediaUrls[slide.image_file]) return mediaUrls[slide.image_file]
+    if (slide?.image_url && /^(data:|https?:)/.test(String(slide.image_url))) return slide.image_url
+    return null
+  }
+
   function toMarp() {
     const lines = ['---', 'marp: true', `title: ${artifact?.spec?.title || 'SourceBook Deck'}`, 'paginate: true', '---', '']
     slides.forEach((s, i) => {
@@ -118,8 +185,32 @@ export function SlideDeckView({ nbId, artifact, onOpenChunk }) {
     return lines.join('\n')
   }
 
+  async function downloadBinaryDeck(fmt) {
+    if (!nbId || !artifact?.id || exportingFmt) return
+    setExportingFmt(fmt)
+    setMoreOpen(false)
+    try {
+      const res = await api(
+        `/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(artifact.id)}/export-binary?fmt=${encodeURIComponent(fmt)}&theme=${encodeURIComponent(themeKey)}`
+      )
+      if (res?.b64) {
+        downloadBinaryBase64(
+          res.filename || `${artifact.id}.${fmt}`,
+          res.b64,
+          res.media_type || (fmt === 'pptx' ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation' : 'application/pdf')
+        )
+        sdk.host?.notify?.({ kind: 'success', title: 'SourceBook', message: `Downloaded ${res.filename || fmt.toUpperCase()}.` })
+      }
+    } catch (err) {
+      sdk.host?.notify?.({ kind: 'error', title: 'SourceBook', message: err.message || `Could not export ${fmt.toUpperCase()}.` })
+    } finally {
+      setExportingFmt('')
+    }
+  }
+
   async function downloadHtmlDeck() {
     if (!nbId || !artifact?.id) return
+    setMoreOpen(false)
     try {
       const res = await api(`/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(artifact.id)}/export-payload?fmt=html`)
       if (res?.content) {
@@ -133,11 +224,61 @@ export function SlideDeckView({ nbId, artifact, onOpenChunk }) {
   function renderSlideBody(slide, large) {
     const layout = slide.layout || 'bullets'
     const bullets = slide.bullets || []
+    const columns = slide.columns || []
+    const steps = slide.steps || []
     const statVal = slide.stat?.value
     const pct = statVal ? parsePct(statVal) : null
+    const imgSrc = resolveSlideImage(slide)
+
+    // Full-Bleed Notebook-style Generated Slide Artwork
+    if (imgSrc && (slide.image_mode === 'full_slide' || layout === 'image-full')) {
+      return (
+        <div className="sb-sl-full-art">
+          <img
+            src={imgSrc}
+            alt={slide.title || 'Generated slide'}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', borderRadius: 8 }}
+          />
+          {showArtOverlay ? (
+            <div className="sb-sl-art-overlay">
+              <div style={{ fontWeight: 700, fontSize: large ? 19 : 15, color: '#fff' }}>{slide.title}</div>
+              {bullets.length > 0 ? (
+                <ul style={{ margin: '6px 0 0', paddingLeft: 18, fontSize: large ? 13 : 11.5, color: '#e2e8f0' }}>
+                  {bullets.slice(0, 4).map((b, i) => (
+                    <li key={i}>{b}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      )
+    }
 
     // Dramatic Keynote Cover Slide
     if (layout === 'title' || layout === 'section') {
+      if (imgSrc) {
+        return (
+          <div className="sb-sl-hybrid-split">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'center' }}>
+              <div className="sb-sl-eyebrow" style={{ color: theme.accent, borderColor: theme.border, background: theme.cardBg, alignSelf: 'flex-start' }}>
+                <span className="sb-dt-dot" style={{ background: theme.accent }} />
+                <span>{layout === 'title' ? 'SOURCEBOOK PRESENTATION' : 'SECTION BREAK'}</span>
+              </div>
+              <h2 style={{ margin: 0, fontSize: large ? 34 : 26, fontWeight: 780, lineHeight: 1.15, letterSpacing: '-0.025em', color: theme.fg }}>
+                {slide.title}
+              </h2>
+              <div style={{ width: 64, height: 3, borderRadius: 99, background: `linear-gradient(90deg, ${theme.accent}, ${theme.secondary})` }} />
+              {slide.body ? (
+                <p style={{ margin: 0, fontSize: large ? 15.5 : 13.5, color: theme.muted, lineHeight: 1.5 }}>{slide.body}</p>
+              ) : null}
+            </div>
+            <div className="sb-sl-hybrid-art" style={{ borderColor: theme.border }}>
+              <img src={imgSrc} alt={slide.title || 'Slide artwork'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            </div>
+          </div>
+        )
+      }
       return (
         <div className="sb-sl-cover">
           <div
@@ -184,10 +325,7 @@ export function SlideDeckView({ nbId, artifact, onOpenChunk }) {
       const dash = circ * (pct ?? 0.78)
       return (
         <div className="sb-sl-stat-split">
-          <div
-            className="sb-sl-stat-hero"
-            style={{ background: theme.cardBg, borderColor: theme.border }}
-          >
+          <div className="sb-sl-stat-hero" style={{ background: theme.cardBg, borderColor: theme.border }}>
             <DitherCanvas
               variant="mesh"
               animated={false}
@@ -257,6 +395,73 @@ export function SlideDeckView({ nbId, artifact, onOpenChunk }) {
       )
     }
 
+    // Side-by-Side Comparison Slide
+    if (layout === 'comparison' && columns.length >= 2) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBlock: 'auto' }}>
+          <h2 style={{ margin: 0, fontSize: large ? 27 : 21, fontWeight: 730, lineHeight: 1.22, letterSpacing: '-0.02em', color: theme.fg }}>
+            {slide.title}
+          </h2>
+          <div className="sb-sl-comparison">
+            {columns.slice(0, 2).map((col, cIdx) => {
+              const colAcc = cIdx === 0 ? theme.accent : theme.secondary
+              return (
+                <div
+                  key={cIdx}
+                  className="sb-sl-comp-col"
+                  style={{ background: theme.cardBg, borderColor: theme.border, borderTopColor: colAcc }}
+                >
+                  <div className="sb-mono" style={{ fontSize: 11.5, fontWeight: 750, letterSpacing: '0.06em', textTransform: 'uppercase', color: colAcc }}>
+                    {col.heading || `Column ${cIdx + 1}`}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {(col.points || []).slice(0, 5).map((pt, pIdx) => (
+                      <div key={pIdx} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: large ? 14 : 12.5, color: theme.fg, lineHeight: 1.45 }}>
+                        <span className="sb-dt-dot" style={{ background: colAcc, marginTop: 6 }} />
+                        <span>{pt}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )
+    }
+
+    // Horizontal Connected Timeline Slide
+    if (layout === 'timeline' && steps.length > 0) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginBlock: 'auto' }}>
+          <h2 style={{ margin: 0, fontSize: large ? 27 : 21, fontWeight: 730, lineHeight: 1.22, letterSpacing: '-0.02em', color: theme.fg }}>
+            {slide.title}
+          </h2>
+          <div className="sb-sl-timeline" style={{ gridTemplateColumns: `repeat(${Math.min(4, steps.length)}, minmax(0, 1fr))` }}>
+            {steps.slice(0, 4).map((st, sIdx) => {
+              const sAcc = sIdx % 2 === 0 ? theme.accent : theme.secondary
+              return (
+                <div key={sIdx} className="sb-sl-step-card" style={{ background: theme.cardBg, borderColor: theme.border }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span className="sb-mono sb-sl-step-pill" style={{ background: sAcc, color: '#fff' }}>
+                      0{sIdx + 1}
+                    </span>
+                    <div style={{ flex: 1, height: 1.5, background: theme.border }} />
+                  </div>
+                  <strong style={{ fontSize: large ? 14.5 : 13, color: theme.fg, lineHeight: 1.3 }}>
+                    {st.label || st.title || `Phase ${sIdx + 1}`}
+                  </strong>
+                  <span style={{ fontSize: large ? 13 : 11.5, color: theme.muted, lineHeight: 1.45 }}>
+                    {st.detail || st.summary || ''}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )
+    }
+
     // Editorial Pull-Quote Slide
     if (layout === 'quote') {
       return (
@@ -278,6 +483,37 @@ export function SlideDeckView({ nbId, artifact, onOpenChunk }) {
           >
             "{slide.body || bullets[0] || slide.title}"
           </blockquote>
+        </div>
+      )
+    }
+
+    // Hybrid Illustrated Split Slide (Editable Text Left + Hermes Generated Visual Right!)
+    if (imgSrc) {
+      return (
+        <div className="sb-sl-hybrid-split">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, justifyContent: 'center', minWidth: 0 }}>
+            <h2 style={{ margin: 0, fontSize: large ? 25 : 19.5, fontWeight: 730, lineHeight: 1.22, letterSpacing: '-0.02em', color: theme.fg }}>
+              {slide.title}
+            </h2>
+            {slide.body ? (
+              <p style={{ margin: 0, fontSize: large ? 14 : 12.5, color: theme.muted, lineHeight: 1.5 }}>{slide.body}</p>
+            ) : null}
+            {bullets.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                {bullets.slice(0, 4).map((b, bIdx) => (
+                  <div key={bIdx} className="sb-sl-point" style={{ background: theme.cardBg, borderColor: theme.border }}>
+                    <span className="sb-mono sb-sl-step" style={{ color: bIdx % 2 === 0 ? theme.accent : theme.secondary }}>
+                      0{bIdx + 1}
+                    </span>
+                    <span style={{ fontSize: large ? 13.5 : 12, color: theme.fg, lineHeight: 1.45 }}>{b}</span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+          <div className="sb-sl-hybrid-art" style={{ borderColor: theme.border }}>
+            <img src={imgSrc} alt={slide.title || 'Slide illustration'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          </div>
         </div>
       )
     }
@@ -314,8 +550,8 @@ export function SlideDeckView({ nbId, artifact, onOpenChunk }) {
       )
     }
 
-    // Modular Bullets / Two-Col Evidence Cards
-    const useTwoCol = layout === 'two-col' || bullets.length >= 3
+    // Modular Bento / Two-Col / Bullets Evidence Cards
+    const useTwoCol = layout === 'two-col' || layout === 'bento' || bullets.length >= 3
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBlock: 'auto' }}>
         <h2
@@ -330,13 +566,6 @@ export function SlideDeckView({ nbId, artifact, onOpenChunk }) {
         >
           {slide.title}
         </h2>
-        {slide.image_url ? (
-          <img
-            src={slide.image_url}
-            alt={slide.title || 'Slide illustration'}
-            style={{ width: '100%', maxHeight: large ? 220 : 140, objectFit: 'cover', borderRadius: 9, border: `1px solid ${theme.border}` }}
-          />
-        ) : null}
         {slide.body ? (
           <p style={{ margin: 0, fontSize: large ? 15 : 13, color: theme.muted, lineHeight: 1.55 }}>{slide.body}</p>
         ) : null}
@@ -369,6 +598,8 @@ export function SlideDeckView({ nbId, artifact, onOpenChunk }) {
 
   function renderSlideCard(slide, slideIdx, large = false) {
     const layout = slide.layout || 'bullets'
+    const imgSrc = resolveSlideImage(slide)
+    const isFullArt = Boolean(imgSrc && (slide.image_mode === 'full_slide' || layout === 'image-full'))
     const isHero = layout === 'title' || layout === 'closing' || layout === 'section'
     return (
       <section
@@ -377,52 +608,71 @@ export function SlideDeckView({ nbId, artifact, onOpenChunk }) {
           background: theme.bg,
           borderColor: theme.border,
           color: theme.fg,
-          ...(large ? { maxWidth: 1020, width: '100%', padding: '36px 44px' } : {})
+          ...(isFullArt ? { padding: 0, gap: 0 } : large ? { maxWidth: 1020, width: '100%', padding: '36px 44px' } : {})
         }}
       >
-        <div
-          className="sb-sl-top-ribbon"
-          style={{ background: `linear-gradient(90deg, ${theme.accent}, ${theme.secondary})` }}
-        />
-        {isHero ? (
-          <DitherCanvas
-            variant="aurora"
-            animated={presenting}
-            color={theme.accent}
-            secondaryColor={theme.secondary}
-            opacity={themeKey === 'paper' ? 0.14 : 0.24}
-            cols={160}
-            rows={28}
-            style={{ position: 'absolute', inset: '0 0 auto 0', width: '100%', height: 110, pointerEvents: 'none' }}
-          />
-        ) : null}
+        {!isFullArt ? (
+          <>
+            <div
+              className="sb-sl-top-ribbon"
+              style={{ background: `linear-gradient(90deg, ${theme.accent}, ${theme.secondary})` }}
+            />
+            {isHero ? (
+              <DitherCanvas
+                variant="aurora"
+                animated={presenting}
+                color={theme.accent}
+                secondaryColor={theme.secondary}
+                opacity={themeKey === 'paper' ? 0.14 : 0.24}
+                cols={160}
+                rows={28}
+                style={{ position: 'absolute', inset: '0 0 auto 0', width: '100%', height: 110, pointerEvents: 'none' }}
+              />
+            ) : null}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
-          <span
-            className="sb-kind-tag"
-            style={{ background: theme.cardBg, borderColor: theme.border, color: theme.muted }}
-          >
-            {layout}
-          </span>
-          <span className="sb-mono" style={{ fontSize: 11, color: theme.dim }}>
-            {String(slideIdx + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
-          </span>
-        </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
+              <span
+                className="sb-kind-tag"
+                style={{ background: theme.cardBg, borderColor: theme.border, color: theme.muted }}
+              >
+                {layout}
+              </span>
+              <span className="sb-mono" style={{ fontSize: 11, color: theme.dim }}>
+                {String(slideIdx + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
+              </span>
+            </div>
+          </>
+        ) : null}
 
         <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 0 }}>
           {renderSlideBody(slide, large)}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', paddingTop: 10, borderTop: `1px solid ${theme.border}` }}>
-          <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-            {(slide.cites || []).map((cid, cIdx) => (
-              <button key={cid} type="button" className="sb-cite" onClick={() => onOpenChunk?.(cid)} title={`Inspect ${cid}`}>
-                {cIdx + 1}
-              </button>
-            ))}
+        {!isFullArt ? (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', paddingTop: 10, borderTop: `1px solid ${theme.border}` }}>
+            <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+              {(slide.cites || []).map((cid, cIdx) => (
+                <button key={cid} type="button" className="sb-cite" onClick={() => onOpenChunk?.(cid)} title={`Inspect ${cid}`}>
+                  {cIdx + 1}
+                </button>
+              ))}
+            </div>
+            <span style={{ fontSize: 11, color: theme.dim }}>{artifact?.spec?.title || 'SourceBook Deck'}</span>
           </div>
-          <span style={{ fontSize: 11, color: theme.dim }}>{artifact?.spec?.title || 'SourceBook Deck'}</span>
-        </div>
+        ) : (
+          <div className="sb-sl-full-art-bar">
+            <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+              {(slide.cites || []).map((cid, cIdx) => (
+                <button key={cid} type="button" className="sb-cite" onClick={() => onOpenChunk?.(cid)} title={`Inspect ${cid}`}>
+                  {cIdx + 1}
+                </button>
+              ))}
+            </div>
+            <button type="button" className="sb-btn" style={{ padding: '3px 8px', fontSize: 11 }} onClick={() => setShowArtOverlay(v => !v)}>
+              {showArtOverlay ? 'Hide text overlay' : 'Source text'}
+            </button>
+          </div>
+        )}
       </section>
     )
   }
@@ -457,7 +707,7 @@ export function SlideDeckView({ nbId, artifact, onOpenChunk }) {
               Stage
             </button>
             <button type="button" className="sb-seg-btn" data-active={viewMode === 'grid'} onClick={() => setViewMode('grid')}>
-              Overview Grid
+              Overview
             </button>
           </div>
 
@@ -476,26 +726,112 @@ export function SlideDeckView({ nbId, artifact, onOpenChunk }) {
           </select>
         </div>
 
-        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-          <button type="button" className="sb-btn sb-btn-primary" onClick={() => setPresenting(true)} title="Launch full-window Presenter Mode">
-            <Icon name="Play" size={12} /> Present
+        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', position: 'relative' }}>
+          <button type="button" className="sb-btn sb-btn-primary" onClick={() => setPresenting(true)} title="Start full-window slideshow">
+            <Icon name="Play" size={12} /> Slideshow
           </button>
-          <button type="button" className="sb-btn" data-active={showNotes} onClick={() => setShowNotes(v => !v)}>
-            Notes
+          <button
+            type="button"
+            className="sb-btn"
+            disabled={Boolean(exportingFmt)}
+            onClick={() => downloadBinaryDeck('pptx')}
+            title="Download native PowerPoint (.pptx)"
+          >
+            {exportingFmt === 'pptx' ? <HermesSpinner size={12} /> : <Icon name="Download" size={12} />} PPTX
           </button>
-          <button type="button" className="sb-btn" onClick={() => { copyText(toMarp()); sdk.host?.notify?.({ kind: 'success', title: 'SourceBook', message: 'Copied Marp deck Markdown.' }) }}>
-            <Icon name="Copy" size={12} /> Marp
+          <button
+            type="button"
+            className="sb-btn"
+            disabled={Boolean(exportingFmt)}
+            onClick={() => downloadBinaryDeck('pdf')}
+            title="Download 16:9 PDF Document (.pdf)"
+          >
+            {exportingFmt === 'pdf' ? <HermesSpinner size={12} /> : <Icon name="FileText" size={12} />} PDF
           </button>
-          <button type="button" className="sb-btn" onClick={downloadHtmlDeck} title="Download self-contained offline HTML presentation">
-            <Icon name="Download" size={12} /> HTML Deck
+          {onRequestRevise ? (
+            <button type="button" className="sb-btn" onClick={() => onRequestRevise(artifact)} title="Revise this slide deck with AI instructions">
+              <Icon name="Sparkles" size={12} /> Revise
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="sb-btn sb-btn-icon"
+            data-active={moreOpen}
+            onClick={() => setMoreOpen(v => !v)}
+            title="More slide deck actions"
+            aria-label="More slide deck actions"
+          >
+            <Icon name="MoreVertical" size={13} />
           </button>
+
+          {moreOpen ? (
+            <div className="sb-art-menu" style={{ top: 'calc(100% + 6px)', right: 0 }}>
+              <button type="button" className="sb-art-menu-item" onClick={() => { setMoreOpen(false); setShowNotes(v => !v) }}>
+                <Icon name="FileText" size={13} /> {showNotes ? 'Hide speaker notes' : 'Show speaker notes'}
+              </button>
+              <button type="button" className="sb-art-menu-item" onClick={() => downloadBinaryDeck('pdf')}>
+                <Icon name="Download" size={13} /> Download PDF Document (.pdf)
+              </button>
+              <button type="button" className="sb-art-menu-item" onClick={() => downloadBinaryDeck('pptx')}>
+                <Icon name="Presentation" size={13} /> Download PowerPoint (.pptx)
+              </button>
+              <button type="button" className="sb-art-menu-item" onClick={() => { setMoreOpen(false); setPresenting(true) }}>
+                <Icon name="Play" size={13} /> Start slideshow
+              </button>
+              {onRequestRevise ? (
+                <button type="button" className="sb-art-menu-item" onClick={() => { setMoreOpen(false); onRequestRevise(artifact) }}>
+                  <Icon name="Sparkles" size={13} /> Revise
+                </button>
+              ) : null}
+              {onRequestRename ? (
+                <button type="button" className="sb-art-menu-item" onClick={() => { setMoreOpen(false); onRequestRename(artifact) }}>
+                  <Icon name="Edit3" size={13} /> Rename
+                </button>
+              ) : null}
+              {onRequestInspect ? (
+                <button type="button" className="sb-art-menu-item" onClick={() => { setMoreOpen(false); onRequestInspect(artifact) }}>
+                  <Icon name="Info" size={13} /> View prompt and sources
+                </button>
+              ) : null}
+              <div className="sb-art-menu-sep" />
+              <button type="button" className="sb-art-menu-item" onClick={downloadHtmlDeck}>
+                <Icon name="Code" size={13} /> Download HTML Deck (.html)
+              </button>
+              <button
+                type="button"
+                className="sb-art-menu-item"
+                onClick={() => {
+                  setMoreOpen(false)
+                  copyText(toMarp())
+                  sdk.host?.notify?.({ kind: 'success', title: 'SourceBook', message: 'Copied Marp deck Markdown.' })
+                }}
+              >
+                <Icon name="Copy" size={13} /> Copy Marp Markdown
+              </button>
+              {onRequestDelete ? (
+                <>
+                  <div className="sb-art-menu-sep" />
+                  <button type="button" className="sb-art-menu-item sb-art-menu-danger" onClick={() => { setMoreOpen(false); onRequestDelete(artifact.id) }}>
+                    <Icon name="Trash2" size={13} /> Delete
+                  </button>
+                </>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </div>
+
+      {artifact?.grounding?.image_notice ? (
+        <div className="sb-quote-box" style={{ fontSize: 11.5 }}>
+          {artifact.grounding.image_notice}
+        </div>
+      ) : null}
 
       {viewMode === 'grid' ? (
         <div className="sb-sl-overview-grid">
           {slides.map((s, sIdx) => {
             const lColor = LAYOUT_ACCENTS[s.layout] || 'var(--ui-accent)'
+            const thumbImg = resolveSlideImage(s)
             return (
               <button
                 key={sIdx}
@@ -507,6 +843,13 @@ export function SlideDeckView({ nbId, artifact, onOpenChunk }) {
                   setViewMode('stage')
                 }}
               >
+                {thumbImg ? (
+                  <img
+                    src={thumbImg}
+                    alt={s.title || `Slide ${sIdx + 1}`}
+                    style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 6, marginBottom: 6 }}
+                  />
+                ) : null}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span className="sb-mono" style={{ fontSize: 10.5, fontWeight: 700, color: lColor }}>
                     {String(sIdx + 1).padStart(2, '0')} · {String(s.layout || 'slide').toUpperCase()}
@@ -520,11 +863,6 @@ export function SlideDeckView({ nbId, artifact, onOpenChunk }) {
                 <div style={{ fontSize: 13, fontWeight: 650, color: 'var(--ui-text-primary)', lineHeight: 1.32, textAlign: 'left' }}>
                   {s.title}
                 </div>
-                {(s.bullets || []).length > 0 ? (
-                  <div style={{ fontSize: 11, color: 'var(--ui-text-tertiary)', textAlign: 'left' }}>
-                    {s.bullets.length} takeaway{s.bullets.length === 1 ? '' : 's'}
-                  </div>
-                ) : null}
               </button>
             )
           })}
@@ -584,7 +922,7 @@ export function SlideDeckView({ nbId, artifact, onOpenChunk }) {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span className="sb-kind-tag">Presenter Mode</span>
+                <span className="sb-kind-tag">Slideshow</span>
                 <span className="sb-mono" style={{ fontSize: 12.5, color: 'var(--ui-text-secondary)' }}>{mins}:{secs}</span>
                 <span className="sb-mono" style={{ fontSize: 11.5, color: 'var(--ui-text-tertiary)' }}>
                   Slide {idx + 1} of {slides.length}

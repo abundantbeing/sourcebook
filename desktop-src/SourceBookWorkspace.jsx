@@ -775,6 +775,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
           <StudioPanel
             ctx={ctx}
             nbId={nbId}
+            sources={sources}
             hasActiveSources={hasActiveSources}
             capabilities={capabilities}
             artifacts={artifacts}

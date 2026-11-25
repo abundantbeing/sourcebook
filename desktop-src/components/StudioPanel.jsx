@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { Icon } from '../sdk.js'
-import { api, pollJob } from '../api.js'
+import { Icon, sdk } from '../sdk.js'
+import { api, downloadBinaryBase64, pollJob } from '../api.js'
 import { HermesSpinner } from './DitherSurface.jsx'
+import { SlideDeckModal } from './SlideDeckModal.jsx'
 import { StudyGuideView } from './renderers/StudyGuideView.jsx'
 import { AudioOverviewView } from './renderers/AudioOverviewView.jsx'
 import { FlashcardsView } from './renderers/FlashcardsView.jsx'
@@ -27,6 +28,7 @@ const KIND_META = Object.fromEntries(STUDIO_FORMATS.map(f => [f.kind, f]))
 export function StudioPanel({
   ctx,
   nbId,
+  sources,
   hasActiveSources,
   capabilities,
   artifacts,
@@ -49,6 +51,14 @@ export function StudioPanel({
   const [count, setCount] = useState(8)
   const [language, setLanguage] = useState('English')
   const [includeImages, setIncludeImages] = useState(false)
+  const [slideModalOpen, setSlideModalOpen] = useState(false)
+  const [slideModalMode, setSlideModalMode] = useState('create')
+  const [slideModalArt, setSlideModalArt] = useState(null)
+  const [openMenuId, setOpenMenuId] = useState('')
+  const [autoPresentId, setAutoPresentId] = useState('')
+  const [renameTarget, setRenameTarget] = useState(null)
+  const [renameValue, setRenameValue] = useState('')
+  const [inspectTarget, setInspectTarget] = useState(null)
   const cancelPollRef = useRef(null)
 
   useEffect(() => {
@@ -90,9 +100,13 @@ export function StudioPanel({
       ...(includeImages && capabilities?.image_generate ? { include_images: true } : {})
     }
     try {
+      const body = { kind, params }
+      if (Array.isArray(params.source_ids) && params.source_ids.length > 0) {
+        body.source_ids = params.source_ids
+      }
       const { job } = await api(`/notebooks/${encodeURIComponent(nbId)}/studio`, {
         method: 'POST',
-        body: { kind, params }
+        body
       })
       cancelPollRef.current?.()
       cancelPollRef.current = pollJob(
@@ -120,8 +134,49 @@ export function StudioPanel({
     }
   }
 
+  async function runSlideRevision(aid, revisionPrompt, params) {
+    if (!nbId || !aid || runningKind) return
+    setRunningKind('slides')
+    setStage('Revising slide deck...')
+    try {
+      const { job } = await api(`/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(aid)}/revise`, {
+        method: 'POST',
+        body: {
+          prompt: revisionPrompt,
+          params,
+          source_ids: params?.source_ids
+        }
+      })
+      cancelPollRef.current?.()
+      cancelPollRef.current = pollJob(
+        ctx,
+        job,
+        j => setStage(j.stage || 'Revising...'),
+        async result => {
+          setRunningKind('')
+          setStage('')
+          await onRefresh()
+          if (result?.id) {
+            setActiveArt(result)
+            onSelectArtifact?.(result.id)
+          }
+        },
+        err => {
+          setRunningKind('')
+          setStage('')
+          onError?.(err.message || 'Could not revise slide deck.')
+        }
+      )
+    } catch (err) {
+      setRunningKind('')
+      setStage('')
+      onError?.(err.message || 'Could not start slide revision.')
+    }
+  }
+
   async function deleteArtifact(e, aid) {
-    e.stopPropagation()
+    e?.stopPropagation?.()
+    setOpenMenuId('')
     try {
       await api(`/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(aid)}`, { method: 'DELETE' })
       if (selectedArtifactId === aid) {
@@ -132,6 +187,57 @@ export function StudioPanel({
     } catch (err) {
       onError?.(err.message || 'Could not delete artifact.')
     }
+  }
+
+  async function submitRename() {
+    if (!renameTarget || !renameValue.trim()) return
+    try {
+      const updated = await api(`/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(renameTarget.id)}`, {
+        method: 'PATCH',
+        body: { title: renameValue.trim() }
+      })
+      if (activeArt?.id === renameTarget.id) setActiveArt(updated)
+      setRenameTarget(null)
+      await onRefresh()
+    } catch (err) {
+      onError?.(err.message || 'Could not rename artifact.')
+    }
+  }
+
+  async function quickDownloadSlideDeck(art, fmt) {
+    setOpenMenuId('')
+    try {
+      const theme = art?.spec?.theme || art?.params?.theme || 'keynote'
+      const res = await api(
+        `/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(art.id)}/export-binary?fmt=${encodeURIComponent(fmt)}&theme=${encodeURIComponent(theme)}`
+      )
+      if (res?.b64) {
+        downloadBinaryBase64(res.filename || `${art.id}.${fmt}`, res.b64, res.media_type)
+        sdk.host?.notify?.({ kind: 'success', title: 'SourceBook', message: `Downloaded ${res.filename || fmt.toUpperCase()}.` })
+      }
+    } catch (err) {
+      onError?.(err.message || `Could not download ${fmt.toUpperCase()}.`)
+    }
+  }
+
+  function openCustomizeSlides(mode = 'create', art = null) {
+    setOpenMenuId('')
+    setSlideModalMode(mode)
+    setSlideModalArt(art)
+    setSlideModalOpen(true)
+  }
+
+  function handleTileClick(kind) {
+    if (kind === 'slides') {
+      openCustomizeSlides('create', null)
+      return
+    }
+    runGenerator(kind)
+  }
+
+  function sourceNamesForArtifact(art) {
+    const map = Object.fromEntries((sources || []).map(s => [s.id, s.title]))
+    return (art?.source_ids || []).map(sid => map[sid] || sid)
   }
 
   function renderViewer() {
@@ -168,7 +274,22 @@ export function StudioPanel({
       case 'table':
         return <DataTableView artifact={activeArt} onOpenChunk={onOpenChunk} />
       case 'slides':
-        return <SlideDeckView nbId={nbId} artifact={activeArt} onOpenChunk={onOpenChunk} />
+        return (
+          <SlideDeckView
+            nbId={nbId}
+            artifact={activeArt}
+            autoPresent={autoPresentId === activeArt.id}
+            onClearAutoPresent={() => setAutoPresentId('')}
+            onOpenChunk={onOpenChunk}
+            onRequestRevise={art => openCustomizeSlides('revise', art)}
+            onRequestRename={art => {
+              setRenameTarget(art)
+              setRenameValue(art.title || '')
+            }}
+            onRequestInspect={art => setInspectTarget(art)}
+            onRequestDelete={aid => deleteArtifact(null, aid)}
+          />
+        )
       default:
         return <pre className="sb-mono" style={{ fontSize: 11 }}>{JSON.stringify(activeArt.spec, null, 2)}</pre>
     }
@@ -223,6 +344,12 @@ export function StudioPanel({
               </button>
             </div>
           </div>
+          {runningKind ? (
+            <div style={{ padding: '7px 14px', fontSize: 11.5, color: 'var(--ui-text-secondary)', display: 'flex', alignItems: 'center', gap: 7, borderBottom: '1px solid var(--ui-stroke-tertiary)' }}>
+              <HermesSpinner size={12} />
+              <span>{stage}</span>
+            </div>
+          ) : null}
           <div className="sb-viewer-body sb-scroll">{renderViewer()}</div>
         </div>
       ) : (
@@ -319,7 +446,8 @@ export function StudioPanel({
                 type="button"
                 className="sb-studio-tile"
                 disabled={!hasActiveSources || Boolean(runningKind)}
-                onClick={() => runGenerator(fmt.kind)}
+                onClick={() => handleTileClick(fmt.kind)}
+                title={fmt.kind === 'slides' ? 'Customize Slide Deck (format, sources, prompt, Hermes ImageGen, outline review)' : `Generate ${fmt.label}`}
               >
                 <Icon name={fmt.icon} size={14} style={{ color: 'var(--ui-accent)', flexShrink: 0 }} />
                 <span>{runningKind === fmt.kind ? 'Generating...' : fmt.label}</span>
@@ -350,14 +478,21 @@ export function StudioPanel({
             ) : (
               artifacts.map(art => {
                 const meta = KIND_META[art.kind] || { label: art.kind, icon: 'FileText' }
+                const isSlides = art.kind === 'slides'
+                const srcCount = (art.source_ids || []).length
+                const menuOpen = openMenuId === art.id
                 return (
                   <div
                     key={art.id}
                     className="sb-art-item"
                     data-active={selectedArtifactId === art.id}
+                    style={{ position: 'relative' }}
                     role="button"
                     tabIndex={0}
-                    onClick={() => onSelectArtifact?.(art.id)}
+                    onClick={() => {
+                      setOpenMenuId('')
+                      onSelectArtifact?.(art.id)
+                    }}
                     onKeyDown={e => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault()
@@ -371,18 +506,80 @@ export function StudioPanel({
                         <div className="sb-src-title" title={art.title}>{art.title}</div>
                         <div style={{ fontSize: 11, color: 'var(--ui-text-tertiary)', display: 'flex', alignItems: 'center', gap: 5 }}>
                           <span>{meta.label}</span>
+                          {srcCount > 0 ? <span>· {srcCount} src</span> : null}
                           {art.stale ? <span className="sb-verdict" data-v="partial">Stale</span> : null}
                         </div>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      className="sb-btn sb-btn-ghost sb-btn-icon sb-btn-danger"
-                      title="Delete artifact"
-                      onClick={e => deleteArtifact(e, art.id)}
-                    >
-                      <Icon name="Trash2" size={13} />
-                    </button>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <button
+                        type="button"
+                        className="sb-btn sb-btn-ghost sb-btn-icon"
+                        title="More options"
+                        aria-label={`More options for ${art.title}`}
+                        onClick={e => {
+                          e.stopPropagation()
+                          setOpenMenuId(cur => (cur === art.id ? '' : art.id))
+                        }}
+                      >
+                        <Icon name="MoreVertical" size={13} />
+                      </button>
+                    </div>
+
+                    {menuOpen ? (
+                      <div className="sb-art-menu" style={{ top: 'calc(100% + 2px)', right: 8 }} onClick={e => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className="sb-art-menu-item"
+                          onClick={() => {
+                            setOpenMenuId('')
+                            setRenameTarget(art)
+                            setRenameValue(art.title || '')
+                          }}
+                        >
+                          <Icon name="Edit3" size={13} /> Rename
+                        </button>
+                        {isSlides ? (
+                          <>
+                            <button type="button" className="sb-art-menu-item" onClick={() => quickDownloadSlideDeck(art, 'pdf')}>
+                              <Icon name="FileText" size={13} /> Download PDF Document (.pdf)
+                            </button>
+                            <button type="button" className="sb-art-menu-item" onClick={() => quickDownloadSlideDeck(art, 'pptx')}>
+                              <Icon name="Presentation" size={13} /> Download PowerPoint (.pptx)
+                            </button>
+                            <button
+                              type="button"
+                              className="sb-art-menu-item"
+                              onClick={() => {
+                                setOpenMenuId('')
+                                setAutoPresentId(art.id)
+                                onSelectArtifact?.(art.id)
+                              }}
+                            >
+                              <Icon name="Play" size={13} /> Start slideshow
+                            </button>
+                            <button type="button" className="sb-art-menu-item" onClick={() => openCustomizeSlides('revise', art)}>
+                              <Icon name="Sparkles" size={13} /> Revise
+                            </button>
+                          </>
+                        ) : null}
+                        <button
+                          type="button"
+                          className="sb-art-menu-item"
+                          onClick={() => {
+                            setOpenMenuId('')
+                            setInspectTarget(art)
+                          }}
+                        >
+                          <Icon name="Info" size={13} /> View prompt and sources
+                        </button>
+                        <div className="sb-art-menu-sep" />
+                        <button type="button" className="sb-art-menu-item sb-art-menu-danger" onClick={e => deleteArtifact(e, art.id)}>
+                          <Icon name="Trash2" size={13} /> Delete
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 )
               })
@@ -390,6 +587,98 @@ export function StudioPanel({
           </div>
         </>
       )}
+
+      {/* Customize / Revise Slide Deck Modal */}
+      <SlideDeckModal
+        open={slideModalOpen}
+        nbId={nbId}
+        sources={sources}
+        capabilities={capabilities}
+        initialFocus={focusPrompt}
+        initialArtifact={slideModalArt}
+        mode={slideModalMode}
+        onClose={() => setSlideModalOpen(false)}
+        onGenerate={params => runGenerator('slides', params)}
+        onRevise={runSlideRevision}
+      />
+
+      {/* Rename Artifact Modal */}
+      {renameTarget ? (
+        <div className="sb-modal-backdrop" onClick={() => setRenameTarget(null)}>
+          <div className="sb-modal" onClick={e => e.stopPropagation()}>
+            <div className="sb-modal-head">
+              <span>Rename {KIND_META[renameTarget.kind]?.label || 'Artifact'}</span>
+              <button type="button" className="sb-btn sb-btn-ghost sb-btn-icon" onClick={() => setRenameTarget(null)}>
+                <Icon name="X" size={14} />
+              </button>
+            </div>
+            <div className="sb-modal-body">
+              <input
+                className="sb-input"
+                value={renameValue}
+                onChange={e => setRenameValue(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') submitRename()
+                }}
+                autoFocus
+              />
+            </div>
+            <div className="sb-modal-foot">
+              <button type="button" className="sb-btn" onClick={() => setRenameTarget(null)}>Cancel</button>
+              <button type="button" className="sb-btn sb-btn-primary" onClick={submitRename}>Save</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* View Prompt & Sources Modal */}
+      {inspectTarget ? (
+        <div className="sb-modal-backdrop" onClick={() => setInspectTarget(null)}>
+          <div className="sb-modal" onClick={e => e.stopPropagation()}>
+            <div className="sb-modal-head">
+              <span>Prompt &amp; Sources</span>
+              <button type="button" className="sb-btn sb-btn-ghost sb-btn-icon" onClick={() => setInspectTarget(null)}>
+                <Icon name="X" size={14} />
+              </button>
+            </div>
+            <div className="sb-modal-body" style={{ gap: 12 }}>
+              <div>
+                <div className="sb-label" style={{ marginBottom: 4 }}>Title</div>
+                <div style={{ fontSize: 13.5, fontWeight: 650, color: 'var(--ui-text-primary)' }}>{inspectTarget.title}</div>
+              </div>
+              <div>
+                <div className="sb-label" style={{ marginBottom: 4 }}>Prompt / Instructions</div>
+                <div className="sb-quote-box" style={{ fontSize: 12 }}>
+                  {inspectTarget.params?.instructions || inspectTarget.params?.focus || 'Default notebook synthesis'}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {inspectTarget.params?.deck_format ? <span className="sb-kind-tag">Format: {inspectTarget.params.deck_format}</span> : null}
+                {inspectTarget.params?.deck_purpose ? <span className="sb-kind-tag">Style: {inspectTarget.params.deck_purpose}</span> : null}
+                {inspectTarget.params?.language ? <span className="sb-kind-tag">Lang: {inspectTarget.params.language}</span> : null}
+                {inspectTarget.params?.include_images ? (
+                  <span className="sb-kind-tag">ImageGen: {inspectTarget.params.image_mode || 'on'}</span>
+                ) : (
+                  <span className="sb-kind-tag">Native Vector Slides</span>
+                )}
+              </div>
+              <div>
+                <div className="sb-label" style={{ marginBottom: 6 }}>Included Sources ({sourceNamesForArtifact(inspectTarget).length})</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  {sourceNamesForArtifact(inspectTarget).map((name, i) => (
+                    <div key={i} className="sb-ledger-row" style={{ padding: '6px 9px', fontSize: 12 }}>
+                      {name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="sb-modal-foot">
+              <button type="button" className="sb-btn sb-btn-primary" onClick={() => setInspectTarget(null)}>Done</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </aside>
   )
 }

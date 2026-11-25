@@ -542,6 +542,8 @@ def _probe_import(module_name: str) -> bool:
 def probe_capabilities(ctx: Any = None) -> dict[str, Any]:
     """Feature-detect optional Hermes tools, Python extractors, TTS/STT, and model routing for the Desktop UI."""
     models_info = list_available_models()
+    cfg = _load_hermes_config()
+    ig_cfg = cfg.get("image_gen") if isinstance(cfg.get("image_gen"), dict) else {}
     return {
         "llm": llm_available(ctx),
         "active_model": models_info["active"],
@@ -550,6 +552,8 @@ def probe_capabilities(ctx: Any = None) -> dict[str, Any]:
         "web_extract": _probe_tool("web_extract"),
         "web_search": _probe_tool("web_search"),
         "image_generate": _probe_tool("image_generate"),
+        "image_gen_provider": str(ig_cfg.get("provider") or ("fal" if _probe_tool("image_generate") else "")),
+        "image_gen_model": str(ig_cfg.get("model") or ""),
         "tts": _probe_tool("text_to_speech") or _probe_import("edge_tts"),
         "edge_tts": _probe_import("edge_tts"),
         "youtube_transcript": _probe_import("youtube_transcript_api"),
@@ -558,20 +562,74 @@ def probe_capabilities(ctx: Any = None) -> dict[str, Any]:
         "pdfplumber": _probe_import("pdfplumber"),
         "python_docx": _probe_import("docx"),
         "docx_stdlib": True,
+        "pptx_export": True,
+        "pdf_export": True,
         "hybrid_search": True,
         "numpy": _probe_import("numpy"),
     }
 
 
-def generate_image(prompt: str, aspect_ratio: str = "landscape", *, ctx: Any = None) -> Optional[str]:
-    """Call Hermes's `image_generate` tool and return the image URL/path, or None on failure."""
+def generate_image(
+    prompt: str,
+    aspect_ratio: str = "landscape",
+    *,
+    resolution: Optional[str] = None,
+    ctx: Any = None,
+) -> Optional[str]:
+    """Call Hermes's `image_generate` tool and return the image URL or local file path, or None on failure."""
     if not prompt or not _probe_tool("image_generate"):
         return None
     try:
-        raw = dispatch_tool("image_generate", {"prompt": prompt, "aspect_ratio": aspect_ratio}, ctx=ctx)
+        args: dict[str, Any] = {"prompt": prompt, "aspect_ratio": aspect_ratio}
+        if resolution:
+            args["resolution"] = resolution
+        raw = dispatch_tool("image_generate", args, ctx=ctx)
         data = json.loads(raw) if isinstance(raw, str) else raw
-        if isinstance(data, dict) and data.get("success") and data.get("image"):
-            return str(data["image"])
+        if isinstance(data, dict) and data.get("success"):
+            for key in ("image", "image_url", "path", "file"):
+                val = data.get(key)
+                if isinstance(val, str) and val.strip():
+                    return val.strip()
+            imgs = data.get("images")
+            if isinstance(imgs, list) and imgs and isinstance(imgs[0], str):
+                return imgs[0].strip()
     except Exception as exc:
         logger.warning("SourceBook image_generate failed: %s", exc)
+    return None
+
+
+def fetch_image_bytes(image_ref: str) -> Optional[tuple[bytes, str]]:
+    """Resolve an image reference (local path, data URI, or safe HTTPS URL) into (bytes, ext)."""
+    import base64
+    import urllib.request
+
+    ref = str(image_ref or "").strip()
+    if not ref:
+        return None
+    try:
+        if ref.startswith("data:image/") and "," in ref:
+            head, payload = ref.split(",", 1)
+            raw = base64.b64decode(payload)
+            ext = "jpeg" if "jpeg" in head or "jpg" in head else ("webp" if "webp" in head else "png")
+            return raw, ext
+        if ref.startswith(("http://", "https://")):
+            try:
+                from tools.url_safety import is_safe_url
+
+                if not is_safe_url(ref):
+                    return None
+            except Exception:
+                return None
+            req = urllib.request.Request(ref, headers={"User-Agent": "Hermes-SourceBook/0.1"})
+            with urllib.request.urlopen(req, timeout=25) as resp:  # noqa: S310
+                raw = resp.read(20 * 1024 * 1024)
+            ext = "jpeg" if raw.startswith(b"\xff\xd8\xff") else "png"
+            return raw, ext
+        p = Path(ref).expanduser()
+        if p.is_file():
+            raw = p.read_bytes()
+            ext = "jpeg" if raw.startswith(b"\xff\xd8\xff") else "png"
+            return raw, ext
+    except Exception as exc:
+        logger.debug("fetch_image_bytes(%s) failed: %s", ref[:80], exc)
     return None

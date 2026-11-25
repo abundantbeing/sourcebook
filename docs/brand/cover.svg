@@ -36,20 +36,21 @@
     <text x="0" y="98" fill="#f4f6fa" font-family="system-ui, -apple-system, 'Segoe UI', Inter, sans-serif" font-size="68" font-weight="750" letter-spacing="-2">SourceBook</text>
 
     <text x="2" y="142" fill="#a8b3c7" font-family="system-ui, -apple-system, 'Segoe UI', Inter, sans-serif" font-size="20" font-weight="450">Source-grounded research notebooks for Hermes Desktop.</text>
-    <text x="2" y="172" fill="#707d96" font-family="system-ui, -apple-system, 'Segoe UI', Inter, sans-serif" font-size="14.5">Cited chat, Claim Ledger, Coverage Map, Passage Inspector, and 7 Studio formats.</text>
+    <text x="2" y="172" fill="#707d96" font-family="system-ui, -apple-system, 'Segoe UI', Inter, sans-serif" font-size="14.5">Hybrid retrieval, Claim Ledger, Contradictions, any Hermes model, and 8 Studio formats.</text>
   </g>
 
   <!-- Right subtle format index -->
-  <g transform="translate(966, 96)" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11.5">
-    <rect x="0" y="0" width="164" height="228" rx="12" fill="#101520" stroke="#222b3d" stroke-width="1"/>
+  <g transform="translate(966, 84)" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11.5">
+    <rect x="0" y="0" width="164" height="252" rx="12" fill="#101520" stroke="#222b3d" stroke-width="1"/>
     <text x="18" y="28" fill="#6b7892" font-size="10" letter-spacing="1.2">STUDIO FORMATS</text>
     <line x1="18" y1="39" x2="146" y2="39" stroke="#1f283b" stroke-width="1"/>
     <text x="18" y="64" fill="#cfd6e3">01  Study Guide</text>
-    <text x="18" y="88" fill="#cfd6e3">02  Mind Map</text>
-    <text x="18" y="112" fill="#cfd6e3">03  Flashcards</text>
-    <text x="18" y="136" fill="#cfd6e3">04  Quiz</text>
-    <text x="18" y="160" fill="#cfd6e3">05  Infographic</text>
-    <text x="18" y="184" fill="#cfd6e3">06  Data Table</text>
-    <text x="18" y="208" fill="#60a5fa" font-weight="600">07  Slide Deck</text>
+    <text x="18" y="88" fill="#60a5fa" font-weight="600">02  Audio Overview</text>
+    <text x="18" y="112" fill="#cfd6e3">03  Mind Map</text>
+    <text x="18" y="136" fill="#cfd6e3">04  Flashcards</text>
+    <text x="18" y="160" fill="#cfd6e3">05  Quiz</text>
+    <text x="18" y="184" fill="#cfd6e3">06  Infographic</text>
+    <text x="18" y="208" fill="#cfd6e3">07  Data Table</text>
+    <text x="18" y="232" fill="#cfd6e3">08  Slide Deck</text>
   </g>
 </svg>

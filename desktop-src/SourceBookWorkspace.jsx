@@ -6,6 +6,7 @@ import { SidebarSources } from './components/SidebarSources.jsx'
 import { SourceInspector } from './components/SourceInspector.jsx'
 import { ChatPanel } from './components/ChatPanel.jsx'
 import { StudioPanel } from './components/StudioPanel.jsx'
+import { BrandMark } from './components/BrandMark.jsx'
 
 export function SourceBookWorkspace({ ctx, externalState }) {
   const profile = typeof sdk.useValue === 'function' && sdk.host?.state?.profile
@@ -250,7 +251,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
         <div className="sb-topbar-left">
           <div className="sb-brand">
             <span className="sb-brand-mark">
-              <Icon name="BookOpen" size={13} />
+              <BrandMark size={15} />
             </span>
             <span>SourceBook</span>
           </div>
@@ -403,7 +404,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
 
       {!loading && !nbId ? (
         <div className="sb-empty" style={{ flex: 1, justifyContent: 'center' }}>
-          <Icon name="BookOpen" size={32} style={{ color: 'var(--ui-accent)' }} />
+          <BrandMark size={38} style={{ color: 'var(--ui-text-primary)' }} />
           <div style={{ fontSize: 16, fontWeight: 650, color: 'var(--ui-text-primary)' }}>
             Create your first research notebook
           </div>

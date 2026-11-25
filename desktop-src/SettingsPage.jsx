@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Icon, sdk } from './sdk.js'
+import { sdk } from './sdk.js'
 import { api } from './api.js'
 import { Styles } from './styles.js'
+import { BrandMark } from './components/BrandMark.jsx'
 
 export function SettingsPage() {
   const [caps, setCaps] = useState(null)
@@ -34,14 +35,19 @@ export function SettingsPage() {
       <Styles />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 640 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-          <div>
-            <div style={{ fontWeight: 650, fontSize: 14 }}>SourceBook Research Notebooks</div>
-            <div style={{ fontSize: 12, color: 'var(--ui-text-secondary)', marginTop: 2 }}>
-              Source-grounded notebooks, Claim Ledger verification, Coverage Map, and 7 interactive Studio formats.
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span className="sb-brand-mark" style={{ width: 32, height: 32, borderRadius: 8 }}>
+              <BrandMark size={20} />
+            </span>
+            <div>
+              <div style={{ fontWeight: 650, fontSize: 14 }}>SourceBook Research Notebooks</div>
+              <div style={{ fontSize: 12, color: 'var(--ui-text-secondary)', marginTop: 2 }}>
+                Source-grounded notebooks, Claim Ledger verification, Coverage Map, and 7 interactive Studio formats.
+              </div>
             </div>
           </div>
           <button type="button" className="sb-btn sb-btn-primary" onClick={() => sdk.host?.navigate?.('/sourcebook')}>
-            <Icon name="BookOpen" size={13} /> Open SourceBook
+            <BrandMark size={13} accent="rgba(255,255,255,0.72)" /> Open SourceBook
           </button>
         </div>
 

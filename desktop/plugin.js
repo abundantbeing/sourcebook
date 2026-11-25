@@ -261,15 +261,15 @@ var CSS = `
 }
 
 .sb-brand-mark {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--sb-accent-soft);
-  color: var(--ui-accent);
-  border: 1px solid var(--sb-accent-border);
+  background: var(--sb-surface);
+  color: var(--ui-text-primary);
+  border: 1px solid var(--ui-stroke-secondary);
 }
 
 .sb-nb-select {
@@ -3684,8 +3684,31 @@ function StudioPanel({
   ] }) });
 }
 
+// desktop-src/components/BrandMark.jsx
+import { jsx as jsx14, jsxs as jsxs12 } from "react/jsx-runtime";
+function BrandMark({ size = 16, accent = "var(--ui-accent, #3b82f6)", className = "", style }) {
+  return /* @__PURE__ */ jsxs12(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      viewBox: "0 0 120 120",
+      width: size,
+      height: size,
+      className,
+      style: { display: "block", flexShrink: 0, ...style },
+      "aria-hidden": "true",
+      children: [
+        /* @__PURE__ */ jsx14("polygon", { points: "59,10 74,10 74,34 66.5,26.5 59,34", fill: accent }),
+        /* @__PURE__ */ jsx14("polygon", { points: "79.5,10 100,10 100,37.5 79.5,48.5", fill: "currentColor" }),
+        /* @__PURE__ */ jsx14("polygon", { points: "47,10 53.5,10 53.5,30.5 44.5,30.5 100,70.5 100,95 24,22", fill: "currentColor" }),
+        /* @__PURE__ */ jsx14("polygon", { points: "20,24.5 95.5,97.5 72.5,110 48,110 20,90 20,82.5 36.5,73.5 58,89 74.5,89 20,50", fill: "currentColor" })
+      ]
+    }
+  );
+}
+
 // desktop-src/SourceBookWorkspace.jsx
-import { Fragment as Fragment5, jsx as jsx14, jsxs as jsxs12 } from "react/jsx-runtime";
+import { Fragment as Fragment5, jsx as jsx15, jsxs as jsxs13 } from "react/jsx-runtime";
 function SourceBookWorkspace({ ctx, externalState }) {
   const profile = typeof sdk.useValue === "function" && sdk.host?.state?.profile ? sdk.useValue(sdk.host.state.profile) : "default";
   const connectionId = typeof sdk.useValue === "function" && sdk.host?.state?.connectionId ? sdk.useValue(sdk.host.state.connectionId) : "local";
@@ -3893,26 +3916,26 @@ Cited chunk: \`${chunk.id}\``,
   }
   const covPct = coverage?.total_chunks ? Math.round(coverage.touched_chunks / coverage.total_chunks * 100) : 0;
   const hasActiveSources = sources.some((s) => s.enabled);
-  return /* @__PURE__ */ jsxs12("div", { className: "sb-root", style: { position: "relative" }, children: [
-    /* @__PURE__ */ jsx14(Styles, {}),
-    /* @__PURE__ */ jsxs12("header", { className: "sb-topbar", children: [
-      /* @__PURE__ */ jsxs12("div", { className: "sb-topbar-left", children: [
-        /* @__PURE__ */ jsxs12("div", { className: "sb-brand", children: [
-          /* @__PURE__ */ jsx14("span", { className: "sb-brand-mark", children: /* @__PURE__ */ jsx14(Icon, { name: "BookOpen", size: 13 }) }),
-          /* @__PURE__ */ jsx14("span", { children: "SourceBook" })
+  return /* @__PURE__ */ jsxs13("div", { className: "sb-root", style: { position: "relative" }, children: [
+    /* @__PURE__ */ jsx15(Styles, {}),
+    /* @__PURE__ */ jsxs13("header", { className: "sb-topbar", children: [
+      /* @__PURE__ */ jsxs13("div", { className: "sb-topbar-left", children: [
+        /* @__PURE__ */ jsxs13("div", { className: "sb-brand", children: [
+          /* @__PURE__ */ jsx15("span", { className: "sb-brand-mark", children: /* @__PURE__ */ jsx15(BrandMark, { size: 15 }) }),
+          /* @__PURE__ */ jsx15("span", { children: "SourceBook" })
         ] }),
-        /* @__PURE__ */ jsx14(
+        /* @__PURE__ */ jsx15(
           "button",
           {
             type: "button",
             className: "sb-btn sb-btn-ghost sb-btn-icon",
             title: leftCollapsed ? "Show Sources rail" : "Hide Sources rail",
             onClick: () => setLeftCollapsed((v) => !v),
-            children: /* @__PURE__ */ jsx14(Icon, { name: "PanelLeft", size: 14 })
+            children: /* @__PURE__ */ jsx15(Icon, { name: "PanelLeft", size: 14 })
           }
         ),
-        /* @__PURE__ */ jsxs12("div", { style: { position: "relative" }, children: [
-          /* @__PURE__ */ jsxs12(
+        /* @__PURE__ */ jsxs13("div", { style: { position: "relative" }, children: [
+          /* @__PURE__ */ jsxs13(
             "button",
             {
               type: "button",
@@ -3920,12 +3943,12 @@ Cited chunk: \`${chunk.id}\``,
               onClick: () => setNbMenuOpen((v) => !v),
               "aria-expanded": nbMenuOpen,
               children: [
-                /* @__PURE__ */ jsx14("span", { className: "sb-nb-select-label", children: notebook?.title || (loading ? "Loading..." : "Select notebook") }),
-                /* @__PURE__ */ jsx14(Icon, { name: "ChevronDown", size: 13 })
+                /* @__PURE__ */ jsx15("span", { className: "sb-nb-select-label", children: notebook?.title || (loading ? "Loading..." : "Select notebook") }),
+                /* @__PURE__ */ jsx15(Icon, { name: "ChevronDown", size: 13 })
               ]
             }
           ),
-          nbMenuOpen ? /* @__PURE__ */ jsxs12(
+          nbMenuOpen ? /* @__PURE__ */ jsxs13(
             "div",
             {
               style: {
@@ -3943,7 +3966,7 @@ Cited chunk: \`${chunk.id}\``,
                 gap: 3
               },
               children: [
-                notebooks.map((nb) => /* @__PURE__ */ jsxs12(
+                notebooks.map((nb) => /* @__PURE__ */ jsxs13(
                   "div",
                   {
                     style: {
@@ -3958,16 +3981,16 @@ Cited chunk: \`${chunk.id}\``,
                     },
                     onClick: () => selectNotebook(nb.id),
                     children: [
-                      /* @__PURE__ */ jsxs12("div", { style: { minWidth: 0 }, children: [
-                        /* @__PURE__ */ jsx14("div", { className: "sb-src-title", children: nb.title }),
-                        /* @__PURE__ */ jsxs12("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: [
-                          /* @__PURE__ */ jsx14("span", { className: "sb-num", children: nb.source_count || 0 }),
+                      /* @__PURE__ */ jsxs13("div", { style: { minWidth: 0 }, children: [
+                        /* @__PURE__ */ jsx15("div", { className: "sb-src-title", children: nb.title }),
+                        /* @__PURE__ */ jsxs13("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: [
+                          /* @__PURE__ */ jsx15("span", { className: "sb-num", children: nb.source_count || 0 }),
                           " sources | ",
-                          /* @__PURE__ */ jsx14("span", { className: "sb-num", children: nb.artifact_count || 0 }),
+                          /* @__PURE__ */ jsx15("span", { className: "sb-num", children: nb.artifact_count || 0 }),
                           " artifacts"
                         ] })
                       ] }),
-                      notebooks.length > 1 ? /* @__PURE__ */ jsx14(
+                      notebooks.length > 1 ? /* @__PURE__ */ jsx15(
                         "button",
                         {
                           type: "button",
@@ -3977,14 +4000,14 @@ Cited chunk: \`${chunk.id}\``,
                             e.stopPropagation();
                             handleDeleteNotebook(nb.id);
                           },
-                          children: /* @__PURE__ */ jsx14(Icon, { name: "Trash2", size: 12 })
+                          children: /* @__PURE__ */ jsx15(Icon, { name: "Trash2", size: 12 })
                         }
                       ) : null
                     ]
                   },
                   nb.id
                 )),
-                /* @__PURE__ */ jsx14("div", { style: { borderTop: "1px solid var(--ui-stroke-tertiary)", marginTop: 4, paddingTop: 4 }, children: /* @__PURE__ */ jsxs12(
+                /* @__PURE__ */ jsx15("div", { style: { borderTop: "1px solid var(--ui-stroke-tertiary)", marginTop: 4, paddingTop: 4 }, children: /* @__PURE__ */ jsxs13(
                   "button",
                   {
                     type: "button",
@@ -3995,7 +4018,7 @@ Cited chunk: \`${chunk.id}\``,
                       setCreateOpen(true);
                     },
                     children: [
-                      /* @__PURE__ */ jsx14(Icon, { name: "Plus", size: 13 }),
+                      /* @__PURE__ */ jsx15(Icon, { name: "Plus", size: 13 }),
                       " New notebook"
                     ]
                   }
@@ -4004,14 +4027,14 @@ Cited chunk: \`${chunk.id}\``,
             }
           ) : null
         ] }),
-        /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-btn", onClick: () => setCreateOpen(true), children: [
-          /* @__PURE__ */ jsx14(Icon, { name: "Plus", size: 13 }),
+        /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-btn", onClick: () => setCreateOpen(true), children: [
+          /* @__PURE__ */ jsx15(Icon, { name: "Plus", size: 13 }),
           " New"
         ] })
       ] }),
-      /* @__PURE__ */ jsxs12("div", { className: "sb-topbar-right", children: [
-        notebook ? /* @__PURE__ */ jsxs12(Fragment5, { children: [
-          /* @__PURE__ */ jsxs12(
+      /* @__PURE__ */ jsxs13("div", { className: "sb-topbar-right", children: [
+        notebook ? /* @__PURE__ */ jsxs13(Fragment5, { children: [
+          /* @__PURE__ */ jsxs13(
             "button",
             {
               type: "button",
@@ -4019,16 +4042,16 @@ Cited chunk: \`${chunk.id}\``,
               title: "Open Coverage Map",
               onClick: () => setCenterTab("coverage"),
               children: [
-                /* @__PURE__ */ jsx14("span", { children: "Coverage" }),
-                /* @__PURE__ */ jsx14("span", { className: "sb-cov-track", children: /* @__PURE__ */ jsx14("span", { className: "sb-cov-fill", style: { width: `${covPct}%` } }) }),
-                /* @__PURE__ */ jsxs12("span", { className: "sb-mono", style: { fontWeight: 600 }, children: [
+                /* @__PURE__ */ jsx15("span", { children: "Coverage" }),
+                /* @__PURE__ */ jsx15("span", { className: "sb-cov-track", children: /* @__PURE__ */ jsx15("span", { className: "sb-cov-fill", style: { width: `${covPct}%` } }) }),
+                /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontWeight: 600 }, children: [
                   covPct,
                   "%"
                 ] })
               ]
             }
           ),
-          /* @__PURE__ */ jsxs12(
+          /* @__PURE__ */ jsxs13(
             "button",
             {
               type: "button",
@@ -4037,14 +4060,14 @@ Cited chunk: \`${chunk.id}\``,
               onClick: toggleStrict,
               title: "Strict grounding refuses any claim unsupported by active sources",
               children: [
-                /* @__PURE__ */ jsx14(Icon, { name: "Lock", size: 12 }),
+                /* @__PURE__ */ jsx15(Icon, { name: "Lock", size: 12 }),
                 " ",
                 notebook.strict ? "Strict" : "Grounded"
               ]
             }
           )
         ] }) : null,
-        /* @__PURE__ */ jsxs12(
+        /* @__PURE__ */ jsxs13(
           "button",
           {
             type: "button",
@@ -4056,33 +4079,33 @@ Cited chunk: \`${chunk.id}\``,
             },
             title: "Search across all notebooks (Ctrl+K)",
             children: [
-              /* @__PURE__ */ jsx14(Icon, { name: "Search", size: 12 }),
+              /* @__PURE__ */ jsx15(Icon, { name: "Search", size: 12 }),
               " Search"
             ]
           }
         )
       ] })
     ] }),
-    error ? /* @__PURE__ */ jsxs12("div", { className: "sb-error-bar", role: "alert", children: [
-      /* @__PURE__ */ jsx14("span", { children: error }),
-      /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setError(""), children: /* @__PURE__ */ jsx14(Icon, { name: "X", size: 13 }) })
+    error ? /* @__PURE__ */ jsxs13("div", { className: "sb-error-bar", role: "alert", children: [
+      /* @__PURE__ */ jsx15("span", { children: error }),
+      /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setError(""), children: /* @__PURE__ */ jsx15(Icon, { name: "X", size: 13 }) })
     ] }) : null,
-    !loading && !nbId ? /* @__PURE__ */ jsxs12("div", { className: "sb-empty", style: { flex: 1, justifyContent: "center" }, children: [
-      /* @__PURE__ */ jsx14(Icon, { name: "BookOpen", size: 32, style: { color: "var(--ui-accent)" } }),
-      /* @__PURE__ */ jsx14("div", { style: { fontSize: 16, fontWeight: 650, color: "var(--ui-text-primary)" }, children: "Create your first research notebook" }),
-      /* @__PURE__ */ jsx14("div", { style: { maxWidth: 420, fontSize: 13 }, children: "Collect PDFs, DOCX files, Markdown, CSV tables, and URLs in one workspace. Every answer cites exact passages and turns sources into interactive Studio artifacts." }),
-      /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => setCreateOpen(true), children: [
-        /* @__PURE__ */ jsx14(Icon, { name: "Plus", size: 13 }),
+    !loading && !nbId ? /* @__PURE__ */ jsxs13("div", { className: "sb-empty", style: { flex: 1, justifyContent: "center" }, children: [
+      /* @__PURE__ */ jsx15(BrandMark, { size: 38, style: { color: "var(--ui-text-primary)" } }),
+      /* @__PURE__ */ jsx15("div", { style: { fontSize: 16, fontWeight: 650, color: "var(--ui-text-primary)" }, children: "Create your first research notebook" }),
+      /* @__PURE__ */ jsx15("div", { style: { maxWidth: 420, fontSize: 13 }, children: "Collect PDFs, DOCX files, Markdown, CSV tables, and URLs in one workspace. Every answer cites exact passages and turns sources into interactive Studio artifacts." }),
+      /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => setCreateOpen(true), children: [
+        /* @__PURE__ */ jsx15(Icon, { name: "Plus", size: 13 }),
         " New notebook"
       ] })
-    ] }) : /* @__PURE__ */ jsxs12(
+    ] }) : /* @__PURE__ */ jsxs13(
       "div",
       {
         className: "sb-workbench",
         "data-left-collapsed": leftCollapsed,
         "data-studio-expanded": studioExpanded,
         children: [
-          /* @__PURE__ */ jsx14(
+          /* @__PURE__ */ jsx15(
             SidebarSources,
             {
               nbId,
@@ -4095,7 +4118,7 @@ Cited chunk: \`${chunk.id}\``,
               onError: setError
             }
           ),
-          /* @__PURE__ */ jsx14(
+          /* @__PURE__ */ jsx15(
             ChatPanel,
             {
               ctx,
@@ -4112,7 +4135,7 @@ Cited chunk: \`${chunk.id}\``,
               onError: setError
             }
           ),
-          /* @__PURE__ */ jsx14(
+          /* @__PURE__ */ jsx15(
             StudioPanel,
             {
               ctx,
@@ -4131,7 +4154,7 @@ Cited chunk: \`${chunk.id}\``,
         ]
       }
     ),
-    /* @__PURE__ */ jsx14(
+    /* @__PURE__ */ jsx15(
       SourceInspector,
       {
         nbId,
@@ -4140,14 +4163,14 @@ Cited chunk: \`${chunk.id}\``,
         onPromoteQuote: handlePromoteQuote
       }
     ),
-    createOpen ? /* @__PURE__ */ jsx14("div", { className: "sb-modal-backdrop", onClick: () => setCreateOpen(false), children: /* @__PURE__ */ jsxs12("form", { className: "sb-modal", onClick: (e) => e.stopPropagation(), onSubmit: handleCreateNotebook, children: [
-      /* @__PURE__ */ jsxs12("div", { className: "sb-modal-head", children: [
-        /* @__PURE__ */ jsx14("span", { children: "New research notebook" }),
-        /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setCreateOpen(false), children: /* @__PURE__ */ jsx14(Icon, { name: "X", size: 14 }) })
+    createOpen ? /* @__PURE__ */ jsx15("div", { className: "sb-modal-backdrop", onClick: () => setCreateOpen(false), children: /* @__PURE__ */ jsxs13("form", { className: "sb-modal", onClick: (e) => e.stopPropagation(), onSubmit: handleCreateNotebook, children: [
+      /* @__PURE__ */ jsxs13("div", { className: "sb-modal-head", children: [
+        /* @__PURE__ */ jsx15("span", { children: "New research notebook" }),
+        /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setCreateOpen(false), children: /* @__PURE__ */ jsx15(Icon, { name: "X", size: 14 }) })
       ] }),
-      /* @__PURE__ */ jsx14("div", { className: "sb-modal-body", children: /* @__PURE__ */ jsxs12("label", { className: "sb-field", children: [
-        /* @__PURE__ */ jsx14("span", { className: "sb-label", children: "Notebook title" }),
-        /* @__PURE__ */ jsx14(
+      /* @__PURE__ */ jsx15("div", { className: "sb-modal-body", children: /* @__PURE__ */ jsxs13("label", { className: "sb-field", children: [
+        /* @__PURE__ */ jsx15("span", { className: "sb-label", children: "Notebook title" }),
+        /* @__PURE__ */ jsx15(
           "input",
           {
             className: "sb-input",
@@ -4159,18 +4182,18 @@ Cited chunk: \`${chunk.id}\``,
           }
         )
       ] }) }),
-      /* @__PURE__ */ jsxs12("div", { className: "sb-modal-foot", children: [
-        /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-btn", onClick: () => setCreateOpen(false), children: "Cancel" }),
-        /* @__PURE__ */ jsx14("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: !newTitle.trim(), children: "Create" })
+      /* @__PURE__ */ jsxs13("div", { className: "sb-modal-foot", children: [
+        /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-btn", onClick: () => setCreateOpen(false), children: "Cancel" }),
+        /* @__PURE__ */ jsx15("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: !newTitle.trim(), children: "Create" })
       ] })
     ] }) }) : null,
-    searchOpen ? /* @__PURE__ */ jsx14("div", { className: "sb-modal-backdrop", onClick: () => setSearchOpen(false), children: /* @__PURE__ */ jsxs12("div", { className: "sb-modal", onClick: (e) => e.stopPropagation(), children: [
-      /* @__PURE__ */ jsxs12("div", { className: "sb-modal-head", children: [
-        /* @__PURE__ */ jsx14("span", { children: "Search across all notebooks" }),
-        /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setSearchOpen(false), children: /* @__PURE__ */ jsx14(Icon, { name: "X", size: 14 }) })
+    searchOpen ? /* @__PURE__ */ jsx15("div", { className: "sb-modal-backdrop", onClick: () => setSearchOpen(false), children: /* @__PURE__ */ jsxs13("div", { className: "sb-modal", onClick: (e) => e.stopPropagation(), children: [
+      /* @__PURE__ */ jsxs13("div", { className: "sb-modal-head", children: [
+        /* @__PURE__ */ jsx15("span", { children: "Search across all notebooks" }),
+        /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setSearchOpen(false), children: /* @__PURE__ */ jsx15(Icon, { name: "X", size: 14 }) })
       ] }),
-      /* @__PURE__ */ jsxs12("div", { className: "sb-modal-body", children: [
-        /* @__PURE__ */ jsx14(
+      /* @__PURE__ */ jsxs13("div", { className: "sb-modal-body", children: [
+        /* @__PURE__ */ jsx15(
           "input",
           {
             className: "sb-input",
@@ -4180,8 +4203,8 @@ Cited chunk: \`${chunk.id}\``,
             autoFocus: true
           }
         ),
-        searchHits.length === 0 && searchQuery.trim() ? /* @__PURE__ */ jsx14("div", { className: "sb-empty", children: "No matching passages found." }) : null,
-        searchHits.map((hit) => /* @__PURE__ */ jsxs12(
+        searchHits.length === 0 && searchQuery.trim() ? /* @__PURE__ */ jsx15("div", { className: "sb-empty", children: "No matching passages found." }) : null,
+        searchHits.map((hit) => /* @__PURE__ */ jsxs13(
           "div",
           {
             className: "sb-ledger-row",
@@ -4192,15 +4215,15 @@ Cited chunk: \`${chunk.id}\``,
               setInspectorTarget({ sourceId: hit.source_id, chunkId: hit.chunk_id });
             },
             children: [
-              /* @__PURE__ */ jsxs12("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 11.5 }, children: [
-                /* @__PURE__ */ jsxs12("strong", { children: [
+              /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 11.5 }, children: [
+                /* @__PURE__ */ jsxs13("strong", { children: [
                   hit.notebook_title,
                   " / ",
                   hit.source_title
                 ] }),
-                /* @__PURE__ */ jsx14("span", { className: "sb-mono", style: { color: "var(--ui-accent)" }, children: hit.chunk_id })
+                /* @__PURE__ */ jsx15("span", { className: "sb-mono", style: { color: "var(--ui-accent)" }, children: hit.chunk_id })
               ] }),
-              /* @__PURE__ */ jsx14("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: hit.snippet })
+              /* @__PURE__ */ jsx15("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: hit.snippet })
             ]
           },
           `${hit.notebook_id}-${hit.chunk_id}`
@@ -4212,7 +4235,7 @@ Cited chunk: \`${chunk.id}\``,
 
 // desktop-src/SettingsPage.jsx
 import { useEffect as useEffect8, useState as useState11 } from "react";
-import { jsx as jsx15, jsxs as jsxs13 } from "react/jsx-runtime";
+import { jsx as jsx16, jsxs as jsxs14 } from "react/jsx-runtime";
 function SettingsPage() {
   const [caps, setCaps] = useState11(null);
   const [err, setErr] = useState11("");
@@ -4234,41 +4257,44 @@ function SettingsPage() {
     ["DOCX extractor", caps?.python_docx ? "python-docx active" : "Built-in stdlib XML extractor"],
     ["Image generation", caps?.image_generate ? "Available" : "Not configured"]
   ];
-  return /* @__PURE__ */ jsxs13("div", { className: "sb-root", style: { height: "auto", overflow: "visible", background: "transparent" }, children: [
-    /* @__PURE__ */ jsx15(Styles, {}),
-    /* @__PURE__ */ jsxs13("div", { style: { display: "flex", flexDirection: "column", gap: 14, maxWidth: 640 }, children: [
-      /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }, children: [
-        /* @__PURE__ */ jsxs13("div", { children: [
-          /* @__PURE__ */ jsx15("div", { style: { fontWeight: 650, fontSize: 14 }, children: "SourceBook Research Notebooks" }),
-          /* @__PURE__ */ jsx15("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", marginTop: 2 }, children: "Source-grounded notebooks, Claim Ledger verification, Coverage Map, and 7 interactive Studio formats." })
+  return /* @__PURE__ */ jsxs14("div", { className: "sb-root", style: { height: "auto", overflow: "visible", background: "transparent" }, children: [
+    /* @__PURE__ */ jsx16(Styles, {}),
+    /* @__PURE__ */ jsxs14("div", { style: { display: "flex", flexDirection: "column", gap: 14, maxWidth: 640 }, children: [
+      /* @__PURE__ */ jsxs14("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }, children: [
+        /* @__PURE__ */ jsxs14("div", { style: { display: "flex", alignItems: "center", gap: 10 }, children: [
+          /* @__PURE__ */ jsx16("span", { className: "sb-brand-mark", style: { width: 32, height: 32, borderRadius: 8 }, children: /* @__PURE__ */ jsx16(BrandMark, { size: 20 }) }),
+          /* @__PURE__ */ jsxs14("div", { children: [
+            /* @__PURE__ */ jsx16("div", { style: { fontWeight: 650, fontSize: 14 }, children: "SourceBook Research Notebooks" }),
+            /* @__PURE__ */ jsx16("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", marginTop: 2 }, children: "Source-grounded notebooks, Claim Ledger verification, Coverage Map, and 7 interactive Studio formats." })
+          ] })
         ] }),
-        /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => sdk.host?.navigate?.("/sourcebook"), children: [
-          /* @__PURE__ */ jsx15(Icon, { name: "BookOpen", size: 13 }),
+        /* @__PURE__ */ jsxs14("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => sdk.host?.navigate?.("/sourcebook"), children: [
+          /* @__PURE__ */ jsx16(BrandMark, { size: 13, accent: "rgba(255,255,255,0.72)" }),
           " Open SourceBook"
         ] })
       ] }),
-      err ? /* @__PURE__ */ jsx15("div", { className: "sb-error-bar", style: { margin: 0 }, children: err }) : null,
-      /* @__PURE__ */ jsx15("div", { className: "sb-table-wrap", children: /* @__PURE__ */ jsxs13("table", { className: "sb-table", children: [
-        /* @__PURE__ */ jsx15("thead", { children: /* @__PURE__ */ jsxs13("tr", { children: [
-          /* @__PURE__ */ jsx15("th", { children: "Capability" }),
-          /* @__PURE__ */ jsx15("th", { children: "Status" })
+      err ? /* @__PURE__ */ jsx16("div", { className: "sb-error-bar", style: { margin: 0 }, children: err }) : null,
+      /* @__PURE__ */ jsx16("div", { className: "sb-table-wrap", children: /* @__PURE__ */ jsxs14("table", { className: "sb-table", children: [
+        /* @__PURE__ */ jsx16("thead", { children: /* @__PURE__ */ jsxs14("tr", { children: [
+          /* @__PURE__ */ jsx16("th", { children: "Capability" }),
+          /* @__PURE__ */ jsx16("th", { children: "Status" })
         ] }) }),
-        /* @__PURE__ */ jsx15("tbody", { children: rows.map(([label, status]) => /* @__PURE__ */ jsxs13("tr", { children: [
-          /* @__PURE__ */ jsx15("td", { style: { fontWeight: 550 }, children: label }),
-          /* @__PURE__ */ jsx15("td", { style: { color: "var(--ui-text-secondary)" }, children: caps ? status : "Checking..." })
+        /* @__PURE__ */ jsx16("tbody", { children: rows.map(([label, status]) => /* @__PURE__ */ jsxs14("tr", { children: [
+          /* @__PURE__ */ jsx16("td", { style: { fontWeight: 550 }, children: label }),
+          /* @__PURE__ */ jsx16("td", { style: { color: "var(--ui-text-secondary)" }, children: caps ? status : "Checking..." })
         ] }, label)) })
       ] }) }),
-      /* @__PURE__ */ jsxs13("div", { className: "sb-ledger-row", children: [
-        /* @__PURE__ */ jsx15("strong", { style: { fontSize: 12 }, children: "Slash commands" }),
-        /* @__PURE__ */ jsxs13("div", { className: "sb-mono", style: { fontSize: 11.5, color: "var(--ui-text-secondary)", lineHeight: 1.7 }, children: [
+      /* @__PURE__ */ jsxs14("div", { className: "sb-ledger-row", children: [
+        /* @__PURE__ */ jsx16("strong", { style: { fontSize: 12 }, children: "Slash commands" }),
+        /* @__PURE__ */ jsxs14("div", { className: "sb-mono", style: { fontSize: 11.5, color: "var(--ui-text-secondary)", lineHeight: 1.7 }, children: [
           "/sourcebook list",
-          /* @__PURE__ */ jsx15("br", {}),
+          /* @__PURE__ */ jsx16("br", {}),
           "/sourcebook use <nb_id>",
-          /* @__PURE__ */ jsx15("br", {}),
+          /* @__PURE__ */ jsx16("br", {}),
           "/sourcebook add <nb_id> <url or text>",
-          /* @__PURE__ */ jsx15("br", {}),
+          /* @__PURE__ */ jsx16("br", {}),
           "/sourcebook ask <nb_id> <question>",
-          /* @__PURE__ */ jsx15("br", {}),
+          /* @__PURE__ */ jsx16("br", {}),
           "/sourcebook make <nb_id> <kind> [focus]"
         ] })
       ] })
@@ -4277,12 +4303,12 @@ function SettingsPage() {
 }
 
 // desktop-src/plugin.jsx
-import { jsx as jsx16, jsxs as jsxs14 } from "react/jsx-runtime";
+import { jsx as jsx17, jsxs as jsxs15 } from "react/jsx-runtime";
 var ROUTE = "/sourcebook";
 function StatusChip({ externalState }) {
   const state = typeof sdk.useValue === "function" && externalState ? sdk.useValue(externalState) : null;
   if (!state?.title) return null;
-  return /* @__PURE__ */ jsxs14(
+  return /* @__PURE__ */ jsxs15(
     "button",
     {
       type: "button",
@@ -4290,9 +4316,9 @@ function StatusChip({ externalState }) {
       onClick: () => sdk.host?.navigate?.(ROUTE),
       title: `Open SourceBook: ${state.title}`,
       children: [
-        /* @__PURE__ */ jsx16(Icon, { name: "BookOpen", size: 12 }),
-        /* @__PURE__ */ jsx16("span", { children: state.title }),
-        state.dueCards > 0 ? /* @__PURE__ */ jsxs14("span", { className: "sb-mono", children: [
+        /* @__PURE__ */ jsx17(BrandMark, { size: 13 }),
+        /* @__PURE__ */ jsx17("span", { children: state.title }),
+        state.dueCards > 0 ? /* @__PURE__ */ jsxs15("span", { className: "sb-mono", children: [
           "(",
           state.dueCards,
           " due)"
@@ -4304,7 +4330,7 @@ function StatusChip({ externalState }) {
 function CiteDirective({ props, externalState }) {
   const nb = props?.nb || "";
   const chunk = props?.chunk || "";
-  return /* @__PURE__ */ jsxs14(
+  return /* @__PURE__ */ jsxs15(
     "button",
     {
       type: "button",
@@ -4316,9 +4342,9 @@ function CiteDirective({ props, externalState }) {
         sdk.host?.navigate?.(ROUTE);
       },
       children: [
-        /* @__PURE__ */ jsx16(Icon, { name: "BookOpen", size: 13 }),
-        /* @__PURE__ */ jsx16("span", { children: "SourceBook source" }),
-        chunk ? /* @__PURE__ */ jsx16("span", { className: "sb-mono", children: chunk }) : null
+        /* @__PURE__ */ jsx17(BrandMark, { size: 14 }),
+        /* @__PURE__ */ jsx17("span", { children: "SourceBook source" }),
+        chunk ? /* @__PURE__ */ jsx17("span", { className: "sb-mono", children: chunk }) : null
       ]
     }
   );
@@ -4334,7 +4360,7 @@ var plugin_default = {
       id: "page",
       area: sdk.ROUTES_AREA,
       data: { path: ROUTE },
-      render: () => /* @__PURE__ */ jsx16(SourceBookWorkspace, { ctx, externalState })
+      render: () => /* @__PURE__ */ jsx17(SourceBookWorkspace, { ctx, externalState })
     });
     ctx.register({
       id: "nav",
@@ -4357,7 +4383,7 @@ var plugin_default = {
       ctx.register({
         id: "status",
         area: sdk.STATUSBAR_AREAS.right,
-        render: () => /* @__PURE__ */ jsx16(StatusChip, { externalState })
+        render: () => /* @__PURE__ */ jsx17(StatusChip, { externalState })
       });
     }
     if (sdk.TRANSCRIPT_DIRECTIVE_AREA) {
@@ -4365,7 +4391,7 @@ var plugin_default = {
         id: "cite-directive",
         area: sdk.TRANSCRIPT_DIRECTIVE_AREA,
         data: { name: "cite" },
-        render: (props) => /* @__PURE__ */ jsx16(CiteDirective, { props, externalState })
+        render: (props) => /* @__PURE__ */ jsx17(CiteDirective, { props, externalState })
       });
     }
     if (typeof ctx.registerSettingsPage === "function") {
@@ -4373,7 +4399,7 @@ var plugin_default = {
         id: "sourcebook",
         title: "SourceBook",
         description: "Source-grounded research notebooks and Studio.",
-        render: () => /* @__PURE__ */ jsx16(SettingsPage, {})
+        render: () => /* @__PURE__ */ jsx17(SettingsPage, {})
       });
     }
   }

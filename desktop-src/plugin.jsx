@@ -1,8 +1,9 @@
 // SourceBook: source-grounded research notebooks and interactive Studio for Hermes Desktop.
-import { sdk, Icon } from './sdk.js'
+import { sdk } from './sdk.js'
 import { bindContext } from './api.js'
 import { SourceBookWorkspace } from './SourceBookWorkspace.jsx'
 import { SettingsPage } from './SettingsPage.jsx'
+import { BrandMark } from './components/BrandMark.jsx'
 
 const ROUTE = '/sourcebook'
 
@@ -16,7 +17,7 @@ function StatusChip({ externalState }) {
       onClick={() => sdk.host?.navigate?.(ROUTE)}
       title={`Open SourceBook: ${state.title}`}
     >
-      <Icon name="BookOpen" size={12} />
+      <BrandMark size={13} />
       <span>{state.title}</span>
       {state.dueCards > 0 ? <span className="sb-mono">({state.dueCards} due)</span> : null}
     </button>
@@ -37,7 +38,7 @@ function CiteDirective({ props, externalState }) {
         sdk.host?.navigate?.(ROUTE)
       }}
     >
-      <Icon name="BookOpen" size={13} />
+      <BrandMark size={14} />
       <span>SourceBook source</span>
       {chunk ? <span className="sb-mono">{chunk}</span> : null}
     </button>

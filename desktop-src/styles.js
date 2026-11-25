@@ -94,15 +94,15 @@ export const CSS = `
 }
 
 .sb-brand-mark {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--sb-accent-soft);
-  color: var(--ui-accent);
-  border: 1px solid var(--sb-accent-border);
+  background: var(--sb-surface);
+  color: var(--ui-text-primary);
+  border: 1px solid var(--ui-stroke-secondary);
 }
 
 .sb-nb-select {

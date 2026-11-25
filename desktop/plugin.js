@@ -84,6 +84,52 @@ var LOCAL_GLYPHS = {
   RotateCcw: /* @__PURE__ */ jsxs(Fragment, { children: [
     /* @__PURE__ */ jsx("path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" }),
     /* @__PURE__ */ jsx("path", { d: "M3 3v5h5" })
+  ] }),
+  BarChart2: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("line", { x1: "18", x2: "18", y1: "20", y2: "10" }),
+    /* @__PURE__ */ jsx("line", { x1: "12", x2: "12", y1: "20", y2: "4" }),
+    /* @__PURE__ */ jsx("line", { x1: "6", x2: "6", y1: "20", y2: "14" })
+  ] }),
+  Columns3: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("rect", { width: "18", height: "18", x: "3", y: "3", rx: "2" }),
+    /* @__PURE__ */ jsx("path", { d: "M9 3v18" }),
+    /* @__PURE__ */ jsx("path", { d: "M15 3v18" })
+  ] }),
+  Filter: /* @__PURE__ */ jsx("polygon", { points: "22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" }),
+  ImageDown: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("rect", { width: "18", height: "18", x: "3", y: "3", rx: "2" }),
+    /* @__PURE__ */ jsx("circle", { cx: "9", cy: "9", r: "2" }),
+    /* @__PURE__ */ jsx("path", { d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" })
+  ] }),
+  List: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("line", { x1: "8", x2: "21", y1: "6", y2: "6" }),
+    /* @__PURE__ */ jsx("line", { x1: "8", x2: "21", y1: "12", y2: "12" }),
+    /* @__PURE__ */ jsx("line", { x1: "8", x2: "21", y1: "18", y2: "18" }),
+    /* @__PURE__ */ jsx("line", { x1: "3", x2: "3.01", y1: "6", y2: "6" }),
+    /* @__PURE__ */ jsx("line", { x1: "3", x2: "3.01", y1: "12", y2: "12" }),
+    /* @__PURE__ */ jsx("line", { x1: "3", x2: "3.01", y1: "18", y2: "18" })
+  ] }),
+  ArrowUp: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "m5 12 7-7 7 7" }),
+    /* @__PURE__ */ jsx("path", { d: "M12 19V5" })
+  ] }),
+  ArrowDown: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "M12 5v14" }),
+    /* @__PURE__ */ jsx("path", { d: "m19 12-7 7-7-7" })
+  ] }),
+  ArrowUpDown: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "m21 16-4 4-4-4" }),
+    /* @__PURE__ */ jsx("path", { d: "M17 20V4" }),
+    /* @__PURE__ */ jsx("path", { d: "m3 8 4-4 4 4" }),
+    /* @__PURE__ */ jsx("path", { d: "M7 4v16" })
+  ] }),
+  ChevronRight: /* @__PURE__ */ jsx("path", { d: "m9 18 6-6-6-6" }),
+  ChevronDown: /* @__PURE__ */ jsx("path", { d: "m6 9 6 6 6-6" }),
+  FileJson: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" }),
+    /* @__PURE__ */ jsx("path", { d: "M14 2v4a2 2 0 0 0 2 2h4" }),
+    /* @__PURE__ */ jsx("path", { d: "M10 12a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1 1 1 0 0 1 1 1v1a1 1 0 0 0 1 1" }),
+    /* @__PURE__ */ jsx("path", { d: "M14 18a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1 1 1 0 0 1-1-1v-1a1 1 0 0 0-1-1" })
   ] })
 };
 function Icon({ name, size = 15, strokeWidth = 1.75, className = "", style }) {
@@ -248,15 +294,23 @@ function bakeSvgVariables(svgEl) {
   const bg = resolveCssColor("var(--ui-bg-chrome)", svgEl);
   const bg2 = resolveCssColor("var(--ui-bg-elevated)", svgEl);
   const sidebar = resolveCssColor("var(--ui-bg-sidebar)", svgEl);
+  const subtle = resolveCssColor("var(--ui-bg-quinary, var(--ui-bg-quaternary))", svgEl);
   const fg = resolveCssColor("var(--ui-text-primary)", svgEl);
   const muted = resolveCssColor("var(--ui-text-secondary)", svgEl);
+  const dim = resolveCssColor("var(--ui-text-tertiary)", svgEl);
   const stroke = resolveCssColor("var(--ui-stroke-secondary)", svgEl);
+  const strokeSub = resolveCssColor("var(--ui-stroke-tertiary)", svgEl);
   const accent = resolveCssColor("var(--ui-accent)", svgEl);
   const accentSoft = resolveCssColor("color-mix(in srgb, var(--ui-accent) 16%, var(--ui-bg-elevated))", svgEl);
+  const ok = resolveCssColor("var(--sb-ok, #2da44e)", svgEl);
+  const warn = resolveCssColor("var(--sb-warn, #d29922)", svgEl);
+  const bad = resolveCssColor("var(--sb-bad, #cf222e)", svgEl);
   const replacements = [
     [/var\(--sb-bg[^)]*\)/g, bg],
     [/var\(--sb-surface[^)]*\)/g, bg2],
     [/var\(--sb-sidebar[^)]*\)/g, sidebar],
+    [/var\(--sb-subtle[^)]*\)/g, subtle],
+    [/var\(--sb-hover[^)]*\)/g, subtle],
     [/var\(--ui-bg-chrome[^)]*\)/g, bg],
     [/var\(--ui-bg-elevated[^)]*\)/g, bg2],
     [/var\(--ui-bg-sidebar[^)]*\)/g, sidebar],
@@ -264,12 +318,16 @@ function bakeSvgVariables(svgEl) {
     [/var\(--ui-bg-secondary[^)]*\)/g, bg2],
     [/var\(--ui-text-primary[^)]*\)/g, fg],
     [/var\(--ui-text-secondary[^)]*\)/g, muted],
-    [/var\(--ui-text-tertiary[^)]*\)/g, muted],
+    [/var\(--ui-text-tertiary[^)]*\)/g, dim],
+    [/var\(--ui-text-quaternary[^)]*\)/g, dim],
     [/var\(--ui-stroke-secondary[^)]*\)/g, stroke],
-    [/var\(--ui-stroke-tertiary[^)]*\)/g, stroke],
+    [/var\(--ui-stroke-tertiary[^)]*\)/g, strokeSub],
     [/var\(--sb-accent-soft[^)]*\)/g, accentSoft],
     [/var\(--sb-accent-border[^)]*\)/g, accent],
-    [/var\(--ui-accent[^)]*\)/g, accent]
+    [/var\(--ui-accent[^)]*\)/g, accent],
+    [/var\(--sb-ok[^)]*\)/g, ok],
+    [/var\(--sb-warn[^)]*\)/g, warn],
+    [/var\(--sb-bad[^)]*\)/g, bad]
   ];
   let markup = new XMLSerializer().serializeToString(clone);
   for (const [re, val] of replacements) {
@@ -277,9 +335,69 @@ function bakeSvgVariables(svgEl) {
   }
   return markup;
 }
+function downloadSvgAsPng(svgEl, filename, scale = 2) {
+  return new Promise((resolve, reject) => {
+    try {
+      const svgText = bakeSvgVariables(svgEl);
+      if (!svgText) {
+        resolve(false);
+        return;
+      }
+      const vb = svgEl.viewBox?.baseVal;
+      const w = Math.max(1, Math.round(vb && vb.width || svgEl.clientWidth || 920));
+      const h = Math.max(1, Math.round(vb && vb.height || svgEl.clientHeight || 640));
+      const svgBlob = new Blob([svgText], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = w * scale;
+          canvas.height = h * scale;
+          const c2d = canvas.getContext("2d");
+          if (!c2d) {
+            URL.revokeObjectURL(url);
+            resolve(false);
+            return;
+          }
+          c2d.scale(scale, scale);
+          c2d.drawImage(img, 0, 0, w, h);
+          URL.revokeObjectURL(url);
+          canvas.toBlob((pngBlob) => {
+            if (!pngBlob) {
+              resolve(false);
+              return;
+            }
+            const dlUrl = URL.createObjectURL(pngBlob);
+            const a = document.createElement("a");
+            a.href = dlUrl;
+            a.download = filename.endsWith(".png") ? filename : `${filename}.png`;
+            a.click();
+            if (activeCtx && typeof activeCtx.setTimeout === "function") {
+              activeCtx.setTimeout(() => URL.revokeObjectURL(dlUrl), 1200);
+            } else {
+              URL.revokeObjectURL(dlUrl);
+            }
+            resolve(true);
+          }, "image/png");
+        } catch (err) {
+          URL.revokeObjectURL(url);
+          reject(err);
+        }
+      };
+      img.onerror = (err) => {
+        URL.revokeObjectURL(url);
+        reject(err);
+      };
+      img.src = url;
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
 
 // desktop-src/SourceBookWorkspace.jsx
-import { useCallback, useEffect as useEffect8, useRef as useRef8, useState as useState11 } from "react";
+import { useCallback, useEffect as useEffect9, useMemo as useMemo4, useRef as useRef9, useState as useState12 } from "react";
 
 // desktop-src/styles.js
 import { jsx as jsx2 } from "react/jsx-runtime";
@@ -1006,6 +1124,8 @@ var CSS = `
   padding: 10px 12px;
 }
 .sb-studio-tile {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1021,9 +1141,26 @@ var CSS = `
   text-align: left;
   transition: background-color 140ms var(--sb-ease), border-color 140ms var(--sb-ease), transform 120ms var(--sb-ease);
 }
+/* Subtle dithercn-inspired ordered-dither dot matrix that thickens cleanly on hover */
+.sb-studio-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.09;
+  background-image:
+    radial-gradient(circle at 1px 1px, var(--ui-accent) 0.9px, transparent 0),
+    radial-gradient(circle at 4px 4px, var(--ui-accent) 0.9px, transparent 0);
+  background-size: 6px 6px;
+  mask-image: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, transparent 72%);
+  transition: opacity 150ms var(--sb-ease);
+}
 .sb-studio-tile:hover:not(:disabled) {
   background: var(--sb-accent-soft);
   border-color: var(--sb-accent-border);
+}
+.sb-studio-tile:hover:not(:disabled)::before {
+  opacity: 0.28;
 }
 .sb-studio-tile:active:not(:disabled) {
   transform: scale(0.97);
@@ -1111,39 +1248,420 @@ var CSS = `
   gap: 6px;
 }
 
-/* Data table */
+/* Infographic toolbar & inspector */
+.sb-inf-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sb-inf-detail {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--sb-accent-border);
+  background: var(--sb-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Data table (Linear / Airtable / Stripe evidence workbench) */
+.sb-dt-root {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  min-height: 100%;
+}
+.sb-dt-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid var(--ui-stroke-secondary);
+  border-radius: 10px;
+  background: var(--sb-surface);
+  overflow: hidden;
+}
+.sb-dt-kpi {
+  padding: 10px 14px;
+  border-right: 1px solid var(--ui-stroke-tertiary);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.sb-dt-kpi:last-child {
+  border-right: 0;
+}
+.sb-dt-kpi-lbl {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ui-text-tertiary);
+}
+.sb-dt-kpi-val {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ui-text-primary);
+}
+.sb-dt-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.sb-dt-search-wrap {
+  flex: 1;
+  min-width: 180px;
+  height: 30px;
+  padding: 0 9px;
+  border-radius: 8px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-surface);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: border-color 140ms var(--sb-ease);
+}
+.sb-dt-search-wrap:focus-within {
+  border-color: var(--ui-accent);
+}
+.sb-dt-search {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ui-text-primary);
+  font: inherit;
+  font-size: 12px;
+  outline: none;
+}
+.sb-dt-clear {
+  border: 0;
+  background: transparent;
+  color: var(--ui-text-tertiary);
+  cursor: pointer;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+}
+.sb-dt-clear:hover {
+  color: var(--ui-text-primary);
+}
+.sb-dt-col-menu {
+  position: absolute;
+  top: 34px;
+  right: 0;
+  min-width: 176px;
+  padding: 6px;
+  border-radius: 9px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-surface);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sb-dt-col-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 7px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--ui-text-primary);
+  cursor: pointer;
+}
+.sb-dt-col-opt:hover {
+  background: var(--sb-hover);
+}
+.sb-dt-facets {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sb-dt-facet-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 999px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-surface);
+  color: var(--ui-text-secondary);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 130ms var(--sb-ease), border-color 130ms var(--sb-ease), color 130ms var(--sb-ease);
+}
+.sb-dt-facet-chip:hover {
+  background: var(--sb-hover);
+  color: var(--ui-text-primary);
+}
+.sb-dt-facet-chip[data-active="true"] {
+  background: var(--sb-accent-soft);
+  border-color: var(--sb-accent-border);
+  color: var(--ui-accent);
+  font-weight: 600;
+}
+.sb-dt-facet-n {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 10.5px;
+  opacity: 0.72;
+}
 .sb-table-wrap {
   border: 1px solid var(--ui-stroke-secondary);
-  border-radius: 9px;
+  border-radius: 10px;
   overflow: auto;
   background: var(--sb-surface);
+}
+.sb-dt-table-stage {
+  max-height: calc(100vh - 280px);
+  min-height: 360px;
 }
 .sb-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 12.5px;
 }
 .sb-table th {
   position: sticky;
   top: 0;
+  z-index: 2;
   text-align: left;
-  padding: 9px 11px;
+  padding: 10px 12px;
   background: var(--sb-sidebar);
   border-bottom: 1px solid var(--ui-stroke-secondary);
-  color: var(--ui-text-secondary);
-  font-weight: 600;
+  color: var(--ui-text-tertiary);
+  font-size: 11px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
+  transition: color 120ms var(--sb-ease);
 }
-.sb-table td {
-  padding: 9px 11px;
-  border-bottom: 1px solid var(--ui-stroke-tertiary);
-  vertical-align: top;
+.sb-table th:hover {
   color: var(--ui-text-primary);
 }
-.sb-table tbody tr:hover {
+.sb-table th[data-sorted] {
+  color: var(--ui-text-primary);
+}
+.sb-dt-th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.sb-table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--ui-stroke-tertiary);
+  vertical-align: middle;
+  color: var(--ui-text-primary);
+  line-height: 1.48;
+}
+.sb-table[data-density="compact"] td {
+  padding: 7px 10px;
+  font-size: 12px;
+}
+.sb-dt-row {
+  cursor: pointer;
+  transition: background-color 110ms var(--sb-ease);
+}
+.sb-table tbody tr.sb-dt-row:hover {
   background: var(--sb-hover);
+}
+.sb-table tbody tr.sb-dt-row[data-expanded="true"] {
+  background: var(--sb-accent-soft);
+}
+.sb-dt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 186px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-size: 11.5px;
+  font-weight: 550;
+  line-height: 1.25;
+}
+.sb-dt-badge-txt {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sb-dt-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.sb-dt-tag {
+  display: inline-block;
+  max-width: 162px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--sb-subtle);
+  border: 1px solid var(--ui-stroke-tertiary);
+  color: var(--ui-text-secondary);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+.sb-dt-qual {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--sb-bg);
+  border: 1px solid var(--ui-stroke-tertiary);
+  color: var(--ui-text-tertiary);
+  font-size: 10.5px;
+  font-weight: 500;
+}
+.sb-dt-metric-cell {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 78px;
+}
+.sb-dt-metric-val {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.sb-dt-bar-track {
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--ui-stroke-tertiary);
+  overflow: hidden;
+}
+.sb-dt-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 220ms var(--sb-ease);
+}
+.sb-dt-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.sb-dt-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.sb-dt-row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+.sb-dt-copy-btn {
+  opacity: 0.25;
+  border: 0;
+  background: transparent;
+  color: var(--ui-text-secondary);
+  cursor: pointer;
+  padding: 3px 4px;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  transition: opacity 120ms var(--sb-ease), background-color 120ms var(--sb-ease), color 120ms var(--sb-ease);
+}
+.sb-dt-row:hover .sb-dt-copy-btn {
+  opacity: 1;
+}
+.sb-dt-copy-btn:hover {
+  background: var(--sb-subtle);
+  color: var(--ui-text-primary);
+}
+.sb-dt-detail-row td {
+  padding: 0;
+  background: var(--sb-bg);
+}
+.sb-dt-detail-panel {
+  padding: 12px 16px 14px 40px;
+  border-left: 2px solid var(--ui-accent);
+}
+.sb-dt-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+.sb-dt-detail-key {
+  font-size: 10px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ui-text-tertiary);
+  margin-bottom: 2px;
+}
+.sb-dt-detail-val {
+  font-size: 12.5px;
+  color: var(--ui-text-primary);
+  line-height: 1.55;
+}
+.sb-dt-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px;
+}
+.sb-dt-card {
+  padding: 14px 15px;
+  border-radius: 10px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sb-dt-chart-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sb-dt-chart-group {
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sb-dt-chart-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ui-stroke-tertiary);
+}
+.sb-dt-chart-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.sb-dt-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--ui-text-tertiary);
+  padding: 0 2px;
 }
 
 /* Slide deck stage */
@@ -1417,6 +1935,400 @@ var CSS = `
   color: var(--ui-text-primary);
   font-size: 12px;
   cursor: pointer;
+}
+
+/* Ordered-dither primitives (dithercn / Paper Shaders inspired, zero-bloat) */
+.sb-dither-canvas {
+  display: block;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+.sb-dither-fill {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.22) 0 1px,
+      transparent 1px 3px
+    );
+}
+.sb-native-catalog-wrap {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--ui-stroke-tertiary);
+  max-height: 360px;
+  overflow: auto;
+}
+
+/* Audio Overview dithered waveform stage */
+.sb-audio-stage {
+  padding: 12px 14px;
+  border-radius: 11px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Flashcards tactile layered deck */
+.sb-fc-mastery-bar {
+  display: flex;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--ui-stroke-tertiary);
+  overflow: hidden;
+  gap: 1px;
+}
+.sb-fc-stack {
+  position: relative;
+  padding-bottom: 12px;
+}
+.sb-fc-layer {
+  position: absolute;
+  border-radius: 13px;
+  border: 1px solid var(--ui-stroke-tertiary);
+  background: var(--sb-surface);
+  pointer-events: none;
+}
+.sb-fc-layer-1 {
+  inset: 7px 8px 5px;
+  opacity: 0.62;
+}
+.sb-fc-layer-2 {
+  inset: 13px 16px 0;
+  opacity: 0.34;
+}
+.sb-fc-card-rich {
+  position: relative;
+  overflow: hidden;
+  min-height: 290px;
+  padding: 24px 28px 20px;
+  border-radius: 13px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-surface);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.16);
+}
+.sb-fc-card-rich[data-flipped="true"] {
+  border-color: color-mix(in srgb, #10b981 48%, var(--ui-stroke-secondary));
+}
+.sb-fc-grade-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-surface);
+  color: var(--ui-text-primary);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 130ms var(--sb-ease), border-color 130ms var(--sb-ease), transform 110ms var(--sb-ease);
+}
+.sb-fc-grade-btn:active {
+  transform: scale(0.97);
+}
+.sb-fc-grade-btn[data-tone="bad"] {
+  border-color: rgba(244, 63, 94, 0.35);
+  background: rgba(244, 63, 94, 0.08);
+  color: #fb7185;
+}
+.sb-fc-grade-btn[data-tone="bad"]:hover {
+  background: rgba(244, 63, 94, 0.16);
+}
+.sb-fc-grade-btn[data-tone="warn"] {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.08);
+  color: #fbbf24;
+}
+.sb-fc-grade-btn[data-tone="warn"]:hover {
+  background: rgba(245, 158, 11, 0.16);
+}
+.sb-fc-grade-btn[data-tone="accent"] {
+  border-color: var(--sb-accent-border);
+  background: var(--sb-accent-soft);
+  color: var(--ui-accent);
+}
+.sb-fc-grade-btn[data-tone="accent"]:hover {
+  background: color-mix(in srgb, var(--ui-accent) 22%, transparent);
+}
+.sb-fc-grade-btn[data-tone="ok"] {
+  border-color: rgba(16, 185, 129, 0.38);
+  background: rgba(16, 185, 129, 0.10);
+  color: #34d399;
+}
+.sb-fc-grade-btn[data-tone="ok"]:hover {
+  background: rgba(16, 185, 129, 0.18);
+}
+
+/* Slide Deck grand presentation studio */
+.sb-slide-stage-rich {
+  position: relative;
+  overflow: hidden;
+  border-radius: 13px;
+  padding: 28px 36px 22px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+}
+.sb-sl-top-ribbon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.5px;
+}
+.sb-sl-cover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  margin-block: auto;
+  padding: 12px 16px;
+}
+.sb-sl-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--ui-stroke-secondary);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.sb-sl-stat-split {
+  display: grid;
+  grid-template-columns: 0.85fr 1.35fr;
+  gap: 24px;
+  align-items: stretch;
+  margin-block: auto;
+}
+.sb-sl-stat-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--ui-stroke-secondary);
+  padding: 22px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sb-sl-point {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--ui-stroke-secondary);
+}
+.sb-sl-step {
+  font-size: 10.5px;
+  font-weight: 750;
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+.sb-sl-cards-grid {
+  display: grid;
+  gap: 10px;
+}
+.sb-sl-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 13px 15px;
+  border-radius: 10px;
+  border: 1px solid var(--ui-stroke-secondary);
+}
+.sb-sl-quote-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-block: auto;
+  padding: 10px 12px;
+}
+.sb-sl-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+}
+.sb-sl-overview-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 15px;
+  border-radius: 10px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-surface);
+  cursor: pointer;
+  font: inherit;
+  min-height: 118px;
+  transition: border-color 140ms var(--sb-ease), background-color 140ms var(--sb-ease);
+}
+.sb-sl-overview-card:hover {
+  background: var(--sb-hover);
+}
+.sb-sl-overview-card[data-active="true"] {
+  border-color: var(--ui-accent);
+  background: var(--sb-accent-soft);
+}
+
+/* Quiz Mastery Studio */
+.sb-qz-hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-surface);
+}
+.sb-qz-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.sb-qz-stepper {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sb-qz-step {
+  width: 30px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-surface);
+  color: var(--ui-text-secondary);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11.5px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background-color 120ms var(--sb-ease), border-color 120ms var(--sb-ease), color 120ms var(--sb-ease);
+}
+.sb-qz-step:hover {
+  border-color: var(--ui-accent);
+  color: var(--ui-text-primary);
+}
+.sb-qz-step[data-state="correct"] {
+  border-color: rgba(16, 185, 129, 0.48);
+  background: rgba(16, 185, 129, 0.14);
+  color: #34d399;
+}
+.sb-qz-step[data-state="wrong"] {
+  border-color: rgba(244, 63, 94, 0.48);
+  background: rgba(244, 63, 94, 0.14);
+  color: #fb7185;
+}
+.sb-qz-step[data-active="true"] {
+  border-color: var(--ui-accent);
+  box-shadow: 0 0 0 1px var(--ui-accent);
+  color: var(--ui-text-primary);
+}
+.sb-qz-stage {
+  padding: 20px 22px;
+  border-radius: 12px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sb-qz-stage-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ui-stroke-tertiary);
+}
+.sb-qz-options {
+  display: grid;
+  gap: 8px;
+}
+.sb-qz-opt {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 13px;
+  border-radius: 9px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-bg);
+  color: var(--ui-text-primary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 130ms var(--sb-ease), border-color 130ms var(--sb-ease), opacity 130ms var(--sb-ease);
+}
+.sb-qz-opt:hover {
+  background: var(--sb-hover);
+  border-color: var(--sb-accent-border);
+}
+.sb-qz-opt[data-state="correct"] {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.13);
+}
+.sb-qz-opt[data-state="wrong"] {
+  border-color: var(--sb-bad);
+  background: color-mix(in srgb, var(--sb-bad) 13%, var(--sb-bg));
+}
+.sb-qz-opt[data-state="dim"] {
+  opacity: 0.56;
+}
+.sb-qz-keycap {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-surface);
+  color: var(--ui-text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sb-qz-opt[data-state="correct"] .sb-qz-keycap {
+  border-color: #10b981;
+  color: #34d399;
+}
+.sb-qz-opt[data-state="wrong"] .sb-qz-keycap {
+  border-color: var(--sb-bad);
+  color: var(--sb-bad);
+}
+.sb-qz-explain {
+  padding: 12px 14px;
+  border-radius: 9px;
+  border: 1px solid var(--ui-stroke-secondary);
+  border-left-width: 3px;
+  background: var(--sb-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sb-qz-explain[data-ok="true"] {
+  border-left-color: #10b981;
+}
+.sb-qz-explain[data-ok="false"] {
+  border-left-color: var(--sb-bad);
+}
+.sb-qz-complete {
+  padding: 14px 16px;
+  border-radius: 11px;
+  border: 1px solid rgba(16, 185, 129, 0.38);
+  background: rgba(16, 185, 129, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 @media (max-width: 1040px) {
@@ -2483,7 +3395,7 @@ function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
 }
 
 // desktop-src/components/ChatPanel.jsx
-import { useEffect as useEffect2, useRef as useRef3, useState as useState3 } from "react";
+import { useEffect as useEffect3, useRef as useRef4, useState as useState3 } from "react";
 
 // desktop-src/components/MarkdownBody.jsx
 import { jsx as jsx5, jsxs as jsxs4 } from "react/jsx-runtime";
@@ -2674,8 +3586,162 @@ function MarkdownBody({ text, citeIndexMap, onOpenChunk }) {
   return /* @__PURE__ */ jsx5("div", { className: "sb-msg-body", children: blocks });
 }
 
+// desktop-src/components/DitherSurface.jsx
+import { useEffect as useEffect2, useRef as useRef3 } from "react";
+import { jsx as jsx6 } from "react/jsx-runtime";
+var BAYER_4X4 = [
+  0 / 16,
+  8 / 16,
+  2 / 16,
+  10 / 16,
+  12 / 16,
+  4 / 16,
+  14 / 16,
+  6 / 16,
+  3 / 16,
+  11 / 16,
+  1 / 16,
+  9 / 16,
+  15 / 16,
+  7 / 16,
+  13 / 16,
+  5 / 16
+];
+function parseRgb(colorStr) {
+  const m = String(colorStr || "").match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i);
+  if (m) {
+    return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
+  }
+  const r = String(colorStr || "").match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if (r) {
+    return [Number(r[1]), Number(r[2]), Number(r[3])];
+  }
+  return [59, 130, 246];
+}
+function prefersReducedMotion() {
+  try {
+    return typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch {
+    return false;
+  }
+}
+function DitherCanvas({
+  variant = "aurora",
+  animated = false,
+  color = "var(--ui-accent)",
+  secondaryColor = "#10b981",
+  opacity = 0.28,
+  cell = 3,
+  cols = 148,
+  rows = 32,
+  className = "",
+  style
+}) {
+  const canvasRef = useRef3(null);
+  useEffect2(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return void 0;
+    canvas.width = cols;
+    canvas.height = rows;
+    const c2d = canvas.getContext("2d");
+    if (!c2d) return void 0;
+    const img = c2d.createImageData(cols, rows);
+    const data = img.data;
+    const readPalette = () => {
+      const c1 = parseRgb(resolveCssColor(color, canvas));
+      const c2 = parseRgb(resolveCssColor(secondaryColor, canvas));
+      return [c1, c2];
+    };
+    let [rgbA, rgbB] = readPalette();
+    const paint = (timeMs) => {
+      const t = timeMs * 55e-5;
+      for (let y = 0; y < rows; y += 1) {
+        const ny = y / Math.max(1, rows - 1);
+        const bRow = (y & 3) * 4;
+        for (let x = 0; x < cols; x += 1) {
+          const nx = x / Math.max(1, cols - 1);
+          let field = 0;
+          let blend = nx;
+          if (variant === "wave") {
+            const w1 = Math.sin(nx * 10.5 + t * 2.2) * 0.24 + Math.sin(nx * 23 - t * 1.4) * 0.11;
+            const w2 = Math.cos(nx * 7.5 - t * 1.7) * 0.2;
+            const env = Math.sin(nx * Math.PI);
+            const center = 0.5 + (w1 + w2) * env;
+            const dist = Math.abs(ny - center);
+            field = Math.max(0, 1 - dist * 3.1) * (0.35 + 0.65 * env);
+            blend = 0.5 + 0.5 * Math.sin(nx * 6 + t);
+          } else if (variant === "mesh") {
+            const dx = nx - 0.14;
+            const dy = ny - 0.12;
+            const r = Math.sqrt(dx * dx * 0.65 + dy * dy * 1.8);
+            const ripple = 0.06 * Math.sin(nx * 8 + t);
+            field = Math.max(0, (1 - r * 1.25 + ripple) * (1 - ny * 0.82));
+            blend = nx * 0.75;
+          } else {
+            const c1 = Math.sin(nx * 5.2 + t * 1.1) * 0.5 + 0.5;
+            const c2 = Math.sin(nx * 11.4 - t * 0.8 + 1.3) * 0.5 + 0.5;
+            const verticalFade = Math.pow(Math.max(0, 1 - ny), 1.35);
+            field = (c1 * 0.55 + c2 * 0.45) * verticalFade * 0.92;
+            blend = c1;
+          }
+          const threshold = BAYER_4X4[bRow + (x & 3)];
+          const idx = (y * cols + x) * 4;
+          if (field > threshold) {
+            const useB = blend > 0.58;
+            const rgb = useB ? rgbB : rgbA;
+            data[idx] = rgb[0];
+            data[idx + 1] = rgb[1];
+            data[idx + 2] = rgb[2];
+            data[idx + 3] = Math.round(255 * Math.min(1, 0.55 + field * 0.45));
+          } else {
+            data[idx + 3] = 0;
+          }
+        }
+      }
+      c2d.putImageData(img, 0, 0);
+    };
+    paint(1400);
+    if (!animated || prefersReducedMotion() || typeof sdk.createBudgetedLoop !== "function") {
+      return void 0;
+    }
+    const loop = sdk.createBudgetedLoop(
+      (now) => {
+        paint(now);
+      },
+      {
+        fps: 10,
+        pauseWhenUnfocused: true
+      }
+    );
+    return () => {
+      loop?.dispose?.();
+    };
+  }, [variant, animated, color, secondaryColor, cols, rows]);
+  return /* @__PURE__ */ jsx6(
+    "canvas",
+    {
+      ref: canvasRef,
+      "aria-hidden": "true",
+      className: className ? `sb-dither-canvas ${className}` : "sb-dither-canvas",
+      style: {
+        opacity,
+        imageRendering: "pixelated",
+        ...style
+      },
+      "data-cell": cell
+    }
+  );
+}
+function HermesSpinner({ size = 12, className = "" }) {
+  const GlyphSpinner = sdk.GlyphSpinner;
+  if (typeof GlyphSpinner === "function") {
+    return /* @__PURE__ */ jsx6(GlyphSpinner, { spinner: "breathe", className, style: { fontSize: size, lineHeight: 1 } });
+  }
+  return /* @__PURE__ */ jsx6("span", { className: "sb-dt-dot", style: { background: "var(--ui-accent)", width: 7, height: 7 }, "aria-hidden": "true" });
+}
+
 // desktop-src/components/ChatPanel.jsx
-import { Fragment as Fragment3, jsx as jsx6, jsxs as jsxs5 } from "react/jsx-runtime";
+import { Fragment as Fragment3, jsx as jsx7, jsxs as jsxs5 } from "react/jsx-runtime";
 var PERSONAS = [
   { id: "default", label: "Default" },
   { id: "analyst", label: "Analyst" },
@@ -2710,14 +3776,14 @@ function ChatPanel({
   const [partialText, setPartialText] = useState3("");
   const [briefingBusy, setBriefingBusy] = useState3(false);
   const [claimFilter, setClaimFilter] = useState3("all");
-  const endRef = useRef3(null);
-  const cancelPollRef = useRef3(null);
-  const activeJobRef = useRef3("");
+  const endRef = useRef4(null);
+  const cancelPollRef = useRef4(null);
+  const activeJobRef = useRef4("");
   const enabledSources = sources.filter((s) => s.enabled);
-  useEffect2(() => {
+  useEffect3(() => {
     return () => cancelPollRef.current?.();
   }, []);
-  useEffect2(() => {
+  useEffect3(() => {
     if (!ctx?.onEvent) return void 0;
     return ctx.onEvent("plugin.sourcebook.job.progress", (ev) => {
       const payload = ev?.payload || ev || {};
@@ -2728,7 +3794,7 @@ function ChatPanel({
       }
     });
   }, [ctx]);
-  useEffect2(() => {
+  useEffect3(() => {
     if (centerTab === "chat" && endRef.current) {
       endRef.current.scrollIntoView({ block: "end" });
     }
@@ -2860,7 +3926,7 @@ function ChatPanel({
             "data-active": centerTab === "chat",
             onClick: () => onChangeCenterTab("chat"),
             children: [
-              /* @__PURE__ */ jsx6(Icon, { name: "MessageSquare", size: 12 }),
+              /* @__PURE__ */ jsx7(Icon, { name: "MessageSquare", size: 12 }),
               " Grounded Chat"
             ]
           }
@@ -2875,10 +3941,10 @@ function ChatPanel({
             "data-active": centerTab === "claims",
             onClick: () => onChangeCenterTab("claims"),
             children: [
-              /* @__PURE__ */ jsx6(Icon, { name: "ShieldCheck", size: 12 }),
+              /* @__PURE__ */ jsx7(Icon, { name: "ShieldCheck", size: 12 }),
               " Claim Ledger",
               " ",
-              /* @__PURE__ */ jsx6("span", { className: "sb-num", style: { opacity: 0.7 }, children: claims.length + conflicts.length })
+              /* @__PURE__ */ jsx7("span", { className: "sb-num", style: { opacity: 0.7 }, children: claims.length + conflicts.length })
             ]
           }
         ),
@@ -2892,20 +3958,31 @@ function ChatPanel({
             "data-active": centerTab === "coverage",
             onClick: () => onChangeCenterTab("coverage"),
             children: [
-              /* @__PURE__ */ jsx6(Icon, { name: "BarChart3", size: 12 }),
+              /* @__PURE__ */ jsx7(Icon, { name: "BarChart3", size: 12 }),
               " Coverage Map"
             ]
           }
         )
       ] }),
-      /* @__PURE__ */ jsx6("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: centerTab === "chat" && messages.length > 0 ? /* @__PURE__ */ jsx6("button", { type: "button", className: "sb-btn sb-btn-ghost", onClick: clearChat, children: "Clear" }) : null })
+      /* @__PURE__ */ jsx7("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: centerTab === "chat" && messages.length > 0 ? /* @__PURE__ */ jsx7("button", { type: "button", className: "sb-btn sb-btn-ghost", onClick: clearChat, children: "Clear" }) : null })
     ] }),
     centerTab === "chat" ? /* @__PURE__ */ jsxs5(Fragment3, { children: [
       /* @__PURE__ */ jsxs5("div", { className: "sb-chat-stream sb-scroll", children: [
-        sources.length > 0 ? /* @__PURE__ */ jsxs5("section", { className: "sb-briefing", style: { margin: 0 }, children: [
-          /* @__PURE__ */ jsxs5("div", { className: "sb-briefing-head", children: [
+        sources.length > 0 ? /* @__PURE__ */ jsxs5("section", { className: "sb-briefing", style: { margin: 0, position: "relative", overflow: "hidden" }, children: [
+          /* @__PURE__ */ jsx7(
+            DitherCanvas,
+            {
+              variant: "aurora",
+              animated: briefingBusy,
+              opacity: 0.18,
+              cols: 136,
+              rows: 22,
+              style: { position: "absolute", inset: "0 0 auto 0", width: "100%", height: 68, pointerEvents: "none" }
+            }
+          ),
+          /* @__PURE__ */ jsxs5("div", { className: "sb-briefing-head", style: { position: "relative" }, children: [
             /* @__PURE__ */ jsxs5("span", { className: "sb-briefing-title", children: [
-              /* @__PURE__ */ jsx6(Icon, { name: "BookOpen", size: 14 }),
+              /* @__PURE__ */ jsx7(Icon, { name: "BookOpen", size: 14 }),
               " Notebook Briefing"
             ] }),
             /* @__PURE__ */ jsxs5(
@@ -2916,7 +3993,7 @@ function ChatPanel({
                 disabled: briefingBusy || enabledSources.length === 0,
                 onClick: generateBriefing,
                 children: [
-                  /* @__PURE__ */ jsx6(Icon, { name: "RefreshCw", size: 12 }),
+                  briefingBusy ? /* @__PURE__ */ jsx7(HermesSpinner, { size: 11 }) : /* @__PURE__ */ jsx7(Icon, { name: "RefreshCw", size: 12 }),
                   " ",
                   briefingBusy ? "Updating..." : guide ? "Refresh" : "Generate briefing"
                 ]
@@ -2924,9 +4001,9 @@ function ChatPanel({
             )
           ] }),
           guide?.overview ? /* @__PURE__ */ jsxs5(Fragment3, { children: [
-            /* @__PURE__ */ jsx6("p", { className: "sb-briefing-text", children: guide.overview }),
-            guide.topics?.length ? /* @__PURE__ */ jsx6("div", { className: "sb-chips", children: guide.topics.map((t, idx) => /* @__PURE__ */ jsx6("span", { className: "sb-kind-tag", style: { textTransform: "none", padding: "2px 7px" }, children: t }, idx)) }) : null,
-            guide.suggested_questions?.length ? /* @__PURE__ */ jsx6("div", { className: "sb-chips", children: guide.suggested_questions.map((sq, idx) => /* @__PURE__ */ jsx6("button", { type: "button", className: "sb-chip-q", onClick: () => sendQuestion(sq), children: sq }, idx)) }) : null
+            /* @__PURE__ */ jsx7("p", { className: "sb-briefing-text", children: guide.overview }),
+            guide.topics?.length ? /* @__PURE__ */ jsx7("div", { className: "sb-chips", children: guide.topics.map((t, idx) => /* @__PURE__ */ jsx7("span", { className: "sb-kind-tag", style: { textTransform: "none", padding: "2px 7px" }, children: t }, idx)) }) : null,
+            guide.suggested_questions?.length ? /* @__PURE__ */ jsx7("div", { className: "sb-chips", children: guide.suggested_questions.map((sq, idx) => /* @__PURE__ */ jsx7("button", { type: "button", className: "sb-chip-q", onClick: () => sendQuestion(sq), children: sq }, idx)) }) : null
           ] }) : /* @__PURE__ */ jsxs5("p", { className: "sb-briefing-text", children: [
             enabledSources.length,
             " active source",
@@ -2935,13 +4012,13 @@ function ChatPanel({
           ] })
         ] }) : null,
         messages.length === 0 && sources.length === 0 ? /* @__PURE__ */ jsxs5("div", { className: "sb-empty", style: { marginTop: 48 }, children: [
-          /* @__PURE__ */ jsx6(Icon, { name: "Library", size: 26 }),
-          /* @__PURE__ */ jsx6("div", { style: { fontWeight: 650, fontSize: 14, color: "var(--ui-text-primary)" }, children: "Add sources to begin" }),
-          /* @__PURE__ */ jsx6("div", { style: { maxWidth: 400, fontSize: 12.5 }, children: "Upload PDFs, DOCX, Markdown, CSVs, audio, YouTube links, or sync a local folder in the left rail. Every reply links inline citations back to the exact passage." })
+          /* @__PURE__ */ jsx7(Icon, { name: "Library", size: 26 }),
+          /* @__PURE__ */ jsx7("div", { style: { fontWeight: 650, fontSize: 14, color: "var(--ui-text-primary)" }, children: "Add sources to begin" }),
+          /* @__PURE__ */ jsx7("div", { style: { maxWidth: 400, fontSize: 12.5 }, children: "Upload PDFs, DOCX, Markdown, CSVs, audio, YouTube links, or sync a local folder in the left rail. Every reply links inline citations back to the exact passage." })
         ] }) : null,
         messages.map((msg) => {
           if (msg.role === "user") {
-            return /* @__PURE__ */ jsx6("div", { className: "sb-msg sb-msg-user", children: msg.content }, msg.id);
+            return /* @__PURE__ */ jsx7("div", { className: "sb-msg sb-msg-user", children: msg.content }, msg.id);
           }
           const citeIndex = /* @__PURE__ */ new Map();
           (msg.citations || []).forEach((cid, i) => citeIndex.set(cid, i + 1));
@@ -2949,7 +4026,7 @@ function ChatPanel({
           const sup = gr.claims_supported ?? (msg.claims || []).filter((c) => c.verdict === "supported").length;
           const unsup = gr.claims_unsupported ?? (msg.claims || []).filter((c) => c.verdict === "unsupported").length;
           return /* @__PURE__ */ jsxs5("article", { className: "sb-msg sb-msg-assistant", children: [
-            /* @__PURE__ */ jsx6(MarkdownBody, { text: msg.content, citeIndexMap: citeIndex, onOpenChunk }),
+            /* @__PURE__ */ jsx7(MarkdownBody, { text: msg.content, citeIndexMap: citeIndex, onOpenChunk }),
             /* @__PURE__ */ jsxs5("div", { className: "sb-msg-foot", children: [
               /* @__PURE__ */ jsxs5("div", { style: { display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }, children: [
                 typeof gr.score === "number" ? /* @__PURE__ */ jsxs5(
@@ -2967,14 +4044,14 @@ function ChatPanel({
                   }
                 ) : null,
                 sup > 0 ? /* @__PURE__ */ jsxs5("span", { className: "sb-verdict", "data-v": "supported", children: [
-                  /* @__PURE__ */ jsx6("span", { className: "sb-num", children: sup }),
+                  /* @__PURE__ */ jsx7("span", { className: "sb-num", children: sup }),
                   " verified"
                 ] }) : null,
                 unsup > 0 ? /* @__PURE__ */ jsxs5("span", { className: "sb-verdict", "data-v": "unsupported", children: [
-                  /* @__PURE__ */ jsx6("span", { className: "sb-num", children: unsup }),
+                  /* @__PURE__ */ jsx7("span", { className: "sb-num", children: unsup }),
                   " uncited"
                 ] }) : null,
-                gr.model ? /* @__PURE__ */ jsx6("span", { className: "sb-kind-tag", style: { textTransform: "none" }, title: `Answered by ${gr.provider ? `${gr.provider} / ` : ""}${gr.model}`, children: gr.model }) : gr.mode === "extractive" ? /* @__PURE__ */ jsx6("span", { className: "sb-kind-tag", title: "Generated locally from indexed chunks without an external model call", children: "Local extractive" }) : null
+                gr.model ? /* @__PURE__ */ jsx7("span", { className: "sb-kind-tag", style: { textTransform: "none" }, title: `Answered by ${gr.provider ? `${gr.provider} / ` : ""}${gr.model}`, children: gr.model }) : gr.mode === "extractive" ? /* @__PURE__ */ jsx7("span", { className: "sb-kind-tag", title: "Generated locally from indexed chunks without an external model call", children: "Local extractive" }) : null
               ] }),
               /* @__PURE__ */ jsxs5("div", { style: { display: "flex", alignItems: "center", gap: 4 }, children: [
                 /* @__PURE__ */ jsxs5(
@@ -2984,7 +4061,7 @@ function ChatPanel({
                     className: "sb-btn sb-btn-ghost",
                     onClick: () => copyText(msg.content),
                     children: [
-                      /* @__PURE__ */ jsx6(Icon, { name: "Copy", size: 12 }),
+                      /* @__PURE__ */ jsx7(Icon, { name: "Copy", size: 12 }),
                       " Copy"
                     ]
                   }
@@ -2996,7 +4073,7 @@ function ChatPanel({
                     className: "sb-btn sb-btn-ghost",
                     onClick: () => saveAsNote(msg),
                     children: [
-                      /* @__PURE__ */ jsx6(Icon, { name: "BookmarkPlus", size: 12 }),
+                      /* @__PURE__ */ jsx7(Icon, { name: "BookmarkPlus", size: 12 }),
                       " Save note"
                     ]
                   }
@@ -3006,17 +4083,17 @@ function ChatPanel({
           ] }, msg.id);
         }),
         asking ? /* @__PURE__ */ jsxs5("div", { className: "sb-msg sb-msg-assistant", "aria-busy": "true", children: [
-          partialText ? /* @__PURE__ */ jsx6(MarkdownBody, { text: partialText, citeIndexMap: /* @__PURE__ */ new Map(), onOpenChunk }) : null,
+          partialText ? /* @__PURE__ */ jsx7(MarkdownBody, { text: partialText, citeIndexMap: /* @__PURE__ */ new Map(), onOpenChunk }) : null,
           /* @__PURE__ */ jsxs5("div", { style: { display: "flex", alignItems: "center", gap: 8, color: "var(--ui-text-secondary)", fontSize: 12 }, children: [
-            /* @__PURE__ */ jsx6(Icon, { name: "Search", size: 13 }),
+            /* @__PURE__ */ jsx7(Icon, { name: "Search", size: 13 }),
             " ",
             stage || "Searching active sources..."
           ] })
         ] }) : null,
-        /* @__PURE__ */ jsx6("div", { ref: endRef })
+        /* @__PURE__ */ jsx7("div", { ref: endRef })
       ] }),
-      /* @__PURE__ */ jsx6("div", { className: "sb-composer-wrap", children: /* @__PURE__ */ jsxs5("div", { className: "sb-composer", children: [
-        /* @__PURE__ */ jsx6(
+      /* @__PURE__ */ jsx7("div", { className: "sb-composer-wrap", children: /* @__PURE__ */ jsxs5("div", { className: "sb-composer", children: [
+        /* @__PURE__ */ jsx7(
           "textarea",
           {
             className: "sb-textarea",
@@ -3037,13 +4114,13 @@ function ChatPanel({
         /* @__PURE__ */ jsxs5("div", { className: "sb-composer-bar", style: { flexWrap: "wrap", gap: 8 }, children: [
           /* @__PURE__ */ jsxs5("div", { style: { display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }, children: [
             /* @__PURE__ */ jsxs5("span", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: [
-              /* @__PURE__ */ jsx6("span", { className: "sb-num", children: enabledSources.length }),
+              /* @__PURE__ */ jsx7("span", { className: "sb-num", children: enabledSources.length }),
               "/",
               sources.length,
               " active"
             ] }),
             notebook ? /* @__PURE__ */ jsxs5(Fragment3, { children: [
-              /* @__PURE__ */ jsx6(
+              /* @__PURE__ */ jsx7(
                 "select",
                 {
                   className: "sb-select",
@@ -3056,7 +4133,7 @@ function ChatPanel({
                   ] }, p.id))
                 }
               ),
-              /* @__PURE__ */ jsx6(
+              /* @__PURE__ */ jsx7(
                 "select",
                 {
                   className: "sb-select",
@@ -3079,7 +4156,7 @@ function ChatPanel({
               disabled: asking || !input.trim() || enabledSources.length === 0,
               onClick: () => sendQuestion(),
               children: [
-                /* @__PURE__ */ jsx6(Icon, { name: "ArrowUp", size: 13 }),
+                /* @__PURE__ */ jsx7(Icon, { name: "ArrowUp", size: 13 }),
                 " Ask"
               ]
             }
@@ -3090,20 +4167,20 @@ function ChatPanel({
     centerTab === "claims" ? /* @__PURE__ */ jsxs5("div", { className: "sb-panel-pad sb-scroll", style: { flex: 1 }, children: [
       /* @__PURE__ */ jsxs5("div", { className: "sb-kpi-strip", style: { gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }, children: [
         /* @__PURE__ */ jsxs5("div", { className: "sb-kpi", children: [
-          /* @__PURE__ */ jsx6("div", { className: "sb-kpi-label", children: "Verified" }),
-          /* @__PURE__ */ jsx6("div", { className: "sb-kpi-val", style: { color: "var(--sb-ok)" }, children: supportedCount })
+          /* @__PURE__ */ jsx7("div", { className: "sb-kpi-label", children: "Verified" }),
+          /* @__PURE__ */ jsx7("div", { className: "sb-kpi-val", style: { color: "var(--sb-ok)" }, children: supportedCount })
         ] }),
         /* @__PURE__ */ jsxs5("div", { className: "sb-kpi", children: [
-          /* @__PURE__ */ jsx6("div", { className: "sb-kpi-label", children: "Partial" }),
-          /* @__PURE__ */ jsx6("div", { className: "sb-kpi-val", style: { color: "var(--sb-warn)" }, children: partialCount })
+          /* @__PURE__ */ jsx7("div", { className: "sb-kpi-label", children: "Partial" }),
+          /* @__PURE__ */ jsx7("div", { className: "sb-kpi-val", style: { color: "var(--sb-warn)" }, children: partialCount })
         ] }),
         /* @__PURE__ */ jsxs5("div", { className: "sb-kpi", children: [
-          /* @__PURE__ */ jsx6("div", { className: "sb-kpi-label", children: "Uncited" }),
-          /* @__PURE__ */ jsx6("div", { className: "sb-kpi-val", style: { color: unsupportedCount > 0 ? "var(--sb-bad)" : "var(--ui-text-primary)" }, children: unsupportedCount })
+          /* @__PURE__ */ jsx7("div", { className: "sb-kpi-label", children: "Uncited" }),
+          /* @__PURE__ */ jsx7("div", { className: "sb-kpi-val", style: { color: unsupportedCount > 0 ? "var(--sb-bad)" : "var(--ui-text-primary)" }, children: unsupportedCount })
         ] }),
         /* @__PURE__ */ jsxs5("div", { className: "sb-kpi", children: [
-          /* @__PURE__ */ jsx6("div", { className: "sb-kpi-label", children: "Conflicts" }),
-          /* @__PURE__ */ jsx6("div", { className: "sb-kpi-val", style: { color: conflicts.length > 0 ? "var(--sb-warn)" : "var(--ui-text-primary)" }, children: conflicts.length })
+          /* @__PURE__ */ jsx7("div", { className: "sb-kpi-label", children: "Conflicts" }),
+          /* @__PURE__ */ jsx7("div", { className: "sb-kpi-val", style: { color: conflicts.length > 0 ? "var(--sb-warn)" : "var(--ui-text-primary)" }, children: conflicts.length })
         ] })
       ] }),
       conflicts.length > 0 ? /* @__PURE__ */ jsxs5("section", { style: { display: "flex", flexDirection: "column", gap: 8 }, children: [
@@ -3113,21 +4190,21 @@ function ChatPanel({
             conflicts.length,
             ")"
           ] }),
-          /* @__PURE__ */ jsx6("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Detected automatically across active sources" })
+          /* @__PURE__ */ jsx7("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Detected automatically across active sources" })
         ] }),
         conflicts.map((cf) => /* @__PURE__ */ jsxs5("article", { className: "sb-conflict-card", children: [
           /* @__PURE__ */ jsxs5("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
-            /* @__PURE__ */ jsx6("strong", { style: { fontSize: 12.5 }, children: cf.topic }),
+            /* @__PURE__ */ jsx7("strong", { style: { fontSize: 12.5 }, children: cf.topic }),
             /* @__PURE__ */ jsxs5("span", { className: "sb-verdict", "data-v": "partial", children: [
               cf.kind,
               " conflict"
             ] })
           ] }),
-          /* @__PURE__ */ jsx6("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: cf.summary }),
-          /* @__PURE__ */ jsx6("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }, children: [cf.side_a, cf.side_b].map((side, idx) => /* @__PURE__ */ jsxs5("div", { className: "sb-quote-box", style: { display: "flex", flexDirection: "column", gap: 4 }, children: [
+          /* @__PURE__ */ jsx7("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: cf.summary }),
+          /* @__PURE__ */ jsx7("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }, children: [cf.side_a, cf.side_b].map((side, idx) => /* @__PURE__ */ jsxs5("div", { className: "sb-quote-box", style: { display: "flex", flexDirection: "column", gap: 4 }, children: [
             /* @__PURE__ */ jsxs5("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }, children: [
-              /* @__PURE__ */ jsx6("span", { className: "sb-src-title", style: { fontSize: 11.5 }, children: side.source_title }),
-              /* @__PURE__ */ jsx6(
+              /* @__PURE__ */ jsx7("span", { className: "sb-src-title", style: { fontSize: 11.5 }, children: side.source_title }),
+              /* @__PURE__ */ jsx7(
                 "button",
                 {
                   type: "button",
@@ -3146,7 +4223,7 @@ function ChatPanel({
         ] }, cf.id))
       ] }) : null,
       consensus.length > 0 ? /* @__PURE__ */ jsxs5("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }, children: [
-        /* @__PURE__ */ jsx6("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Multi-source consensus:" }),
+        /* @__PURE__ */ jsx7("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Multi-source consensus:" }),
         consensus.slice(0, 4).map((co, idx) => /* @__PURE__ */ jsxs5("span", { className: "sb-verdict", "data-v": "supported", children: [
           co.topic,
           ": ",
@@ -3157,7 +4234,7 @@ function ChatPanel({
         ] }, idx))
       ] }) : null,
       /* @__PURE__ */ jsxs5("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }, children: [
-        /* @__PURE__ */ jsx6("div", { className: "sb-seg", children: ["all", "supported", "partial", "unsupported"].map((f) => /* @__PURE__ */ jsx6(
+        /* @__PURE__ */ jsx7("div", { className: "sb-seg", children: ["all", "supported", "partial", "unsupported"].map((f) => /* @__PURE__ */ jsx7(
           "button",
           {
             type: "button",
@@ -3168,12 +4245,12 @@ function ChatPanel({
           },
           f
         )) }),
-        /* @__PURE__ */ jsx6("span", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: "Click any citation to inspect highlighted evidence" })
+        /* @__PURE__ */ jsx7("span", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: "Click any citation to inspect highlighted evidence" })
       ] }),
       filteredClaims.length === 0 ? /* @__PURE__ */ jsxs5("div", { className: "sb-empty", children: [
-        /* @__PURE__ */ jsx6(Icon, { name: "ShieldCheck", size: 24 }),
-        /* @__PURE__ */ jsx6("div", { style: { fontWeight: 600, color: "var(--ui-text-secondary)" }, children: "No chat claims recorded yet" }),
-        /* @__PURE__ */ jsx6("div", { style: { fontSize: 12 }, children: "Ask a grounded question to populate the Claim Ledger with verifiable evidence." })
+        /* @__PURE__ */ jsx7(Icon, { name: "ShieldCheck", size: 24 }),
+        /* @__PURE__ */ jsx7("div", { style: { fontWeight: 600, color: "var(--ui-text-secondary)" }, children: "No chat claims recorded yet" }),
+        /* @__PURE__ */ jsx7("div", { style: { fontSize: 12 }, children: "Ask a grounded question to populate the Claim Ledger with verifiable evidence." })
       ] }) : filteredClaims.map((cl) => /* @__PURE__ */ jsxs5("article", { className: "sb-ledger-row", children: [
         /* @__PURE__ */ jsxs5("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
           /* @__PURE__ */ jsxs5("div", { style: { display: "flex", gap: 6, alignItems: "center" }, children: [
@@ -3182,11 +4259,11 @@ function ChatPanel({
               " ",
               typeof cl.overlap === "number" ? `(${Math.round(cl.overlap * 100)}%)` : ""
             ] }),
-            cl.numeric_mismatch ? /* @__PURE__ */ jsx6("span", { className: "sb-verdict", "data-v": "unsupported", children: "number mismatch" }) : null
+            cl.numeric_mismatch ? /* @__PURE__ */ jsx7("span", { className: "sb-verdict", "data-v": "unsupported", children: "number mismatch" }) : null
           ] }),
           /* @__PURE__ */ jsxs5("div", { style: { display: "flex", alignItems: "center", gap: 4 }, children: [
-            cl.source_title ? /* @__PURE__ */ jsx6("span", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: cl.source_title }) : null,
-            (cl.citations || []).map((cid) => /* @__PURE__ */ jsx6(
+            cl.source_title ? /* @__PURE__ */ jsx7("span", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: cl.source_title }) : null,
+            (cl.citations || []).map((cid) => /* @__PURE__ */ jsx7(
               "button",
               {
                 type: "button",
@@ -3198,21 +4275,21 @@ function ChatPanel({
             ))
           ] })
         ] }),
-        /* @__PURE__ */ jsx6("div", { style: { fontSize: 12.5, color: "var(--ui-text-primary)" }, children: cl.text }),
-        cl.quote ? /* @__PURE__ */ jsx6("div", { className: "sb-quote-box", children: cl.quote }) : null
+        /* @__PURE__ */ jsx7("div", { style: { fontSize: 12.5, color: "var(--ui-text-primary)" }, children: cl.text }),
+        cl.quote ? /* @__PURE__ */ jsx7("div", { className: "sb-quote-box", children: cl.quote }) : null
       ] }, cl.id))
     ] }) : null,
     centerTab === "coverage" ? /* @__PURE__ */ jsxs5("div", { className: "sb-panel-pad sb-scroll", style: { flex: 1 }, children: [
       /* @__PURE__ */ jsxs5("div", { className: "sb-kpi-strip", children: [
         /* @__PURE__ */ jsxs5("div", { className: "sb-kpi", children: [
-          /* @__PURE__ */ jsx6("div", { className: "sb-kpi-label", children: "Corpus coverage" }),
+          /* @__PURE__ */ jsx7("div", { className: "sb-kpi-label", children: "Corpus coverage" }),
           /* @__PURE__ */ jsxs5("div", { className: "sb-kpi-val", children: [
             coverage?.total_chunks ? Math.round(coverage.touched_chunks / coverage.total_chunks * 100) : 0,
             "%"
           ] })
         ] }),
         /* @__PURE__ */ jsxs5("div", { className: "sb-kpi", children: [
-          /* @__PURE__ */ jsx6("div", { className: "sb-kpi-label", children: "Interrogated chunks" }),
+          /* @__PURE__ */ jsx7("div", { className: "sb-kpi-label", children: "Interrogated chunks" }),
           /* @__PURE__ */ jsxs5("div", { className: "sb-kpi-val", children: [
             coverage?.touched_chunks || 0,
             " / ",
@@ -3220,20 +4297,20 @@ function ChatPanel({
           ] })
         ] }),
         /* @__PURE__ */ jsxs5("div", { className: "sb-kpi", children: [
-          /* @__PURE__ */ jsx6("div", { className: "sb-kpi-label", children: "Blind spots" }),
-          /* @__PURE__ */ jsx6("div", { className: "sb-kpi-val", children: Math.max(0, (coverage?.total_chunks || 0) - (coverage?.touched_chunks || 0)) })
+          /* @__PURE__ */ jsx7("div", { className: "sb-kpi-label", children: "Blind spots" }),
+          /* @__PURE__ */ jsx7("div", { className: "sb-kpi-val", children: Math.max(0, (coverage?.total_chunks || 0) - (coverage?.touched_chunks || 0)) })
         ] })
       ] }),
-      (coverage?.sources || []).length === 0 ? /* @__PURE__ */ jsx6("div", { className: "sb-empty", children: "Add sources to measure how thoroughly you have explored your corpus." }) : (coverage?.sources || []).map((item) => {
+      (coverage?.sources || []).length === 0 ? /* @__PURE__ */ jsx7("div", { className: "sb-empty", children: "Add sources to measure how thoroughly you have explored your corpus." }) : (coverage?.sources || []).map((item) => {
         const pct = item.total_chunks > 0 ? Math.round(item.touched_chunks / item.total_chunks * 100) : 0;
         return /* @__PURE__ */ jsxs5("article", { className: "sb-ledger-row", children: [
           /* @__PURE__ */ jsxs5("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }, children: [
             /* @__PURE__ */ jsxs5("div", { style: { minWidth: 0 }, children: [
-              /* @__PURE__ */ jsx6("div", { className: "sb-src-title", children: item.title }),
+              /* @__PURE__ */ jsx7("div", { className: "sb-src-title", children: item.title }),
               /* @__PURE__ */ jsxs5("div", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: [
-                /* @__PURE__ */ jsx6("span", { className: "sb-num", children: item.touched_chunks }),
+                /* @__PURE__ */ jsx7("span", { className: "sb-num", children: item.touched_chunks }),
                 " of ",
-                /* @__PURE__ */ jsx6("span", { className: "sb-num", children: item.total_chunks }),
+                /* @__PURE__ */ jsx7("span", { className: "sb-num", children: item.total_chunks }),
                 " passages cited"
               ] })
             ] }),
@@ -3242,7 +4319,7 @@ function ChatPanel({
                 pct,
                 "%"
               ] }),
-              /* @__PURE__ */ jsx6(
+              /* @__PURE__ */ jsx7(
                 "button",
                 {
                   type: "button",
@@ -3251,7 +4328,7 @@ function ChatPanel({
                   children: "Inspect"
                 }
               ),
-              pct < 100 ? /* @__PURE__ */ jsx6(
+              pct < 100 ? /* @__PURE__ */ jsx7(
                 "button",
                 {
                   type: "button",
@@ -3262,7 +4339,7 @@ function ChatPanel({
               ) : null
             ] })
           ] }),
-          /* @__PURE__ */ jsx6("div", { className: "sb-src-bar", style: { height: 5 }, children: /* @__PURE__ */ jsx6("div", { className: "sb-src-bar-fill", style: { width: `${pct}%` } }) })
+          /* @__PURE__ */ jsx7("div", { className: "sb-src-bar", style: { height: 5 }, children: /* @__PURE__ */ jsx7("div", { className: "sb-src-bar-fill", style: { width: `${pct}%` } }) })
         ] }, item.source_id);
       })
     ] }) : null
@@ -3270,10 +4347,10 @@ function ChatPanel({
 }
 
 // desktop-src/components/StudioPanel.jsx
-import { useEffect as useEffect7, useRef as useRef7, useState as useState10 } from "react";
+import { useEffect as useEffect8, useRef as useRef8, useState as useState11 } from "react";
 
 // desktop-src/components/renderers/StudyGuideView.jsx
-import { jsx as jsx7, jsxs as jsxs6 } from "react/jsx-runtime";
+import { jsx as jsx8, jsxs as jsxs6 } from "react/jsx-runtime";
 function StudyGuideView({ artifact, onOpenChunk }) {
   const md = String(artifact?.spec?.markdown || "");
   const citeOrder = [];
@@ -3288,7 +4365,7 @@ function StudyGuideView({ artifact, onOpenChunk }) {
   return /* @__PURE__ */ jsxs6("div", { style: { display: "flex", flexDirection: "column", gap: 12 }, children: [
     /* @__PURE__ */ jsxs6("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" }, children: [
       /* @__PURE__ */ jsxs6("button", { type: "button", className: "sb-btn", onClick: () => copyText(md), children: [
-        /* @__PURE__ */ jsx7(Icon, { name: "Copy", size: 12 }),
+        /* @__PURE__ */ jsx8(Icon, { name: "Copy", size: 12 }),
         " Copy Markdown"
       ] }),
       /* @__PURE__ */ jsxs6(
@@ -3298,19 +4375,19 @@ function StudyGuideView({ artifact, onOpenChunk }) {
           className: "sb-btn",
           onClick: () => downloadTextFile(`${artifact.id || "study-guide"}.md`, md, "text/markdown;charset=utf-8"),
           children: [
-            /* @__PURE__ */ jsx7(Icon, { name: "Download", size: 12 }),
+            /* @__PURE__ */ jsx8(Icon, { name: "Download", size: 12 }),
             " Download .md"
           ]
         }
       )
     ] }),
-    /* @__PURE__ */ jsx7(MarkdownBody, { text: md, citeIndexMap: citeMap, onOpenChunk })
+    /* @__PURE__ */ jsx8(MarkdownBody, { text: md, citeIndexMap: citeMap, onOpenChunk })
   ] });
 }
 
 // desktop-src/components/renderers/AudioOverviewView.jsx
-import { useEffect as useEffect3, useRef as useRef4, useState as useState4 } from "react";
-import { Fragment as Fragment4, jsx as jsx8, jsxs as jsxs7 } from "react/jsx-runtime";
+import { useEffect as useEffect4, useRef as useRef5, useState as useState4 } from "react";
+import { jsx as jsx9, jsxs as jsxs7 } from "react/jsx-runtime";
 function b64ToBlobUrl(b64, mime = "audio/mpeg") {
   const bin = atob(b64);
   const arr = new Uint8Array(bin.length);
@@ -3324,15 +4401,22 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
   const [audioUrl, setAudioUrl] = useState4("");
   const [audioBlob, setAudioBlob] = useState4(null);
   const [loadingAudio, setLoadingAudio] = useState4(false);
+  const [audioPlaying, setAudioPlaying] = useState4(false);
   const [rate, setRate] = useState4(1);
+  const [speakingIdx, setSpeakingIdx] = useState4(-1);
   const [question, setQuestion] = useState4("");
   const [asking, setAsking] = useState4(false);
-  const audioRef = useRef4(null);
-  useEffect3(() => {
+  const audioRef = useRef5(null);
+  const stopSpeakRef = useRef5(false);
+  const canBrowserSpeak = typeof window !== "undefined" && typeof window.speechSynthesis !== "undefined";
+  const isActivelyPlaying = audioPlaying || speakingIdx >= 0;
+  useEffect4(() => {
+    stopSpeech();
     let alive = true;
     let createdUrl = "";
     setAudioUrl("");
     setAudioBlob(null);
+    setAudioPlaying(false);
     if (!nbId || !artifact?.id || !artifact?.has_audio) return void 0;
     setLoadingAudio(true);
     api(`/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(artifact.id)}/audio-data`).then((res) => {
@@ -3347,14 +4431,53 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
     });
     return () => {
       alive = false;
+      stopSpeech();
       if (createdUrl) URL.revokeObjectURL(createdUrl);
     };
   }, [nbId, artifact?.id, artifact?.has_audio]);
-  useEffect3(() => {
+  useEffect4(() => {
     if (audioRef.current) {
       audioRef.current.playbackRate = rate;
     }
   }, [rate, audioUrl]);
+  function stopSpeech() {
+    stopSpeakRef.current = true;
+    setSpeakingIdx(-1);
+    if (canBrowserSpeak) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch {
+      }
+    }
+  }
+  function playBrowserSpeech(startAt = 0) {
+    if (!canBrowserSpeak || !turns.length) return;
+    stopSpeech();
+    stopSpeakRef.current = false;
+    const voices = window.speechSynthesis.getVoices() || [];
+    const enVoices = voices.filter((v) => /^en/i.test(v.lang || ""));
+    const voiceA = enVoices[0] || voices[0] || null;
+    const voiceB = enVoices[1] || enVoices[0] || voices[1] || voiceA;
+    const speakTurn = (i) => {
+      if (stopSpeakRef.current || i >= turns.length) {
+        setSpeakingIdx(-1);
+        return;
+      }
+      setSpeakingIdx(i);
+      const t = turns[i];
+      const utt = new SpeechSynthesisUtterance(String(t.text || ""));
+      const sp = String(t.speaker || "").toLowerCase();
+      const isB = sp === "maya" || sp === "host b" || sp !== "alex" && i % 2 === 1;
+      if (isB && voiceB) utt.voice = voiceB;
+      else if (voiceA) utt.voice = voiceA;
+      utt.rate = rate;
+      utt.pitch = isB ? 1.08 : 0.95;
+      utt.onend = () => speakTurn(i + 1);
+      utt.onerror = () => setSpeakingIdx(-1);
+      window.speechSynthesis.speak(utt);
+    };
+    speakTurn(startAt);
+  }
   function toMarkdown() {
     const lines = [`# ${spec.title || "Audio Overview"}`, ""];
     if (spec.subtitle) lines.push(`*${spec.subtitle}*`, "");
@@ -3395,14 +4518,19 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
     }
   }
   return /* @__PURE__ */ jsxs7("div", { style: { display: "flex", flexDirection: "column", gap: 12 }, children: [
-    /* @__PURE__ */ jsxs7("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6, flexWrap: "wrap" }, children: [
-      /* @__PURE__ */ jsxs7("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
-        /* @__PURE__ */ jsx8("span", { className: "sb-kind-tag", children: (spec.style || "deep_dive").replace("_", " ") }),
-        /* @__PURE__ */ jsx8("span", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: (spec.hosts || ["Alex", "Maya"]).join(" & ") })
+    /* @__PURE__ */ jsxs7("div", { className: "sb-inf-toolbar", children: [
+      /* @__PURE__ */ jsxs7("div", { style: { display: "flex", alignItems: "center", gap: 8 }, children: [
+        /* @__PURE__ */ jsx9("span", { className: "sb-kind-tag", children: (spec.style || "deep_dive").replace("_", " ") }),
+        /* @__PURE__ */ jsxs7("span", { style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: [
+          (spec.hosts || ["Alex", "Maya"]).join(" & "),
+          " \xB7 ",
+          /* @__PURE__ */ jsx9("span", { className: "sb-mono", children: turns.length }),
+          " turns"
+        ] })
       ] }),
       /* @__PURE__ */ jsxs7("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" }, children: [
         /* @__PURE__ */ jsxs7("button", { type: "button", className: "sb-btn", onClick: () => copyText(toMarkdown()), children: [
-          /* @__PURE__ */ jsx8(Icon, { name: "Copy", size: 12 }),
+          /* @__PURE__ */ jsx9(Icon, { name: "Copy", size: 12 }),
           " Script"
         ] }),
         /* @__PURE__ */ jsxs7(
@@ -3412,22 +4540,58 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
             className: "sb-btn",
             onClick: () => downloadTextFile(`${artifact.id || "audio-overview"}.md`, toMarkdown(), "text/markdown;charset=utf-8"),
             children: [
-              /* @__PURE__ */ jsx8(Icon, { name: "Download", size: 12 }),
+              /* @__PURE__ */ jsx9(Icon, { name: "Download", size: 12 }),
               " .md"
             ]
           }
         ),
         audioBlob ? /* @__PURE__ */ jsxs7("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: downloadMp3, children: [
-          /* @__PURE__ */ jsx8(Icon, { name: "Download", size: 12 }),
+          /* @__PURE__ */ jsx9(Icon, { name: "Download", size: 12 }),
           " MP3"
         ] }) : null
       ] })
     ] }),
-    /* @__PURE__ */ jsx8("div", { className: "sb-ledger-row", style: { gap: 8 }, children: audioUrl ? /* @__PURE__ */ jsxs7(Fragment4, { children: [
-      /* @__PURE__ */ jsx8("audio", { ref: audioRef, controls: true, src: audioUrl, style: { width: "100%", height: 36 } }),
-      /* @__PURE__ */ jsxs7("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }, children: [
-        /* @__PURE__ */ jsx8("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Playback speed" }),
-        /* @__PURE__ */ jsx8("div", { className: "sb-seg", children: [0.75, 1, 1.25, 1.5, 2].map((v) => /* @__PURE__ */ jsxs7(
+    /* @__PURE__ */ jsxs7("div", { className: "sb-audio-stage", children: [
+      /* @__PURE__ */ jsx9(
+        DitherCanvas,
+        {
+          variant: "wave",
+          animated: isActivelyPlaying,
+          color: "var(--ui-accent)",
+          secondaryColor: "#f59e0b",
+          opacity: isActivelyPlaying ? 0.55 : 0.28,
+          cols: 168,
+          rows: 32,
+          style: { width: "100%", height: 64, display: "block", borderRadius: 7 }
+        }
+      ),
+      audioUrl ? /* @__PURE__ */ jsx9(
+        "audio",
+        {
+          ref: audioRef,
+          controls: true,
+          src: audioUrl,
+          onPlay: () => setAudioPlaying(true),
+          onPause: () => setAudioPlaying(false),
+          onEnded: () => setAudioPlaying(false),
+          style: { width: "100%", height: 36 }
+        }
+      ) : /* @__PURE__ */ jsxs7("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }, children: [
+        /* @__PURE__ */ jsxs7("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", display: "flex", alignItems: "center", gap: 8 }, children: [
+          /* @__PURE__ */ jsx9(Icon, { name: "Headphones", size: 14, style: { color: "var(--ui-accent)" } }),
+          /* @__PURE__ */ jsx9("span", { children: loadingAudio ? "Loading podcast audio..." : "Listen instantly with dual desktop voices or configure Hermes TTS (ElevenLabs, OpenAI, Gemini, Piper) for MP3 downloads." })
+        ] }),
+        canBrowserSpeak && turns.length > 0 ? speakingIdx >= 0 ? /* @__PURE__ */ jsxs7("button", { type: "button", className: "sb-btn", onClick: stopSpeech, children: [
+          /* @__PURE__ */ jsx9(Icon, { name: "X", size: 12 }),
+          " Stop"
+        ] }) : /* @__PURE__ */ jsxs7("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => playBrowserSpeech(0), children: [
+          /* @__PURE__ */ jsx9(Icon, { name: "Play", size: 12 }),
+          " Listen aloud"
+        ] }) : null
+      ] }),
+      /* @__PURE__ */ jsxs7("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6, paddingTop: 4, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
+        /* @__PURE__ */ jsx9("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Playback speed" }),
+        /* @__PURE__ */ jsx9("div", { className: "sb-seg", children: [0.75, 1, 1.25, 1.5, 2].map((v) => /* @__PURE__ */ jsxs7(
           "button",
           {
             type: "button",
@@ -3442,34 +4606,57 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
           v
         )) })
       ] })
-    ] }) : /* @__PURE__ */ jsxs7("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", display: "flex", alignItems: "center", gap: 8 }, children: [
-      /* @__PURE__ */ jsx8(Icon, { name: "Headphones", size: 14, style: { color: "var(--ui-accent)" } }),
-      /* @__PURE__ */ jsx8("span", { children: loadingAudio ? "Loading neural podcast audio..." : "Interactive cited transcript ready (offline or TTS skipped). Click any citation pill to inspect its source." })
-    ] }) }),
-    /* @__PURE__ */ jsx8("div", { style: { display: "flex", flexDirection: "column", gap: 8 }, children: turns.map((t, idx) => {
+    ] }),
+    /* @__PURE__ */ jsx9("div", { style: { display: "flex", flexDirection: "column", gap: 8 }, children: turns.map((t, idx) => {
       const sp = String(t.speaker || "Host");
       const isHostB = sp.toLowerCase() === "maya" || sp.toLowerCase() === "host b";
       const isListener = sp.toLowerCase() === "listener";
+      const isSpeaking = speakingIdx === idx;
+      const accent = isListener ? "#10b981" : isHostB ? "#f59e0b" : "var(--ui-accent)";
       return /* @__PURE__ */ jsxs7(
         "article",
         {
           className: "sb-ledger-row",
           style: {
-            borderLeft: `3px solid ${isListener ? "var(--sb-ok)" : isHostB ? "var(--sb-warn)" : "var(--ui-accent)"}`
+            borderLeft: `3px solid ${accent}`,
+            background: isSpeaking ? "var(--sb-accent-soft)" : void 0
           },
           children: [
             /* @__PURE__ */ jsxs7("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
-              /* @__PURE__ */ jsx8("span", { style: { fontSize: 11.5, fontWeight: 650, color: "var(--ui-text-primary)" }, children: sp }),
-              /* @__PURE__ */ jsx8("div", { style: { display: "flex", gap: 4 }, children: (t.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx8("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: cIdx + 1 }, cid)) })
+              /* @__PURE__ */ jsxs7("div", { style: { display: "flex", alignItems: "center", gap: 7 }, children: [
+                /* @__PURE__ */ jsx9(
+                  "span",
+                  {
+                    className: "sb-mono",
+                    style: {
+                      width: 20,
+                      height: 20,
+                      borderRadius: 6,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 10.5,
+                      fontWeight: 750,
+                      background: `color-mix(in srgb, ${accent} 16%, transparent)`,
+                      color: accent,
+                      border: `1px solid color-mix(in srgb, ${accent} 36%, transparent)`
+                    },
+                    children: sp.slice(0, 1).toUpperCase()
+                  }
+                ),
+                /* @__PURE__ */ jsx9("span", { style: { fontSize: 12, fontWeight: 650, color: "var(--ui-text-primary)" }, children: sp }),
+                isSpeaking ? /* @__PURE__ */ jsx9("span", { className: "sb-kind-tag", style: { color: accent }, children: "Speaking" }) : null
+              ] }),
+              /* @__PURE__ */ jsx9("div", { style: { display: "flex", gap: 4 }, children: (t.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx9("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: cIdx + 1 }, cid)) })
             ] }),
-            /* @__PURE__ */ jsx8("div", { style: { fontSize: 12.5, lineHeight: 1.55, color: "var(--ui-text-secondary)" }, children: t.text })
+            /* @__PURE__ */ jsx9("div", { style: { fontSize: 12.5, lineHeight: 1.58, color: "var(--ui-text-secondary)" }, children: t.text })
           ]
         },
         t.id || idx
       );
     }) }),
     /* @__PURE__ */ jsxs7("form", { onSubmit: askHosts, style: { display: "flex", gap: 6, marginTop: 4 }, children: [
-      /* @__PURE__ */ jsx8(
+      /* @__PURE__ */ jsx9(
         "input",
         {
           className: "sb-input",
@@ -3479,14 +4666,14 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
           disabled: asking
         }
       ),
-      /* @__PURE__ */ jsx8("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: asking || !question.trim(), children: asking ? "Asking..." : "Ask Hosts" })
+      /* @__PURE__ */ jsx9("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: asking || !question.trim(), children: asking ? "Asking..." : "Ask Hosts" })
     ] })
   ] });
 }
 
 // desktop-src/components/renderers/FlashcardsView.jsx
-import { useEffect as useEffect4, useState as useState5 } from "react";
-import { jsx as jsx9, jsxs as jsxs8 } from "react/jsx-runtime";
+import { useEffect as useEffect5, useState as useState5 } from "react";
+import { Fragment as Fragment4, jsx as jsx10, jsxs as jsxs8 } from "react/jsx-runtime";
 function nextSm2(prev, quality) {
   const ease = Math.max(1.3, (prev?.ease ?? 2.5) + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
   let reps = prev?.reps ?? 0;
@@ -3507,33 +4694,55 @@ function nextSm2(prev, quality) {
     due_at: Date.now() / 1e3 + interval * 86400
   };
 }
+function fmtInterval(days) {
+  if (days <= 1) return "1d";
+  if (days < 30) return `${days}d`;
+  const mo = (days / 30).toFixed(1).replace(/\.0$/, "");
+  return `${mo}mo`;
+}
 function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStateSaved }) {
   const cards = artifact?.spec?.cards || [];
   const [order, setOrder] = useState5(() => cards.map((_, i) => i));
   const [cursor, setCursor] = useState5(0);
   const [flipped, setFlipped] = useState5(false);
   const [showHint, setShowHint] = useState5(false);
+  const [viewMode, setViewMode] = useState5("deck");
+  const [sessionReviewed, setSessionReviewed] = useState5(0);
   const [sm2, setSm2] = useState5(() => artifact?.state?.sm2 || {});
-  useEffect4(() => {
+  useEffect5(() => {
     setOrder(cards.map((_, i) => i));
     setCursor(0);
     setFlipped(false);
     setShowHint(false);
+    setViewMode("deck");
+    setSessionReviewed(0);
     setSm2(artifact?.state?.sm2 || {});
   }, [artifact?.id]);
   if (!cards.length) {
-    return /* @__PURE__ */ jsx9("div", { className: "sb-empty", children: "No flashcards in this deck." });
+    return /* @__PURE__ */ jsx10("div", { className: "sb-empty", children: "No flashcards in this deck." });
   }
   const card = cards[order[cursor] ?? 0] || cards[0];
   const cardId = card.id || String(order[cursor] ?? 0);
+  const cardState = sm2[cardId];
+  const nowSec = Date.now() / 1e3;
   const mastered = cards.filter((c, i) => (sm2[c.id || String(i)]?.reps || 0) >= 2).length;
+  const learning = cards.filter((c, i) => (sm2[c.id || String(i)]?.reps || 0) === 1).length;
   const due = cards.filter((c, i) => {
     const s = sm2[c.id || String(i)];
-    return !s || !s.due_at || s.due_at <= Date.now() / 1e3;
+    return !s || !s.due_at || s.due_at <= nowSec;
   }).length;
+  const masteredPct = Math.round(mastered / cards.length * 100);
+  const learningPct = Math.round(learning / cards.length * 100);
+  const gradePreviews = [
+    { q: 1, label: "Again", tone: "bad", interval: fmtInterval(nextSm2(cardState, 1).interval), key: "1" },
+    { q: 3, label: "Hard", tone: "warn", interval: fmtInterval(nextSm2(cardState, 3).interval), key: "2" },
+    { q: 4, label: "Good", tone: "accent", interval: fmtInterval(nextSm2(cardState, 4).interval), key: "3" },
+    { q: 5, label: "Easy", tone: "ok", interval: fmtInterval(nextSm2(cardState, 5).interval), key: "4" }
+  ];
   async function grade(quality) {
     const updated = { ...sm2, [cardId]: nextSm2(sm2[cardId], quality) };
     setSm2(updated);
+    setSessionReviewed((n) => n + 1);
     setFlipped(false);
     setShowHint(false);
     setCursor((c) => (c + 1) % order.length);
@@ -3576,132 +4785,259 @@ function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStat
     downloadTextFile(`${artifact.id || "flashcards"}-anki.tsv`, lines.join("\n"), "text/tab-separated-values;charset=utf-8");
   }
   return /* @__PURE__ */ jsxs8("div", { style: { display: "flex", flexDirection: "column", gap: 12 }, children: [
-    /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }, children: [
-      /* @__PURE__ */ jsxs8("div", { style: { display: "flex", gap: 12, fontSize: 12, color: "var(--ui-text-secondary)" }, children: [
-        /* @__PURE__ */ jsxs8("span", { children: [
-          "Card ",
-          /* @__PURE__ */ jsxs8("strong", { className: "sb-num", children: [
-            cursor + 1,
-            "/",
-            cards.length
-          ] })
+    /* @__PURE__ */ jsxs8("div", { className: "sb-dt-kpis", children: [
+      /* @__PURE__ */ jsxs8("div", { className: "sb-dt-kpi", children: [
+        /* @__PURE__ */ jsx10("div", { className: "sb-dt-kpi-lbl", children: "Deck" }),
+        /* @__PURE__ */ jsxs8("div", { className: "sb-dt-kpi-val sb-mono", children: [
+          cursor + 1,
+          " / ",
+          cards.length
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs8("div", { className: "sb-dt-kpi", children: [
+        /* @__PURE__ */ jsx10("div", { className: "sb-dt-kpi-lbl", children: "Due Now" }),
+        /* @__PURE__ */ jsx10("div", { className: "sb-dt-kpi-val sb-mono", style: { color: due > 0 ? "#f59e0b" : "#10b981" }, children: due })
+      ] }),
+      /* @__PURE__ */ jsxs8("div", { className: "sb-dt-kpi", children: [
+        /* @__PURE__ */ jsx10("div", { className: "sb-dt-kpi-lbl", children: "Mastered" }),
+        /* @__PURE__ */ jsx10("div", { className: "sb-dt-kpi-val sb-mono", style: { color: "#10b981" }, children: mastered })
+      ] }),
+      /* @__PURE__ */ jsxs8("div", { className: "sb-dt-kpi", children: [
+        /* @__PURE__ */ jsx10("div", { className: "sb-dt-kpi-lbl", children: "Session" }),
+        /* @__PURE__ */ jsx10("div", { className: "sb-dt-kpi-val sb-mono", style: { color: "var(--ui-accent)" }, children: sessionReviewed })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxs8("div", { className: "sb-inf-toolbar", children: [
+      /* @__PURE__ */ jsxs8("div", { className: "sb-seg", role: "group", "aria-label": "Flashcard mode", children: [
+        /* @__PURE__ */ jsxs8("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "deck", onClick: () => setViewMode("deck"), children: [
+          /* @__PURE__ */ jsx10(Icon, { name: "Layers", size: 12 }),
+          " Study Deck"
         ] }),
-        /* @__PURE__ */ jsxs8("span", { children: [
-          "Due ",
-          /* @__PURE__ */ jsx9("strong", { className: "sb-num", children: due })
-        ] }),
-        /* @__PURE__ */ jsxs8("span", { children: [
-          "Mastered ",
-          /* @__PURE__ */ jsx9("strong", { className: "sb-num", children: mastered })
+        /* @__PURE__ */ jsxs8("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "browse", onClick: () => setViewMode("browse"), children: [
+          /* @__PURE__ */ jsx10(Icon, { name: "LayoutGrid", size: 12 }),
+          " Browse All (",
+          cards.length,
+          ")"
         ] })
       ] }),
       /* @__PURE__ */ jsxs8("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" }, children: [
         /* @__PURE__ */ jsxs8("button", { type: "button", className: "sb-btn", onClick: shuffle, children: [
-          /* @__PURE__ */ jsx9(Icon, { name: "Shuffle", size: 12 }),
+          /* @__PURE__ */ jsx10(Icon, { name: "Shuffle", size: 12 }),
           " Shuffle"
         ] }),
         /* @__PURE__ */ jsxs8("button", { type: "button", className: "sb-btn", onClick: exportCsv, children: [
-          /* @__PURE__ */ jsx9(Icon, { name: "Download", size: 12 }),
+          /* @__PURE__ */ jsx10(Icon, { name: "Download", size: 12 }),
           " CSV"
         ] }),
         /* @__PURE__ */ jsxs8("button", { type: "button", className: "sb-btn", onClick: exportAnki, title: "Export tab-separated deck ready for Anki import", children: [
-          /* @__PURE__ */ jsx9(Icon, { name: "Download", size: 12 }),
+          /* @__PURE__ */ jsx10(Icon, { name: "Download", size: 12 }),
           " Anki TSV"
         ] })
       ] })
     ] }),
-    /* @__PURE__ */ jsx9("div", { className: "sb-src-bar", style: { height: 4 }, children: /* @__PURE__ */ jsx9("div", { className: "sb-src-bar-fill", style: { width: `${Math.round((cursor + 1) / cards.length * 100)}%` } }) }),
-    /* @__PURE__ */ jsxs8(
-      "div",
-      {
-        className: "sb-fc-card",
-        role: "button",
-        tabIndex: 0,
-        onClick: () => setFlipped((f) => !f),
-        onKeyDown: (e) => {
-          if (e.key === " " || e.key === "Enter") {
-            e.preventDefault();
-            setFlipped((f) => !f);
-          } else if (e.key === "ArrowRight") {
+    /* @__PURE__ */ jsxs8("div", { className: "sb-fc-mastery-bar", title: `Mastered ${mastered} | Learning ${learning} | New/Due ${Math.max(0, cards.length - mastered - learning)}`, children: [
+      /* @__PURE__ */ jsx10("div", { style: { width: `${masteredPct}%`, background: "#10b981" } }),
+      /* @__PURE__ */ jsx10("div", { style: { width: `${learningPct}%`, background: "var(--ui-accent)" } })
+    ] }),
+    viewMode === "browse" ? /* @__PURE__ */ jsx10("div", { className: "sb-dt-cards-grid", children: cards.map((c, cIdx) => {
+      const st = sm2[c.id || String(cIdx)];
+      const status = (st?.reps || 0) >= 2 ? "Mastered" : (st?.reps || 0) === 1 ? "Learning" : "Due";
+      return /* @__PURE__ */ jsxs8(
+        "div",
+        {
+          className: "sb-dt-card",
+          style: { cursor: "pointer" },
+          onClick: () => {
+            const pos = order.indexOf(cIdx);
+            if (pos >= 0) setCursor(pos);
             setFlipped(false);
-            setShowHint(false);
-            setCursor((c) => (c + 1) % order.length);
-          } else if (e.key === "ArrowLeft") {
-            setFlipped(false);
-            setShowHint(false);
-            setCursor((c) => (c - 1 + order.length) % order.length);
-          }
+            setViewMode("deck");
+          },
+          children: [
+            /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }, children: [
+              /* @__PURE__ */ jsxs8("span", { className: "sb-mono", style: { fontSize: 10.5, color: "var(--ui-text-tertiary)" }, children: [
+                "CARD 0",
+                cIdx + 1
+              ] }),
+              /* @__PURE__ */ jsx10("span", { className: "sb-verdict", "data-v": status === "Mastered" ? "supported" : status === "Learning" ? "partial" : void 0, style: { fontSize: 10 }, children: status })
+            ] }),
+            /* @__PURE__ */ jsx10("div", { style: { fontWeight: 650, fontSize: 13, color: "var(--ui-text-primary)", lineHeight: 1.4 }, children: c.front }),
+            /* @__PURE__ */ jsx10("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", lineHeight: 1.5, paddingTop: 6, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: c.back })
+          ]
         },
-        children: [
-          /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
-            /* @__PURE__ */ jsx9("span", { className: "sb-kind-tag", children: flipped ? "Answer" : "Prompt" }),
-            /* @__PURE__ */ jsx9("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Click or Space to flip" })
-          ] }),
-          /* @__PURE__ */ jsx9("div", { style: { fontSize: flipped ? 13.5 : 15, fontWeight: flipped ? 450 : 600, lineHeight: 1.55, color: "var(--ui-text-primary)" }, children: flipped ? card.back : card.front }),
-          /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
-            /* @__PURE__ */ jsx9("div", { style: { display: "flex", gap: 4, flexWrap: "wrap" }, onClick: (e) => e.stopPropagation(), children: (card.cites || []).map((cid, idx) => /* @__PURE__ */ jsx9("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: idx + 1 }, cid)) }),
-            !flipped && card.hint ? /* @__PURE__ */ jsx9(
-              "button",
-              {
-                type: "button",
-                className: "sb-btn sb-btn-ghost",
-                onClick: (e) => {
-                  e.stopPropagation();
-                  setShowHint((h) => !h);
-                },
-                children: showHint ? card.hint : "Show hint"
+        c.id || cIdx
+      );
+    }) }) : /* @__PURE__ */ jsxs8(Fragment4, { children: [
+      /* @__PURE__ */ jsxs8("div", { className: "sb-fc-stack", children: [
+        /* @__PURE__ */ jsx10("div", { className: "sb-fc-layer sb-fc-layer-2", "aria-hidden": "true" }),
+        /* @__PURE__ */ jsx10("div", { className: "sb-fc-layer sb-fc-layer-1", "aria-hidden": "true" }),
+        /* @__PURE__ */ jsxs8(
+          "div",
+          {
+            className: "sb-fc-card sb-fc-card-rich",
+            "data-flipped": flipped,
+            role: "button",
+            tabIndex: 0,
+            onClick: () => setFlipped((f) => !f),
+            onKeyDown: (e) => {
+              if (e.key === " " || e.key === "Enter") {
+                e.preventDefault();
+                setFlipped((f) => !f);
+              } else if (e.key.toLowerCase() === "h" && !flipped && card.hint) {
+                setShowHint((h) => !h);
+              } else if (flipped && ["1", "2", "3", "4"].includes(e.key)) {
+                const qMap = { "1": 1, "2": 3, "3": 4, "4": 5 };
+                grade(qMap[e.key]);
+              } else if (e.key === "ArrowRight") {
+                setFlipped(false);
+                setShowHint(false);
+                setCursor((c) => (c + 1) % order.length);
+              } else if (e.key === "ArrowLeft") {
+                setFlipped(false);
+                setShowHint(false);
+                setCursor((c) => (c - 1 + order.length) % order.length);
               }
-            ) : null
-          ] })
-        ]
-      }
-    ),
-    flipped ? /* @__PURE__ */ jsxs8("div", { className: "sb-fc-grade-row", children: [
-      /* @__PURE__ */ jsx9("button", { type: "button", className: "sb-btn", onClick: () => grade(1), children: "Again (1d)" }),
-      /* @__PURE__ */ jsx9("button", { type: "button", className: "sb-btn", onClick: () => grade(3), children: "Hard" }),
-      /* @__PURE__ */ jsx9("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => grade(4), children: "Good" }),
-      /* @__PURE__ */ jsx9("button", { type: "button", className: "sb-btn", onClick: () => grade(5), children: "Easy" })
-    ] }) : /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", gap: 8 }, children: [
-      /* @__PURE__ */ jsxs8(
+            },
+            children: [
+              /* @__PURE__ */ jsx10(
+                "div",
+                {
+                  className: "sb-sl-top-ribbon",
+                  style: { background: flipped ? "#10b981" : "var(--ui-accent)" }
+                }
+              ),
+              /* @__PURE__ */ jsx10(
+                DitherCanvas,
+                {
+                  variant: "mesh",
+                  animated: false,
+                  color: flipped ? "#10b981" : "var(--ui-accent)",
+                  secondaryColor: "var(--ui-accent)",
+                  opacity: 0.18,
+                  cols: 110,
+                  rows: 28,
+                  style: { position: "absolute", inset: "0 0 auto 0", width: "100%", height: 92, pointerEvents: "none" }
+                }
+              ),
+              /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative" }, children: [
+                /* @__PURE__ */ jsx10(
+                  "span",
+                  {
+                    className: "sb-kind-tag",
+                    style: flipped ? { color: "#10b981", borderColor: "rgba(16, 185, 129, 0.35)", background: "rgba(16, 185, 129, 0.12)" } : { color: "var(--ui-accent)", borderColor: "var(--sb-accent-border)", background: "var(--sb-accent-soft)" },
+                    children: flipped ? "VERIFIED ANSWER" : "STUDY PROMPT"
+                  }
+                ),
+                /* @__PURE__ */ jsxs8("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
+                  (card.tags || []).slice(0, 2).map((t) => /* @__PURE__ */ jsxs8("span", { className: "sb-dt-tag", style: { fontSize: 10 }, children: [
+                    "#",
+                    t
+                  ] }, t)),
+                  /* @__PURE__ */ jsx10("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Space to flip" })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsx10(
+                "div",
+                {
+                  style: {
+                    position: "relative",
+                    marginBlock: "auto",
+                    padding: "14px 4px",
+                    fontSize: flipped ? 15 : 18,
+                    fontWeight: flipped ? 460 : 660,
+                    lineHeight: 1.55,
+                    letterSpacing: flipped ? void 0 : "-0.015em",
+                    color: "var(--ui-text-primary)"
+                  },
+                  children: flipped ? card.back : card.front
+                }
+              ),
+              !flipped && showHint && card.hint ? /* @__PURE__ */ jsxs8("div", { className: "sb-quote-box", style: { position: "relative" }, onClick: (e) => e.stopPropagation(), children: [
+                /* @__PURE__ */ jsx10("strong", { style: { fontSize: 10, letterSpacing: "0.06em", color: "var(--ui-text-tertiary)", display: "block" }, children: "HINT" }),
+                card.hint
+              ] }) : null,
+              /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, position: "relative", paddingTop: 10, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
+                /* @__PURE__ */ jsxs8("div", { style: { display: "flex", gap: 5, alignItems: "center", flexWrap: "wrap" }, onClick: (e) => e.stopPropagation(), children: [
+                  /* @__PURE__ */ jsx10("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Sources:" }),
+                  (card.cites || []).map((cid, idx) => /* @__PURE__ */ jsx10("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: idx + 1 }, cid))
+                ] }),
+                !flipped && card.hint ? /* @__PURE__ */ jsx10(
+                  "button",
+                  {
+                    type: "button",
+                    className: "sb-btn sb-btn-ghost",
+                    onClick: (e) => {
+                      e.stopPropagation();
+                      setShowHint((h) => !h);
+                    },
+                    children: showHint ? "Hide hint" : "Show hint (H)"
+                  }
+                ) : /* @__PURE__ */ jsx10("span", { className: "sb-mono", style: { fontSize: 10.5, color: "var(--ui-text-tertiary)" }, children: cardState?.reps ? `Reps: ${cardState.reps} \xB7 Ease ${cardState.ease}` : "New card" })
+              ] })
+            ]
+          }
+        )
+      ] }),
+      flipped ? /* @__PURE__ */ jsx10("div", { className: "sb-fc-grade-row", children: gradePreviews.map((g) => /* @__PURE__ */ jsxs8(
         "button",
         {
           type: "button",
-          className: "sb-btn",
-          onClick: () => {
-            setFlipped(false);
-            setShowHint(false);
-            setCursor((c) => (c - 1 + order.length) % order.length);
-          },
+          className: "sb-fc-grade-btn",
+          "data-tone": g.tone,
+          onClick: () => grade(g.q),
           children: [
-            /* @__PURE__ */ jsx9(Icon, { name: "ChevronLeft", size: 13 }),
-            " Prev"
+            /* @__PURE__ */ jsx10("span", { style: { fontWeight: 650, fontSize: 12.5 }, children: g.label }),
+            /* @__PURE__ */ jsxs8("span", { className: "sb-mono", style: { fontSize: 10.5, opacity: 0.78 }, children: [
+              g.interval,
+              " \xB7 [",
+              g.key,
+              "]"
+            ] })
           ]
-        }
-      ),
-      /* @__PURE__ */ jsx9("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => setFlipped(true), children: "Reveal answer" }),
-      /* @__PURE__ */ jsxs8(
-        "button",
-        {
-          type: "button",
-          className: "sb-btn",
-          onClick: () => {
-            setFlipped(false);
-            setShowHint(false);
-            setCursor((c) => (c + 1) % order.length);
-          },
-          children: [
-            "Next ",
-            /* @__PURE__ */ jsx9(Icon, { name: "ChevronRight", size: 13 })
-          ]
-        }
-      )
+        },
+        g.q
+      )) }) : /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
+        /* @__PURE__ */ jsxs8(
+          "button",
+          {
+            type: "button",
+            className: "sb-btn",
+            onClick: () => {
+              setFlipped(false);
+              setShowHint(false);
+              setCursor((c) => (c - 1 + order.length) % order.length);
+            },
+            children: [
+              /* @__PURE__ */ jsx10(Icon, { name: "ChevronLeft", size: 13 }),
+              " Prev"
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsx10("button", { type: "button", className: "sb-btn sb-btn-primary", style: { minWidth: 156 }, onClick: () => setFlipped(true), children: "Reveal answer" }),
+        /* @__PURE__ */ jsxs8(
+          "button",
+          {
+            type: "button",
+            className: "sb-btn",
+            onClick: () => {
+              setFlipped(false);
+              setShowHint(false);
+              setCursor((c) => (c + 1) % order.length);
+            },
+            children: [
+              "Next ",
+              /* @__PURE__ */ jsx10(Icon, { name: "ChevronRight", size: 13 })
+            ]
+          }
+        )
+      ] })
     ] })
   ] });
 }
 
 // desktop-src/components/renderers/QuizView.jsx
-import { useEffect as useEffect5, useState as useState6 } from "react";
-import { jsx as jsx10, jsxs as jsxs9 } from "react/jsx-runtime";
+import { useEffect as useEffect6, useState as useState6 } from "react";
+import { Fragment as Fragment5, jsx as jsx11, jsxs as jsxs9 } from "react/jsx-runtime";
 function isCorrectChoice(q, chosen) {
   if (chosen === void 0 || chosen === null) return false;
   if (typeof q.answer === "number") return chosen === q.answer;
@@ -3712,183 +5048,420 @@ function isCorrectChoice(q, chosen) {
   }
   return String(chosen).trim().toLowerCase() === String(q.answer).trim().toLowerCase();
 }
+function questionTypeLabel(q) {
+  if (q.type === "tf") return "TRUE OR FALSE";
+  if (q.type === "short") return "SHORT ANSWER";
+  return "MULTIPLE CHOICE";
+}
 function QuizView({ artifact, onOpenChunk }) {
   const questions = artifact?.spec?.questions || [];
   const [answers, setAnswers] = useState6({});
+  const [cursor, setCursor] = useState6(0);
+  const [viewMode, setViewMode] = useState6("focus");
   const [retryMissedOnly, setRetryMissedOnly] = useState6(false);
-  useEffect5(() => {
+  const [shortDraft, setShortDraft] = useState6("");
+  useEffect6(() => {
     setAnswers({});
+    setCursor(0);
+    setViewMode("focus");
     setRetryMissedOnly(false);
+    setShortDraft("");
   }, [artifact?.id]);
   if (!questions.length) {
-    return /* @__PURE__ */ jsx10("div", { className: "sb-empty", children: "No questions in this quiz." });
+    return /* @__PURE__ */ jsx11("div", { className: "sb-empty", children: "No questions in this quiz." });
   }
   const answeredCount = Object.keys(answers).length;
   const correctCount = questions.filter((q, idx) => isCorrectChoice(q, answers[q.id || idx])).length;
-  const visible = retryMissedOnly ? questions.filter((q, idx) => {
+  const missedCount = Math.max(0, answeredCount - correctCount);
+  const accuracyPct = answeredCount ? Math.round(correctCount / answeredCount * 100) : 0;
+  const allDone = answeredCount === questions.length;
+  let streak = 0;
+  for (let i = 0; i < questions.length; i += 1) {
+    const k = questions[i].id || i;
+    if (answers[k] === void 0) continue;
+    if (isCorrectChoice(questions[i], answers[k])) streak += 1;
+    else streak = 0;
+  }
+  const visibleList = retryMissedOnly ? questions.map((q, idx) => ({ q, idx })).filter(({ q, idx }) => {
     const key = q.id || idx;
     return answers[key] !== void 0 && !isCorrectChoice(q, answers[key]);
-  }) : questions;
-  return /* @__PURE__ */ jsxs9("div", { style: { display: "flex", flexDirection: "column", gap: 12 }, children: [
-    /* @__PURE__ */ jsxs9("div", { className: "sb-kpi-strip", children: [
-      /* @__PURE__ */ jsxs9("div", { className: "sb-kpi", children: [
-        /* @__PURE__ */ jsx10("div", { className: "sb-kpi-label", children: "Answered" }),
-        /* @__PURE__ */ jsxs9("div", { className: "sb-kpi-val", children: [
-          answeredCount,
-          " / ",
+  }) : questions.map((q, idx) => ({ q, idx }));
+  const activeEntry = visibleList[Math.min(cursor, Math.max(0, visibleList.length - 1))] || visibleList[0];
+  const ringR = 24;
+  const ringCirc = 2 * Math.PI * ringR;
+  const ringDash = ringCirc * (answeredCount ? accuracyPct / 100 : 0);
+  const ringColor = answeredCount === 0 ? "var(--ui-accent)" : accuracyPct >= 75 ? "#10b981" : accuracyPct >= 50 ? "#f59e0b" : "#f43f5e";
+  function downloadKey() {
+    const lines = [`# ${artifact?.spec?.title || "Quiz"}`, ""];
+    const keyLines = ["## Answer Key", ""];
+    questions.forEach((q, i) => {
+      lines.push(`### ${i + 1}. ${q.prompt || ""}`);
+      (q.options || []).forEach((opt, oi) => lines.push(`- ${String.fromCharCode(65 + oi)}. ${opt}`));
+      lines.push("");
+      const ansLabel = typeof q.answer === "number" && q.options?.[q.answer] ? `${String.fromCharCode(65 + q.answer)} (${q.options[q.answer]})` : String(q.answer);
+      keyLines.push(`${i + 1}. **${ansLabel}**: ${q.explanation || ""}`);
+    });
+    downloadTextFile(`${artifact.id || "quiz"}-key.md`, [...lines, ...keyLines].join("\n"), "text/markdown;charset=utf-8");
+  }
+  function renderQuestionCard(q, origIdx, isFocus) {
+    const key = q.id || origIdx;
+    const chosen = answers[key];
+    const answered = chosen !== void 0;
+    const ok = answered && isCorrectChoice(q, chosen);
+    const opts = q.options && q.options.length ? q.options : q.type === "tf" ? ["True", "False"] : [];
+    const useGrid = opts.length === 2 || isFocus && opts.length === 4 && opts.every((o) => String(o).length < 95);
+    return /* @__PURE__ */ jsxs9("article", { className: isFocus ? "sb-qz-stage" : "sb-ledger-row", style: isFocus ? void 0 : { gap: 10 }, children: [
+      isFocus ? /* @__PURE__ */ jsxs9("div", { className: "sb-qz-stage-top", children: [
+        /* @__PURE__ */ jsxs9("span", { className: "sb-mono", style: { fontSize: 10.5, fontWeight: 700, letterSpacing: "0.06em", color: "var(--ui-accent)" }, children: [
+          "QUESTION ",
+          origIdx + 1,
+          " OF ",
           questions.length
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxs9("div", { className: "sb-kpi", children: [
-        /* @__PURE__ */ jsx10("div", { className: "sb-kpi-label", children: "Score" }),
-        /* @__PURE__ */ jsx10("div", { className: "sb-kpi-val", style: { color: "var(--sb-ok)" }, children: answeredCount ? `${Math.round(correctCount / answeredCount * 100)}%` : "0%" })
-      ] }),
-      /* @__PURE__ */ jsxs9("div", { className: "sb-kpi", children: [
-        /* @__PURE__ */ jsx10("div", { className: "sb-kpi-label", children: "Missed" }),
-        /* @__PURE__ */ jsx10("div", { className: "sb-kpi-val", children: Math.max(0, answeredCount - correctCount) })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxs9("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" }, children: [
-      /* @__PURE__ */ jsx10(
-        "button",
-        {
-          type: "button",
-          className: "sb-btn",
-          "data-active": retryMissedOnly,
-          disabled: answeredCount - correctCount <= 0,
-          onClick: () => setRetryMissedOnly((v) => !v),
-          children: "Missed only"
-        }
-      ),
-      /* @__PURE__ */ jsxs9(
-        "button",
-        {
-          type: "button",
-          className: "sb-btn",
-          onClick: () => {
-            setAnswers({});
-            setRetryMissedOnly(false);
-          },
-          children: [
-            /* @__PURE__ */ jsx10(Icon, { name: "RotateCcw", size: 12 }),
-            " Reset"
-          ]
-        }
-      ),
-      /* @__PURE__ */ jsxs9(
-        "button",
-        {
-          type: "button",
-          className: "sb-btn",
-          onClick: () => {
-            const lines = [`# ${artifact?.spec?.title || "Quiz"}`, ""];
-            const keyLines = ["## Answer Key", ""];
-            questions.forEach((q, i) => {
-              lines.push(`### ${i + 1}. ${q.prompt || ""}`);
-              (q.options || []).forEach((opt, oi) => lines.push(`- ${String.fromCharCode(65 + oi)}. ${opt}`));
-              lines.push("");
-              const ansLabel = typeof q.answer === "number" && q.options?.[q.answer] ? `${String.fromCharCode(65 + q.answer)} (${q.options[q.answer]})` : String(q.answer);
-              keyLines.push(`${i + 1}. **${ansLabel}**: ${q.explanation || ""}`);
-            });
-            downloadTextFile(`${artifact.id || "quiz"}-key.md`, [...lines, ...keyLines].join("\n"), "text/markdown;charset=utf-8");
-          },
-          children: [
-            /* @__PURE__ */ jsx10(Icon, { name: "Download", size: 12 }),
-            " Answer Key .md"
-          ]
-        }
-      )
-    ] }),
-    visible.map((q, idx) => {
-      const key = q.id || idx;
-      const chosen = answers[key];
-      const answered = chosen !== void 0;
-      const ok = answered && isCorrectChoice(q, chosen);
-      const opts = q.options && q.options.length ? q.options : q.type === "tf" ? ["True", "False"] : [];
-      return /* @__PURE__ */ jsxs9("article", { className: "sb-ledger-row", children: [
-        /* @__PURE__ */ jsxs9("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }, children: [
-          /* @__PURE__ */ jsxs9("div", { style: { fontWeight: 600, fontSize: 12.5 }, children: [
-            /* @__PURE__ */ jsxs9("span", { className: "sb-mono", style: { color: "var(--ui-text-tertiary)", marginRight: 6 }, children: [
-              "Q",
-              idx + 1
-            ] }),
-            q.prompt
-          ] }),
-          answered ? /* @__PURE__ */ jsx10("span", { className: "sb-verdict", "data-v": ok ? "supported" : "unsupported", children: ok ? "Correct" : "Missed" }) : null
         ] }),
-        opts.length > 0 ? /* @__PURE__ */ jsx10("div", { style: { display: "flex", flexDirection: "column", gap: 5, marginTop: 4 }, children: opts.map((opt, oi) => {
-          const isSelected = chosen === oi;
-          const isRight = isCorrectChoice(q, oi);
-          let border = "var(--ui-stroke-secondary)";
-          let bg = "var(--ui-bg-primary)";
-          if (answered && isRight) {
-            border = "var(--sb-ok)";
-            bg = "color-mix(in srgb, var(--sb-ok) 12%, var(--ui-bg-primary))";
-          } else if (answered && isSelected && !isRight) {
-            border = "var(--sb-bad)";
-            bg = "color-mix(in srgb, var(--sb-bad) 12%, var(--ui-bg-primary))";
-          }
-          return /* @__PURE__ */ jsxs9(
-            "button",
-            {
-              type: "button",
-              className: "sb-btn",
-              style: {
-                height: "auto",
-                minHeight: 32,
-                padding: "7px 10px",
-                justifyContent: "flex-start",
-                textAlign: "left",
-                whiteSpace: "normal",
-                borderColor: border,
-                background: bg,
-                color: "var(--ui-text-primary)"
-              },
-              onClick: () => setAnswers((prev) => ({ ...prev, [key]: oi })),
-              children: [
-                /* @__PURE__ */ jsxs9("span", { className: "sb-mono", style: { color: "var(--ui-text-tertiary)", marginRight: 6 }, children: [
-                  String.fromCharCode(65 + oi),
-                  "."
-                ] }),
-                /* @__PURE__ */ jsx10("span", { children: opt })
-              ]
-            },
-            oi
-          );
-        }) }) : /* @__PURE__ */ jsx10("div", { style: { display: "flex", gap: 6, marginTop: 4 }, children: /* @__PURE__ */ jsx10(
+        /* @__PURE__ */ jsxs9("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
+          /* @__PURE__ */ jsx11("span", { className: "sb-kind-tag", children: questionTypeLabel(q) }),
+          answered ? /* @__PURE__ */ jsx11("span", { className: "sb-verdict", "data-v": ok ? "supported" : "unsupported", children: ok ? "Correct" : "Missed" }) : null
+        ] })
+      ] }) : /* @__PURE__ */ jsxs9("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
+        /* @__PURE__ */ jsxs9("div", { style: { display: "flex", alignItems: "center", gap: 7 }, children: [
+          /* @__PURE__ */ jsxs9("span", { className: "sb-mono", style: { fontSize: 11, fontWeight: 700, color: "var(--ui-accent)" }, children: [
+            "Q",
+            origIdx + 1
+          ] }),
+          /* @__PURE__ */ jsx11("span", { className: "sb-kind-tag", children: questionTypeLabel(q) })
+        ] }),
+        answered ? /* @__PURE__ */ jsx11("span", { className: "sb-verdict", "data-v": ok ? "supported" : "unsupported", children: ok ? "Correct" : "Missed" }) : null
+      ] }),
+      /* @__PURE__ */ jsx11(
+        "div",
+        {
+          style: {
+            fontWeight: 650,
+            fontSize: isFocus ? 16 : 13.5,
+            lineHeight: 1.45,
+            color: "var(--ui-text-primary)",
+            letterSpacing: isFocus ? "-0.01em" : void 0
+          },
+          children: q.prompt
+        }
+      ),
+      opts.length > 0 ? /* @__PURE__ */ jsx11("div", { className: "sb-qz-options", style: { gridTemplateColumns: useGrid ? "repeat(2, minmax(0, 1fr))" : "1fr" }, children: opts.map((opt, oi) => {
+        const isSelected = chosen === oi;
+        const isRight = isCorrectChoice(q, oi);
+        let state = "idle";
+        if (answered && isRight) state = "correct";
+        else if (answered && isSelected && !isRight) state = "wrong";
+        else if (answered) state = "dim";
+        return /* @__PURE__ */ jsxs9(
+          "button",
+          {
+            type: "button",
+            className: "sb-qz-opt",
+            "data-state": state,
+            onClick: () => setAnswers((prev) => ({ ...prev, [key]: oi })),
+            children: [
+              /* @__PURE__ */ jsx11("span", { className: "sb-qz-keycap sb-mono", children: String.fromCharCode(65 + oi) }),
+              /* @__PURE__ */ jsx11("span", { style: { flex: 1, textAlign: "left", lineHeight: 1.48 }, children: opt }),
+              state === "correct" ? /* @__PURE__ */ jsx11(Icon, { name: "Check", size: 14, style: { color: "#10b981", flexShrink: 0 } }) : state === "wrong" ? /* @__PURE__ */ jsx11(Icon, { name: "X", size: 14, style: { color: "var(--sb-bad)", flexShrink: 0 } }) : null
+            ]
+          },
+          oi
+        );
+      }) }) : /* @__PURE__ */ jsxs9("div", { style: { display: "flex", gap: 8 }, children: [
+        /* @__PURE__ */ jsx11(
           "input",
           {
             className: "sb-input",
+            value: shortDraft,
+            onChange: (e) => setShortDraft(e.target.value),
             placeholder: "Type your answer and press Enter...",
             onKeyDown: (e) => {
-              if (e.key === "Enter") {
-                setAnswers((prev) => ({ ...prev, [key]: e.currentTarget.value }));
+              if (e.key === "Enter" && shortDraft.trim()) {
+                setAnswers((prev) => ({ ...prev, [key]: shortDraft.trim() }));
               }
             }
           }
-        ) }),
-        answered ? /* @__PURE__ */ jsxs9("div", { className: "sb-quote-box", style: { marginTop: 4 }, children: [
-          /* @__PURE__ */ jsx10("div", { children: q.explanation || `Expected answer: ${String(q.answer)}` }),
-          (q.cites || []).length > 0 ? /* @__PURE__ */ jsxs9("div", { style: { marginTop: 6, display: "flex", gap: 4, alignItems: "center" }, children: [
-            /* @__PURE__ */ jsx10("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Source:" }),
-            (q.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx10("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), children: cIdx + 1 }, cid))
-          ] }) : null
-        ] }) : null
-      ] }, key);
-    })
-  ] });
+        ),
+        /* @__PURE__ */ jsx11(
+          "button",
+          {
+            type: "button",
+            className: "sb-btn sb-btn-primary",
+            disabled: !shortDraft.trim(),
+            onClick: () => setAnswers((prev) => ({ ...prev, [key]: shortDraft.trim() })),
+            children: "Submit"
+          }
+        )
+      ] }),
+      answered ? /* @__PURE__ */ jsxs9("div", { className: "sb-qz-explain", "data-ok": ok, children: [
+        /* @__PURE__ */ jsxs9("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
+          /* @__PURE__ */ jsx11("span", { className: "sb-mono", style: { fontSize: 10.5, fontWeight: 700, letterSpacing: "0.06em", color: ok ? "#10b981" : "var(--sb-bad)" }, children: ok ? "VERIFIED EXPLANATION" : "CORRECTION & SOURCE" }),
+          (q.cites || []).length > 0 ? /* @__PURE__ */ jsx11("div", { style: { display: "flex", gap: 5, alignItems: "center" }, children: (q.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsxs9("button", { type: "button", className: "sb-btn", style: { height: 24, fontSize: 11 }, onClick: () => onOpenChunk?.(cid), children: [
+            /* @__PURE__ */ jsx11(Icon, { name: "BookOpen", size: 11 }),
+            " Passage [",
+            cIdx + 1,
+            "]"
+          ] }, cid)) }) : null
+        ] }),
+        /* @__PURE__ */ jsx11("div", { style: { fontSize: 12.5, lineHeight: 1.55, color: "var(--ui-text-primary)" }, children: q.explanation || `Expected answer: ${String(q.answer)}` })
+      ] }) : null
+    ] }, key);
+  }
+  return /* @__PURE__ */ jsxs9(
+    "div",
+    {
+      style: { display: "flex", flexDirection: "column", gap: 12 },
+      tabIndex: 0,
+      onKeyDown: (e) => {
+        if (viewMode !== "focus" || !activeEntry) return;
+        const { q, idx } = activeEntry;
+        const key = q.id || idx;
+        const opts = q.options && q.options.length ? q.options : q.type === "tf" ? ["True", "False"] : [];
+        const kLow = e.key.toLowerCase();
+        if (opts.length > 0) {
+          const mapIdx = { "1": 0, a: 0, "2": 1, b: 1, "3": 2, c: 2, "4": 3, d: 3 }[kLow];
+          if (mapIdx !== void 0 && mapIdx < opts.length) {
+            setAnswers((prev) => ({ ...prev, [key]: mapIdx }));
+            return;
+          }
+        }
+        if (e.key === "ArrowRight") setCursor((c) => Math.min(visibleList.length - 1, c + 1));
+        if (e.key === "ArrowLeft") setCursor((c) => Math.max(0, c - 1));
+      },
+      children: [
+        /* @__PURE__ */ jsxs9("div", { className: "sb-qz-hero", children: [
+          /* @__PURE__ */ jsx11(
+            DitherCanvas,
+            {
+              variant: "mesh",
+              animated: false,
+              color: ringColor,
+              secondaryColor: "var(--ui-accent)",
+              opacity: 0.18,
+              cols: 120,
+              rows: 26,
+              style: { position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }
+            }
+          ),
+          /* @__PURE__ */ jsxs9("div", { style: { position: "relative", display: "flex", alignItems: "center", gap: 16, flex: 1, minWidth: 0 }, children: [
+            /* @__PURE__ */ jsxs9("svg", { width: "62", height: "62", viewBox: "0 0 62 62", style: { flexShrink: 0 }, "aria-hidden": "true", children: [
+              /* @__PURE__ */ jsx11("circle", { cx: "31", cy: "31", r: ringR, fill: "none", stroke: "var(--ui-stroke-tertiary)", strokeWidth: "5.5" }),
+              /* @__PURE__ */ jsx11(
+                "circle",
+                {
+                  cx: "31",
+                  cy: "31",
+                  r: ringR,
+                  fill: "none",
+                  stroke: ringColor,
+                  strokeWidth: "5.5",
+                  strokeLinecap: "round",
+                  strokeDasharray: `${ringDash.toFixed(1)} ${ringCirc.toFixed(1)}`,
+                  transform: "rotate(-90 31 31)"
+                }
+              ),
+              /* @__PURE__ */ jsxs9("text", { x: "31", y: "35", textAnchor: "middle", fill: ringColor, fontSize: "13.5", fontWeight: "800", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: [
+                accuracyPct,
+                "%"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxs9("div", { className: "sb-qz-stats", children: [
+              /* @__PURE__ */ jsxs9("div", { children: [
+                /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-lbl", children: "Progress" }),
+                /* @__PURE__ */ jsxs9("div", { className: "sb-dt-kpi-val sb-mono", children: [
+                  answeredCount,
+                  " / ",
+                  questions.length
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxs9("div", { children: [
+                /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-lbl", children: "Correct" }),
+                /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-val sb-mono", style: { color: "#10b981" }, children: correctCount })
+              ] }),
+              /* @__PURE__ */ jsxs9("div", { children: [
+                /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-lbl", children: "Streak" }),
+                /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-val sb-mono", style: { color: "var(--ui-accent)" }, children: streak })
+              ] }),
+              /* @__PURE__ */ jsxs9("div", { children: [
+                /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-lbl", children: "Missed" }),
+                /* @__PURE__ */ jsx11("div", { className: "sb-dt-kpi-val sb-mono", style: { color: missedCount > 0 ? "var(--sb-bad)" : "var(--ui-text-secondary)" }, children: missedCount })
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxs9("div", { style: { position: "relative", display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }, children: [
+            /* @__PURE__ */ jsxs9("div", { className: "sb-seg", role: "group", "aria-label": "Quiz mode", children: [
+              /* @__PURE__ */ jsx11("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "focus", onClick: () => setViewMode("focus"), children: "Focus" }),
+              /* @__PURE__ */ jsxs9("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "all", onClick: () => setViewMode("all"), children: [
+                "All (",
+                questions.length,
+                ")"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxs9(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn",
+                "data-active": retryMissedOnly,
+                disabled: missedCount <= 0,
+                onClick: () => {
+                  setRetryMissedOnly((v) => !v);
+                  setCursor(0);
+                },
+                children: [
+                  "Missed (",
+                  missedCount,
+                  ")"
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxs9(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn",
+                onClick: () => {
+                  setAnswers({});
+                  setRetryMissedOnly(false);
+                  setCursor(0);
+                },
+                children: [
+                  /* @__PURE__ */ jsx11(Icon, { name: "RotateCcw", size: 12 }),
+                  " Reset"
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxs9("button", { type: "button", className: "sb-btn", onClick: downloadKey, children: [
+              /* @__PURE__ */ jsx11(Icon, { name: "Download", size: 12 }),
+              " Key .md"
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxs9("div", { className: "sb-qz-stepper", children: [
+          questions.map((q, idx) => {
+            const k = q.id || idx;
+            const ans = answers[k];
+            const st = ans === void 0 ? "idle" : isCorrectChoice(q, ans) ? "correct" : "wrong";
+            const isCur = viewMode === "focus" && activeEntry?.idx === idx;
+            return /* @__PURE__ */ jsx11(
+              "button",
+              {
+                type: "button",
+                className: "sb-qz-step",
+                "data-state": st,
+                "data-active": isCur,
+                onClick: () => {
+                  setRetryMissedOnly(false);
+                  setViewMode("focus");
+                  setCursor(idx);
+                },
+                title: `Jump to Question ${idx + 1}`,
+                children: idx + 1
+              },
+              k
+            );
+          }),
+          viewMode === "focus" ? /* @__PURE__ */ jsx11("span", { style: { marginLeft: "auto", fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Keys: A-D to answer \xB7 Left/Right to navigate" }) : null
+        ] }),
+        allDone ? /* @__PURE__ */ jsxs9("div", { className: "sb-qz-complete", children: [
+          /* @__PURE__ */ jsxs9("div", { children: [
+            /* @__PURE__ */ jsx11("div", { className: "sb-mono", style: { fontSize: 10.5, fontWeight: 700, letterSpacing: "0.07em", color: "#10b981" }, children: "QUIZ COMPLETE" }),
+            /* @__PURE__ */ jsxs9("div", { style: { fontSize: 15, fontWeight: 700, color: "var(--ui-text-primary)", marginTop: 2 }, children: [
+              "Scored ",
+              correctCount,
+              " / ",
+              questions.length,
+              " (",
+              accuracyPct,
+              "%)"
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxs9("div", { style: { display: "flex", gap: 6 }, children: [
+            missedCount > 0 ? /* @__PURE__ */ jsxs9(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn sb-btn-primary",
+                onClick: () => {
+                  const nextAns = { ...answers };
+                  questions.forEach((q, i) => {
+                    const k = q.id || i;
+                    if (!isCorrectChoice(q, nextAns[k])) delete nextAns[k];
+                  });
+                  setAnswers(nextAns);
+                  setRetryMissedOnly(false);
+                  setCursor(0);
+                },
+                children: [
+                  "Retry ",
+                  missedCount,
+                  " missed"
+                ]
+              }
+            ) : null,
+            /* @__PURE__ */ jsxs9("button", { type: "button", className: "sb-btn", onClick: downloadKey, children: [
+              /* @__PURE__ */ jsx11(Icon, { name: "Download", size: 12 }),
+              " Export Answer Key"
+            ] })
+          ] })
+        ] }) : null,
+        viewMode === "focus" && activeEntry ? /* @__PURE__ */ jsxs9(Fragment5, { children: [
+          renderQuestionCard(activeEntry.q, activeEntry.idx, true),
+          /* @__PURE__ */ jsxs9("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
+            /* @__PURE__ */ jsxs9(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn",
+                disabled: cursor <= 0,
+                onClick: () => setCursor((c) => Math.max(0, c - 1)),
+                children: [
+                  /* @__PURE__ */ jsx11(Icon, { name: "ChevronLeft", size: 13 }),
+                  " Previous"
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxs9("span", { className: "sb-mono", style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: [
+              cursor + 1,
+              " / ",
+              visibleList.length
+            ] }),
+            /* @__PURE__ */ jsxs9(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn sb-btn-primary",
+                disabled: cursor >= visibleList.length - 1,
+                onClick: () => setCursor((c) => Math.min(visibleList.length - 1, c + 1)),
+                children: [
+                  "Next question ",
+                  /* @__PURE__ */ jsx11(Icon, { name: "ChevronRight", size: 13 })
+                ]
+              }
+            )
+          ] })
+        ] }) : /* @__PURE__ */ jsx11("div", { style: { display: "flex", flexDirection: "column", gap: 10 }, children: visibleList.map(({ q, idx }) => renderQuestionCard(q, idx, false)) })
+      ]
+    }
+  );
 }
 
 // desktop-src/components/renderers/MindMapView.jsx
-import { useMemo, useRef as useRef5, useState as useState7 } from "react";
-import { jsx as jsx11, jsxs as jsxs10 } from "react/jsx-runtime";
+import { useMemo, useRef as useRef6, useState as useState7 } from "react";
+import { jsx as jsx12, jsxs as jsxs10 } from "react/jsx-runtime";
+var BRANCH_COLORS = ["#3b82f6", "#10b981", "#38bdf8", "#f59e0b", "#f43f5e", "#8b5cf6"];
+function clipNode(label, maxChars = 25) {
+  const s = String(label || "").trim();
+  if (s.length <= maxChars) return s;
+  return `${s.slice(0, maxChars - 1).trimEnd().replace(/[.,;:\-]+$/, "")}...`;
+}
 function layoutTree(root, collapsed) {
   const nodes = [];
   const edges = [];
   let leafY = 0;
-  const xStep = 224;
+  const xStep = 232;
   const yStep = 56;
-  function walk(node, depth, parentId) {
+  function walk(node, depth, parentId, branchIdx) {
     const id = node.id || `${depth}-${nodes.length}`;
     const kids = !collapsed[id] && Array.isArray(node.children) ? node.children : [];
     const item = {
@@ -3897,29 +5470,31 @@ function layoutTree(root, collapsed) {
       summary: String(node.summary || ""),
       cites: node.cites || [],
       depth,
+      branchIdx,
+      color: depth === 0 ? "var(--ui-accent)" : BRANCH_COLORS[branchIdx % BRANCH_COLORS.length],
       hasChildren: Array.isArray(node.children) && node.children.length > 0,
       collapsed: Boolean(collapsed[id]),
-      x: 32 + depth * xStep,
+      x: 34 + depth * xStep,
       y: 0
     };
     if (!kids.length) {
-      item.y = 44 + leafY * yStep;
+      item.y = 48 + leafY * yStep;
       leafY += 1;
       nodes.push(item);
     } else {
-      const childPositions = kids.map((k) => walk(k, depth + 1, id));
+      const childPositions = kids.map((k, kIdx) => walk(k, depth + 1, id, depth === 0 ? kIdx : branchIdx));
       item.y = (childPositions[0].y + childPositions[childPositions.length - 1].y) / 2;
       nodes.push(item);
     }
     if (parentId) {
-      edges.push({ from: parentId, to: id });
+      edges.push({ from: parentId, to: id, color: item.color });
     }
     return item;
   }
-  if (root) walk(root, 0, null);
+  if (root) walk(root, 0, null, 0);
   const byId = new Map(nodes.map((n) => [n.id, n]));
-  const maxX = Math.max(640, ...nodes.map((n) => n.x + 216));
-  const maxY = Math.max(340, ...nodes.map((n) => n.y + 48));
+  const maxX = Math.max(720, ...nodes.map((n) => n.x + 226));
+  const maxY = Math.max(380, ...nodes.map((n) => n.y + 54));
   return { nodes, edges, byId, width: maxX, height: maxY };
 }
 function MindMapView({ artifact, onOpenChunk }) {
@@ -3929,12 +5504,14 @@ function MindMapView({ artifact, onOpenChunk }) {
   const [dragging, setDragging] = useState7(null);
   const [collapsed, setCollapsed] = useState7({});
   const [selected, setSelected] = useState7(null);
-  const svgRef = useRef5(null);
+  const [exportingPng, setExportingPng] = useState7(false);
+  const svgRef = useRef6(null);
   const graph = useMemo(() => layoutTree(root, collapsed), [root, collapsed]);
-  const titleId = `sb-mm-title-${artifact?.id || "map"}`;
-  const descId = `sb-mm-desc-${artifact?.id || "map"}`;
+  const uid = String(artifact?.id || "map").replace(/[^a-zA-Z0-9_-]/g, "");
+  const titleId = `sb-mm-title-${uid}`;
+  const descId = `sb-mm-desc-${uid}`;
   if (!root) {
-    return /* @__PURE__ */ jsx11("div", { className: "sb-empty", children: "No mind map structure available." });
+    return /* @__PURE__ */ jsx12("div", { className: "sb-empty", children: "No mind map structure available." });
   }
   async function handleCopySvg() {
     const svgText = bakeSvgVariables(svgRef.current);
@@ -3944,6 +5521,18 @@ function MindMapView({ artifact, onOpenChunk }) {
   function handleDownloadSvg() {
     const svgText = bakeSvgVariables(svgRef.current);
     downloadTextFile(`${artifact.id || "mindmap"}.svg`, svgText, "image/svg+xml;charset=utf-8");
+  }
+  async function handleDownloadPng() {
+    if (exportingPng) return;
+    setExportingPng(true);
+    try {
+      await downloadSvgAsPng(svgRef.current, `${artifact.id || "mindmap"}.png`, 2);
+      sdk.host?.notify?.({ kind: "success", title: "SourceBook", message: "Downloaded 2x PNG mind map." });
+    } catch {
+      sdk.host?.notify?.({ kind: "error", title: "SourceBook", message: "Could not render PNG export." });
+    } finally {
+      setExportingPng(false);
+    }
   }
   function handleDownloadOpml() {
     const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -3956,39 +5545,50 @@ function MindMapView({ artifact, onOpenChunk }) {
     downloadTextFile(`${artifact.id || "mindmap"}.opml`, xml, "text/xml;charset=utf-8");
   }
   const activeNode = selected ? graph.byId.get(selected) : graph.nodes.find((n) => n.depth === 0);
+  const hasCollapsed = Object.values(collapsed).some(Boolean);
   return /* @__PURE__ */ jsxs10("div", { style: { display: "flex", flexDirection: "column", gap: 10 }, children: [
-    /* @__PURE__ */ jsxs10("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6, flexWrap: "wrap" }, children: [
-      /* @__PURE__ */ jsxs10("div", { style: { display: "flex", gap: 4 }, children: [
-        /* @__PURE__ */ jsx11("button", { type: "button", className: "sb-btn sb-btn-icon", title: "Zoom out", onClick: () => setZoom((z) => Math.max(0.45, Number((z - 0.15).toFixed(2)))), children: /* @__PURE__ */ jsx11(Icon, { name: "Minus", size: 13 }) }),
-        /* @__PURE__ */ jsx11("button", { type: "button", className: "sb-btn", onClick: () => {
+    /* @__PURE__ */ jsxs10("div", { className: "sb-inf-toolbar", children: [
+      /* @__PURE__ */ jsxs10("div", { style: { display: "flex", gap: 4, alignItems: "center" }, children: [
+        /* @__PURE__ */ jsx12("button", { type: "button", className: "sb-btn sb-btn-icon", title: "Zoom out", onClick: () => setZoom((z) => Math.max(0.45, Number((z - 0.15).toFixed(2)))), children: /* @__PURE__ */ jsx12(Icon, { name: "Minus", size: 13 }) }),
+        /* @__PURE__ */ jsx12("button", { type: "button", className: "sb-btn", onClick: () => {
           setZoom(1);
           setPan({ x: 0, y: 0 });
         }, children: /* @__PURE__ */ jsxs10("span", { className: "sb-mono", children: [
           Math.round(zoom * 100),
           "%"
         ] }) }),
-        /* @__PURE__ */ jsx11("button", { type: "button", className: "sb-btn sb-btn-icon", title: "Zoom in", onClick: () => setZoom((z) => Math.min(2, Number((z + 0.15).toFixed(2)))), children: /* @__PURE__ */ jsx11(Icon, { name: "Plus", size: 13 }) })
+        /* @__PURE__ */ jsx12("button", { type: "button", className: "sb-btn sb-btn-icon", title: "Zoom in", onClick: () => setZoom((z) => Math.min(2, Number((z + 0.15).toFixed(2)))), children: /* @__PURE__ */ jsx12(Icon, { name: "Plus", size: 13 }) }),
+        hasCollapsed ? /* @__PURE__ */ jsx12("button", { type: "button", className: "sb-btn", onClick: () => setCollapsed({}), children: "Expand all" }) : null,
+        /* @__PURE__ */ jsxs10("span", { className: "sb-mono", style: { fontSize: 11, color: "var(--ui-text-tertiary)", marginLeft: 4 }, children: [
+          graph.nodes.length,
+          " nodes"
+        ] })
       ] }),
       /* @__PURE__ */ jsxs10("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" }, children: [
         /* @__PURE__ */ jsxs10("button", { type: "button", className: "sb-btn", onClick: handleCopySvg, children: [
-          /* @__PURE__ */ jsx11(Icon, { name: "Copy", size: 12 }),
+          /* @__PURE__ */ jsx12(Icon, { name: "Copy", size: 12 }),
           " Copy SVG"
         ] }),
         /* @__PURE__ */ jsxs10("button", { type: "button", className: "sb-btn", onClick: handleDownloadSvg, children: [
-          /* @__PURE__ */ jsx11(Icon, { name: "Download", size: 12 }),
+          /* @__PURE__ */ jsx12(Icon, { name: "Download", size: 12 }),
           " SVG"
         ] }),
         /* @__PURE__ */ jsxs10("button", { type: "button", className: "sb-btn", onClick: handleDownloadOpml, title: "Export outline for XMind, MindNode, or FreeMind", children: [
-          /* @__PURE__ */ jsx11(Icon, { name: "Download", size: 12 }),
+          /* @__PURE__ */ jsx12(Icon, { name: "Download", size: 12 }),
           " OPML"
+        ] }),
+        /* @__PURE__ */ jsxs10("button", { type: "button", className: "sb-btn sb-btn-primary", disabled: exportingPng, onClick: handleDownloadPng, children: [
+          /* @__PURE__ */ jsx12(Icon, { name: "ImageDown", size: 12 }),
+          " ",
+          exportingPng ? "Exporting..." : "PNG"
         ] })
       ] })
     ] }),
-    /* @__PURE__ */ jsx11(
+    /* @__PURE__ */ jsx12(
       "div",
       {
         className: "sb-svg-stage",
-        style: { height: 340, cursor: dragging ? "grabbing" : "grab", userSelect: "none" },
+        style: { height: 420, cursor: dragging ? "grabbing" : "grab", userSelect: "none" },
         onPointerDown: (e) => {
           if (e.target.closest("g[data-node]")) return;
           setDragging({ sx: e.clientX, sy: e.clientY, ox: pan.x, oy: pan.y });
@@ -4010,29 +5610,33 @@ function MindMapView({ artifact, onOpenChunk }) {
             viewBox: `0 0 ${graph.width} ${graph.height}`,
             style: { display: "block", background: "var(--sb-bg)" },
             children: [
-              /* @__PURE__ */ jsx11("title", { id: titleId, children: artifact?.spec?.title || "Concept Mind Map" }),
+              /* @__PURE__ */ jsx12("title", { id: titleId, children: artifact?.spec?.title || "Concept Mind Map" }),
               /* @__PURE__ */ jsxs10("desc", { id: descId, children: [
                 "Interactive hierarchical concept map with ",
                 graph.nodes.length,
                 " nodes grounded in notebook sources."
               ] }),
+              /* @__PURE__ */ jsx12("defs", { children: /* @__PURE__ */ jsx12("pattern", { id: `sb-mm-dots-${uid}`, width: "16", height: "16", patternUnits: "userSpaceOnUse", children: /* @__PURE__ */ jsx12("circle", { cx: "2", cy: "2", r: "0.9", fill: "var(--ui-stroke-tertiary)" }) }) }),
+              /* @__PURE__ */ jsx12("rect", { x: "0", y: "0", width: graph.width, height: graph.height, fill: "var(--sb-bg)" }),
+              /* @__PURE__ */ jsx12("rect", { x: "0", y: "0", width: graph.width, height: graph.height, fill: `url(#sb-mm-dots-${uid})`, opacity: "0.65" }),
               /* @__PURE__ */ jsxs10("g", { transform: `translate(${pan.x}, ${pan.y}) scale(${zoom})`, children: [
                 graph.edges.map((ed, i) => {
                   const a = graph.byId.get(ed.from);
                   const b = graph.byId.get(ed.to);
                   if (!a || !b) return null;
-                  const sx = a.x + 186;
+                  const sx = a.x + 194;
                   const sy = a.y;
                   const tx = b.x;
                   const ty = b.y;
                   const mx = (sx + tx) / 2;
-                  return /* @__PURE__ */ jsx11(
+                  return /* @__PURE__ */ jsx12(
                     "path",
                     {
                       d: `M ${sx} ${sy} C ${mx} ${sy}, ${mx} ${ty}, ${tx} ${ty}`,
                       fill: "none",
-                      stroke: "var(--ui-stroke-secondary)",
-                      strokeWidth: "1.5"
+                      stroke: ed.color,
+                      strokeOpacity: "0.58",
+                      strokeWidth: a.depth === 0 ? "2" : "1.5"
                     },
                     i
                   );
@@ -4040,37 +5644,39 @@ function MindMapView({ artifact, onOpenChunk }) {
                 graph.nodes.map((n) => {
                   const isRoot = n.depth === 0;
                   const isSel = activeNode && activeNode.id === n.id;
-                  const label = n.label.length > 24 ? `${n.label.slice(0, 23)}...` : n.label;
+                  const label = clipNode(n.label, 24);
                   return /* @__PURE__ */ jsxs10(
                     "g",
                     {
                       "data-node": n.id,
-                      transform: `translate(${n.x}, ${n.y - 18})`,
+                      transform: `translate(${n.x}, ${n.y - 19})`,
                       style: { cursor: "pointer" },
                       onClick: () => setSelected(n.id),
                       onDoubleClick: () => {
                         if (n.hasChildren) setCollapsed((prev) => ({ ...prev, [n.id]: !prev[n.id] }));
                       },
                       children: [
-                        /* @__PURE__ */ jsx11(
+                        /* @__PURE__ */ jsx12(
                           "rect",
                           {
-                            width: "186",
-                            height: "36",
-                            rx: "8",
-                            fill: isRoot || isSel ? "var(--sb-accent-soft)" : "var(--sb-surface)",
-                            stroke: isRoot || isSel ? "var(--ui-accent)" : "var(--ui-stroke-secondary)",
-                            strokeWidth: isRoot || isSel ? "1.6" : "1"
+                            width: "194",
+                            height: "38",
+                            rx: "9",
+                            fill: isRoot ? "var(--sb-accent-soft)" : isSel ? n.color : "var(--sb-surface)",
+                            fillOpacity: isRoot ? "1" : isSel ? "0.16" : "1",
+                            stroke: isRoot || isSel ? n.color : "var(--ui-stroke-secondary)",
+                            strokeWidth: isRoot || isSel ? "1.8" : "1"
                           }
                         ),
-                        /* @__PURE__ */ jsx11(
+                        !isRoot ? /* @__PURE__ */ jsx12("rect", { x: "0", y: "7", width: "3", height: "24", rx: "1.5", fill: n.color }) : null,
+                        /* @__PURE__ */ jsx12(
                           "text",
                           {
-                            x: "12",
-                            y: "22",
+                            x: "13",
+                            y: "23",
                             fill: "var(--ui-text-primary)",
                             fontSize: "12",
-                            fontWeight: isRoot ? "650" : "500",
+                            fontWeight: isRoot || n.depth === 1 ? "650" : "500",
                             fontFamily: "system-ui, -apple-system, sans-serif",
                             children: label
                           }
@@ -4078,14 +5684,14 @@ function MindMapView({ artifact, onOpenChunk }) {
                         n.hasChildren ? /* @__PURE__ */ jsxs10(
                           "g",
                           {
-                            transform: "translate(186, 18)",
+                            transform: "translate(194, 19)",
                             onClick: (e) => {
                               e.stopPropagation();
                               setCollapsed((prev) => ({ ...prev, [n.id]: !prev[n.id] }));
                             },
                             children: [
-                              /* @__PURE__ */ jsx11("circle", { r: "8", fill: "var(--sb-surface)", stroke: "var(--ui-stroke-secondary)", strokeWidth: "1.2" }),
-                              /* @__PURE__ */ jsx11("text", { textAnchor: "middle", y: "3.5", fill: "var(--ui-text-secondary)", fontSize: "11", fontWeight: "700", children: n.collapsed ? "+" : "-" })
+                              /* @__PURE__ */ jsx12("circle", { r: "8.5", fill: "var(--sb-surface)", stroke: n.color, strokeWidth: "1.4" }),
+                              /* @__PURE__ */ jsx12("text", { textAnchor: "middle", y: "3.5", fill: n.color, fontSize: "11", fontWeight: "700", children: n.collapsed ? "+" : "-" })
                             ]
                           }
                         ) : null
@@ -4100,19 +5706,50 @@ function MindMapView({ artifact, onOpenChunk }) {
         )
       }
     ),
-    activeNode ? /* @__PURE__ */ jsxs10("div", { className: "sb-ledger-row", children: [
+    activeNode ? /* @__PURE__ */ jsxs10("div", { className: "sb-ledger-row", style: { borderLeft: `3px solid ${activeNode.color}` }, children: [
       /* @__PURE__ */ jsxs10("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
-        /* @__PURE__ */ jsx11("strong", { style: { fontSize: 12.5 }, children: activeNode.label }),
-        /* @__PURE__ */ jsx11("div", { style: { display: "flex", gap: 4 }, children: (activeNode.cites || []).map((cid, idx) => /* @__PURE__ */ jsx11("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: idx + 1 }, cid)) })
+        /* @__PURE__ */ jsx12("strong", { style: { fontSize: 13 }, children: activeNode.label }),
+        /* @__PURE__ */ jsx12("div", { style: { display: "flex", gap: 4 }, children: (activeNode.cites || []).map((cid, idx) => /* @__PURE__ */ jsx12("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: idx + 1 }, cid)) })
       ] }),
-      activeNode.summary ? /* @__PURE__ */ jsx11("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: activeNode.summary }) : null
+      activeNode.summary ? /* @__PURE__ */ jsx12("div", { style: { fontSize: 12.5, color: "var(--ui-text-secondary)", lineHeight: 1.55 }, children: activeNode.summary }) : null
     ] }) : null
   ] });
 }
 
 // desktop-src/components/renderers/InfographicView.jsx
-import { useRef as useRef6 } from "react";
-import { Fragment as Fragment5, jsx as jsx12, jsxs as jsxs11 } from "react/jsx-runtime";
+import { useMemo as useMemo2, useRef as useRef7, useState as useState8 } from "react";
+import { Fragment as Fragment6, jsx as jsx13, jsxs as jsxs11 } from "react/jsx-runtime";
+var LAYOUT_OPTIONS = [
+  { id: "stat-grid", label: "Bento" },
+  { id: "timeline", label: "Timeline" },
+  { id: "comparison", label: "Compare" },
+  { id: "hub-spoke", label: "Hub" },
+  { id: "pyramid", label: "Pyramid" }
+];
+var PALETTES = {
+  adaptive: {
+    label: "Adaptive",
+    accents: ["var(--ui-accent)", "#10b981", "#38bdf8", "#f59e0b", "#f43f5e", "#8b5cf6"]
+  },
+  editorial: {
+    label: "Editorial",
+    accents: ["#3b82f6", "#0d9488", "#d97706", "#e11d48", "#6366f1", "#0891b2"]
+  },
+  emerald: {
+    label: "Emerald",
+    accents: ["#10b981", "#06b6d4", "#84cc16", "#f59e0b", "#14b8a6", "#22c55e"]
+  },
+  warm: {
+    label: "Warm",
+    accents: ["#f97316", "#eab308", "#e11d48", "#10b981", "#f59e0b", "#ec4899"]
+  }
+};
+function clipLabel(text, maxChars) {
+  const s = String(text || "").trim();
+  if (s.length <= maxChars) return s;
+  const cut = s.slice(0, maxChars - 1).trimEnd();
+  return `${cut.replace(/[.,;:\-]+$/, "")}...`;
+}
 function wrapText(text, maxChars, maxLines = 4) {
   const words = String(text || "").trim().split(/\s+/).filter(Boolean);
   const lines = [];
@@ -4148,24 +5785,188 @@ function wrapText(text, maxChars, maxLines = 4) {
   }
   return lines;
 }
+function parseMetric(rawValue, idx, total) {
+  const raw = String(rawValue ?? "").trim();
+  if (!raw) return null;
+  if (/^0\d$/.test(raw) && Number(raw) === idx + 1 && total >= 2) {
+    return null;
+  }
+  const m = raw.match(/^([~$+<>=]*)\s*(\d+(?:[.,]\d+)?)\s*(%|ms|us|s|sec|min|hr|h|x|GB|MB|KB|MiB|GiB|TB|k|M|B|px|fps|rps|qps)?$/i);
+  if (!m) {
+    return {
+      raw,
+      display: raw.slice(0, 18),
+      num: null,
+      unit: "",
+      group: "label",
+      isPct: false,
+      tag: "HIGHLIGHT"
+    };
+  }
+  const prefix = m[1] || "";
+  const num = parseFloat(m[2].replace(/,/g, ""));
+  const unit = m[3] || "";
+  const uLow = unit.toLowerCase();
+  const isPct = unit === "%";
+  let group = "count";
+  let tag = "METRIC";
+  if (isPct) {
+    group = "percent";
+    tag = num >= 50 ? "IMPACT" : "THRESHOLD";
+  } else if (uLow === "ms" || uLow === "us" || uLow === "s" || uLow === "sec") {
+    group = "latency";
+    tag = "LATENCY";
+  } else if (uLow === "x") {
+    group = "multiplier";
+    tag = "SCALE";
+  } else if (["gb", "mb", "kb", "mib", "gib", "tb"].includes(uLow)) {
+    group = "memory";
+    tag = "CAPACITY";
+  } else if (prefix.includes("$")) {
+    group = "currency";
+    tag = "VALUE";
+  }
+  return {
+    raw,
+    display: `${prefix}${m[2]}${unit}`,
+    num: Number.isFinite(num) ? num : null,
+    unit,
+    group,
+    isPct,
+    tag
+  };
+}
+function normalizeLayout(raw) {
+  const k = String(raw || "stat-grid").toLowerCase();
+  if (k === "process") return "timeline";
+  if (LAYOUT_OPTIONS.some((o) => o.id === k)) return k;
+  return "stat-grid";
+}
 function InfographicView({ artifact, onOpenChunk }) {
   const spec = artifact?.spec || {};
   const blocks = spec.blocks || [];
-  const layout = spec.layout || "stat-grid";
-  const svgRef = useRef6(null);
+  const svgRef = useRef7(null);
+  const [layout, setLayout] = useState8(() => normalizeLayout(spec.layout));
+  const [paletteKey, setPaletteKey] = useState8(() => PALETTES[spec.palette] ? spec.palette : "adaptive");
+  const [selectedIdx, setSelectedIdx] = useState8(null);
+  const [exportingPng, setExportingPng] = useState8(false);
+  const enriched = useMemo2(() => {
+    const items2 = blocks.map((blk, idx) => {
+      const metric = parseMetric(blk.value, idx, blocks.length);
+      return {
+        ...blk,
+        _idx: idx,
+        _metric: metric,
+        _tag: metric ? metric.tag : blk.kind && blk.kind !== "metric" ? String(blk.kind).toUpperCase() : "KEY INSIGHT"
+      };
+    });
+    const maxByGroup = {};
+    for (const it of items2) {
+      if (it._metric && it._metric.num != null) {
+        const g = it._metric.group;
+        maxByGroup[g] = Math.max(maxByGroup[g] || 0, it._metric.num);
+      }
+    }
+    let heroIdx = 0;
+    let bestScore = -1;
+    items2.forEach((it, idx) => {
+      if (!it._metric || it._metric.num == null) return;
+      const score = it._metric.isPct ? 1e4 + it._metric.num : 1e3 + it._metric.num;
+      if (score > bestScore) {
+        bestScore = score;
+        heroIdx = idx;
+      }
+    });
+    const withRatios = items2.map((it, idx) => {
+      let ratio = 0;
+      if (it._metric && it._metric.num != null) {
+        if (it._metric.isPct) {
+          ratio = Math.max(0.05, Math.min(1, it._metric.num / 100));
+        } else {
+          const mx = maxByGroup[it._metric.group] || it._metric.num || 1;
+          ratio = Math.max(0.08, Math.min(1, it._metric.num / mx));
+        }
+      }
+      return { ...it, _ratio: ratio, _isHero: idx === heroIdx };
+    });
+    const citeOrder = Array.from(new Set(items2.flatMap((b) => b.cites || [])));
+    const citeNum = Object.fromEntries(citeOrder.map((cid, i) => [cid, i + 1]));
+    return {
+      items: withRatios,
+      heroIdx,
+      metricItems: withRatios.filter((it) => it._metric && it._metric.num != null),
+      citeOrder,
+      citeNum
+    };
+  }, [blocks]);
   if (!blocks.length) {
-    return /* @__PURE__ */ jsx12("div", { className: "sb-empty", children: "No infographic blocks available." });
+    return /* @__PURE__ */ jsx13("div", { className: "sb-empty", children: "No infographic blocks available." });
   }
-  const W = 740;
-  const isTimeline = layout === "timeline" || layout === "process";
-  const cols = isTimeline ? 1 : 2;
-  const rows = Math.ceil(blocks.length / cols);
-  const cardH = isTimeline ? 104 : 156;
-  const gap = 14;
-  const headerH = 84;
-  const H = headerH + rows * cardH + Math.max(0, rows - 1) * gap + 28;
-  const titleId = `sb-inf-title-${artifact?.id || "info"}`;
-  const descId = `sb-inf-desc-${artifact?.id || "info"}`;
+  const palette = PALETTES[paletteKey] || PALETTES.adaptive;
+  const accentAt = (idx) => palette.accents[idx % palette.accents.length];
+  const W = 920;
+  const PAD = 32;
+  const CW = W - PAD * 2;
+  const HEADER_H = 92;
+  const FOOTER_H = 38;
+  const uid = String(artifact?.id || "info").replace(/[^a-zA-Z0-9_-]/g, "");
+  const titleId = `sb-inf-title-${uid}`;
+  const descId = `sb-inf-desc-${uid}`;
+  const items = enriched.items;
+  const hero = items[enriched.heroIdx] || items[0];
+  const rest = items.filter((_, i) => i !== enriched.heroIdx);
+  const metricCount = enriched.metricItems.length;
+  function computeHeight() {
+    if (layout === "stat-grid") {
+      const heroRowH = 204;
+      const rows = packBentoRows(rest);
+      const gridH = rows.reduce((acc, r) => acc + r.height, 0) + Math.max(0, rows.length - 1) * 14;
+      return HEADER_H + 16 + heroRowH + (rows.length ? 16 + gridH : 0) + 18 + FOOTER_H;
+    }
+    if (layout === "timeline") {
+      const cardH = 96;
+      const gap = 12;
+      return HEADER_H + 18 + items.length * cardH + Math.max(0, items.length - 1) * gap + 18 + FOOTER_H;
+    }
+    if (layout === "comparison") {
+      const leftN = Math.ceil(items.length / 2);
+      const rightN = items.length - leftN;
+      const maxRows = Math.max(leftN, rightN, 1);
+      return HEADER_H + 56 + maxRows * 124 + Math.max(0, maxRows - 1) * 12 + 20 + FOOTER_H;
+    }
+    if (layout === "hub-spoke") {
+      const satCount = Math.max(1, items.length - 1);
+      const perSide = Math.ceil(satCount / 2);
+      return HEADER_H + Math.max(410, perSide * 138 + 44) + FOOTER_H;
+    }
+    if (layout === "pyramid") {
+      const n = Math.min(items.length, 6);
+      return HEADER_H + 22 + n * 78 + Math.max(0, n - 1) * 10 + 20 + FOOTER_H;
+    }
+    return 640;
+  }
+  function packBentoRows(list) {
+    const rows = [];
+    let i = 0;
+    while (i < list.length) {
+      const left = list.length - i;
+      if (left === 5) {
+        rows.push({ items: list.slice(i, i + 3), cols: 3, height: 152 });
+        i += 3;
+      } else if (left === 3) {
+        rows.push({ items: list.slice(i, i + 3), cols: 3, height: 152 });
+        i += 3;
+      } else if (left >= 2) {
+        rows.push({ items: list.slice(i, i + 2), cols: 2, height: 138 });
+        i += 2;
+      } else {
+        rows.push({ items: list.slice(i, i + 1), cols: 1, height: 122 });
+        i += 1;
+      }
+    }
+    return rows;
+  }
+  const H = computeHeight();
   async function handleCopySvg() {
     const svgText = bakeSvgVariables(svgRef.current);
     await copyText(svgText);
@@ -4173,23 +5974,738 @@ function InfographicView({ artifact, onOpenChunk }) {
   }
   function handleDownloadSvg() {
     const svgText = bakeSvgVariables(svgRef.current);
-    downloadTextFile(`${artifact.id || "infographic"}.svg`, svgText, "image/svg+xml;charset=utf-8");
+    downloadTextFile(`${artifact.id || "infographic"}-${layout}.svg`, svgText, "image/svg+xml;charset=utf-8");
   }
+  async function handleDownloadPng() {
+    if (exportingPng) return;
+    setExportingPng(true);
+    try {
+      await downloadSvgAsPng(svgRef.current, `${artifact.id || "infographic"}-${layout}.png`, 2);
+      sdk.host?.notify?.({ kind: "success", title: "SourceBook", message: "Downloaded 2x PNG infographic." });
+    } catch {
+      sdk.host?.notify?.({ kind: "error", title: "SourceBook", message: "Could not render PNG export." });
+    } finally {
+      setExportingPng(false);
+    }
+  }
+  function handleBlockClick(it) {
+    setSelectedIdx((prev) => prev === it._idx ? null : it._idx);
+  }
+  function renderCiteBadgesSvg(cites, rightX, y, accent) {
+    const list = (cites || []).slice(0, 3);
+    if (!list.length) return null;
+    return list.map((cid, i) => {
+      const num = enriched.citeNum[cid] || i + 1;
+      const bw = 22;
+      const bx = rightX - (list.length - i) * (bw + 4) + 4;
+      return /* @__PURE__ */ jsxs11(
+        "g",
+        {
+          style: { cursor: "pointer" },
+          onClick: (e) => {
+            e.stopPropagation();
+            onOpenChunk?.(cid);
+          },
+          children: [
+            /* @__PURE__ */ jsx13("rect", { x: bx, y, width: bw, height: 18, rx: "4", fill: accent, fillOpacity: "0.16", stroke: accent, strokeOpacity: "0.45", strokeWidth: "1" }),
+            /* @__PURE__ */ jsx13(
+              "text",
+              {
+                x: bx + bw / 2,
+                y: y + 12.5,
+                textAnchor: "middle",
+                fill: accent,
+                fontSize: "10",
+                fontWeight: "700",
+                fontFamily: "ui-monospace, SFMono-Regular, monospace",
+                children: num
+              }
+            )
+          ]
+        },
+        cid
+      );
+    });
+  }
+  function renderHeader() {
+    const primaryAccent = accentAt(0);
+    const secondAccent = accentAt(1);
+    const subtitle = String(spec.subtitle || `Synthesized from ${enriched.citeOrder.length} cited passages`);
+    const summaryText = metricCount > 0 ? `${items.length} FINDINGS  |  ${metricCount} METRICS` : `${items.length} FINDINGS  |  ${enriched.citeOrder.length} CITATIONS`;
+    const badgeW = Math.max(154, summaryText.length * 6.8 + 24);
+    return /* @__PURE__ */ jsxs11("g", { children: [
+      /* @__PURE__ */ jsx13("rect", { x: "0", y: "0", width: W, height: "3", fill: `url(#sb-top-grad-${uid})` }),
+      /* @__PURE__ */ jsx13("rect", { x: PAD, y: "16", width: "98", height: "19", rx: "9.5", fill: primaryAccent, fillOpacity: "0.15", stroke: primaryAccent, strokeOpacity: "0.35", strokeWidth: "1" }),
+      /* @__PURE__ */ jsx13("circle", { cx: PAD + 11, cy: "25.5", r: "3", fill: primaryAccent }),
+      /* @__PURE__ */ jsx13("text", { x: PAD + 20, y: "29", fill: primaryAccent, fontSize: "9.5", fontWeight: "700", letterSpacing: "0.9", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: "VISUAL BRIEF" }),
+      /* @__PURE__ */ jsx13("text", { x: PAD + 110, y: "29", fill: "var(--ui-text-tertiary)", fontSize: "10.5", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: layout.toUpperCase() }),
+      /* @__PURE__ */ jsx13(
+        "rect",
+        {
+          x: W - PAD - badgeW,
+          y: "18",
+          width: badgeW,
+          height: "24",
+          rx: "12",
+          fill: "var(--sb-surface)",
+          stroke: "var(--ui-stroke-secondary)",
+          strokeWidth: "1"
+        }
+      ),
+      /* @__PURE__ */ jsx13(
+        "text",
+        {
+          x: W - PAD - badgeW / 2,
+          y: "33.5",
+          textAnchor: "middle",
+          fill: "var(--ui-text-secondary)",
+          fontSize: "10",
+          fontWeight: "650",
+          letterSpacing: "0.4",
+          fontFamily: "ui-monospace, SFMono-Regular, monospace",
+          children: summaryText
+        }
+      ),
+      /* @__PURE__ */ jsx13(
+        "text",
+        {
+          x: PAD,
+          y: "60",
+          fill: "var(--ui-text-primary)",
+          fontSize: "22",
+          fontWeight: "750",
+          letterSpacing: "-0.4",
+          fontFamily: "system-ui, -apple-system, sans-serif",
+          children: String(spec.title || "Infographic").slice(0, 58)
+        }
+      ),
+      /* @__PURE__ */ jsx13("text", { x: PAD, y: "80", fill: "var(--ui-text-secondary)", fontSize: "12.5", fontFamily: "system-ui, -apple-system, sans-serif", children: subtitle.slice(0, 96) }),
+      /* @__PURE__ */ jsx13("line", { x1: PAD, y1: HEADER_H, x2: W - PAD, y2: HEADER_H, stroke: "var(--ui-stroke-tertiary)", strokeWidth: "1" }),
+      /* @__PURE__ */ jsx13("rect", { x: PAD, y: HEADER_H - 1, width: "84", height: "2", rx: "1", fill: secondAccent, fillOpacity: "0.85" })
+    ] });
+  }
+  function renderFooter() {
+    const fy = H - FOOTER_H;
+    return /* @__PURE__ */ jsxs11("g", { children: [
+      /* @__PURE__ */ jsx13("line", { x1: PAD, y1: fy, x2: W - PAD, y2: fy, stroke: "var(--ui-stroke-tertiary)", strokeWidth: "1" }),
+      /* @__PURE__ */ jsx13("text", { x: PAD, y: fy + 23, fill: "var(--ui-text-tertiary)", fontSize: "10", fontWeight: "600", letterSpacing: "0.8", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: "SOURCEBOOK  |  GROUNDED VISUAL SYNTHESIS" }),
+      /* @__PURE__ */ jsx13(
+        "text",
+        {
+          x: W - PAD,
+          y: fy + 23,
+          textAnchor: "end",
+          fill: "var(--ui-text-tertiary)",
+          fontSize: "10",
+          fontFamily: "ui-monospace, SFMono-Regular, monospace",
+          children: `${enriched.citeOrder.length} cited passage${enriched.citeOrder.length === 1 ? "" : "s"}  |  Click any card to inspect`
+        }
+      )
+    ] });
+  }
+  function renderBentoLayout() {
+    const heroY = HEADER_H + 16;
+    const heroH = 204;
+    const heroW = 472;
+    const chartX = PAD + heroW + 16;
+    const chartW = CW - heroW - 16;
+    const heroAccent = accentAt(0);
+    const isHeroSel = selectedIdx === hero._idx;
+    const cx = PAD + 92;
+    const cy = heroY + 106;
+    const r = 56;
+    const circ = 2 * Math.PI * r;
+    const gaugeRatio = hero._metric ? hero._metric.isPct ? hero._ratio : 0.78 : 0.72;
+    const dashLen = circ * gaugeRatio;
+    const heroVal = hero._metric ? hero._metric.display : "KEY";
+    const heroFontSize = heroVal.length >= 6 ? 21 : heroVal.length >= 4 ? 25 : 29;
+    const heroTitleLines = wrapText(hero.heading || "Primary Highlight", 26, 2);
+    const heroBodyLines = wrapText(hero.body, 38, 4);
+    const barItems = enriched.metricItems.slice(0, 5);
+    const bentoRows = packBentoRows(rest);
+    let curY = heroY + heroH + 16;
+    return /* @__PURE__ */ jsxs11("g", { children: [
+      /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(hero), children: [
+        /* @__PURE__ */ jsx13(
+          "rect",
+          {
+            x: PAD,
+            y: heroY,
+            width: heroW,
+            height: heroH,
+            rx: "12",
+            fill: `url(#sb-hero-wash-${uid})`,
+            stroke: isHeroSel ? heroAccent : "var(--ui-stroke-secondary)",
+            strokeWidth: isHeroSel ? "1.8" : "1"
+          }
+        ),
+        /* @__PURE__ */ jsx13("rect", { x: PAD, y: heroY, width: heroW, height: "3.5", rx: "2", fill: heroAccent }),
+        /* @__PURE__ */ jsx13("circle", { cx, cy, r, fill: "none", stroke: "var(--ui-stroke-tertiary)", strokeWidth: "10" }),
+        /* @__PURE__ */ jsx13(
+          "circle",
+          {
+            cx,
+            cy,
+            r,
+            fill: "none",
+            stroke: heroAccent,
+            strokeWidth: "10",
+            strokeLinecap: "round",
+            strokeDasharray: `${dashLen.toFixed(1)} ${circ.toFixed(1)}`,
+            transform: `rotate(-90 ${cx} ${cy})`
+          }
+        ),
+        /* @__PURE__ */ jsx13("circle", { cx, cy, r: r - 12, fill: "var(--sb-bg)", fillOpacity: "0.65" }),
+        /* @__PURE__ */ jsx13(
+          "text",
+          {
+            x: cx,
+            y: cy + 5,
+            textAnchor: "middle",
+            fill: heroAccent,
+            fontSize: heroFontSize,
+            fontWeight: "800",
+            fontFamily: "ui-monospace, SFMono-Regular, monospace",
+            children: heroVal
+          }
+        ),
+        /* @__PURE__ */ jsx13(
+          "text",
+          {
+            x: cx,
+            y: cy + 22,
+            textAnchor: "middle",
+            fill: "var(--ui-text-tertiary)",
+            fontSize: "8.5",
+            fontWeight: "700",
+            letterSpacing: "0.8",
+            fontFamily: "ui-monospace, SFMono-Regular, monospace",
+            children: hero._tag
+          }
+        ),
+        /* @__PURE__ */ jsx13("rect", { x: PAD + 172, y: heroY + 20, width: "108", height: "18", rx: "9", fill: heroAccent, fillOpacity: "0.15" }),
+        /* @__PURE__ */ jsx13(
+          "text",
+          {
+            x: PAD + 182,
+            y: heroY + 32,
+            fill: heroAccent,
+            fontSize: "9",
+            fontWeight: "700",
+            letterSpacing: "0.7",
+            fontFamily: "ui-monospace, SFMono-Regular, monospace",
+            children: "HEADLINE METRIC"
+          }
+        ),
+        /* @__PURE__ */ jsx13(
+          "text",
+          {
+            x: PAD + 172,
+            y: heroY + 58,
+            fill: "var(--ui-text-primary)",
+            fontSize: "16",
+            fontWeight: "700",
+            fontFamily: "system-ui, -apple-system, sans-serif",
+            children: heroTitleLines.map((ln, li) => /* @__PURE__ */ jsx13("tspan", { x: PAD + 172, dy: li === 0 ? 0 : 20, children: ln }, li))
+          }
+        ),
+        /* @__PURE__ */ jsx13(
+          "text",
+          {
+            x: PAD + 172,
+            y: heroY + (heroTitleLines.length > 1 ? 100 : 82),
+            fill: "var(--ui-text-secondary)",
+            fontSize: "12",
+            fontFamily: "system-ui, -apple-system, sans-serif",
+            children: heroBodyLines.map((ln, li) => /* @__PURE__ */ jsx13("tspan", { x: PAD + 172, dy: li === 0 ? 0 : 17, children: ln }, li))
+          }
+        ),
+        renderCiteBadgesSvg(hero.cites, PAD + heroW - 16, heroY + heroH - 28, heroAccent)
+      ] }),
+      /* @__PURE__ */ jsxs11("g", { children: [
+        /* @__PURE__ */ jsx13(
+          "rect",
+          {
+            x: chartX,
+            y: heroY,
+            width: chartW,
+            height: heroH,
+            rx: "12",
+            fill: "var(--sb-surface)",
+            stroke: "var(--ui-stroke-secondary)",
+            strokeWidth: "1"
+          }
+        ),
+        /* @__PURE__ */ jsx13(
+          "text",
+          {
+            x: chartX + 18,
+            y: heroY + 26,
+            fill: "var(--ui-text-tertiary)",
+            fontSize: "9.5",
+            fontWeight: "700",
+            letterSpacing: "0.9",
+            fontFamily: "ui-monospace, SFMono-Regular, monospace",
+            children: barItems.length >= 2 ? "METRIC COMPARISON" : "KEY HIGHLIGHTS"
+          }
+        ),
+        /* @__PURE__ */ jsx13("line", { x1: chartX + 18, y1: heroY + 36, x2: chartX + chartW - 18, y2: heroY + 36, stroke: "var(--ui-stroke-tertiary)", strokeWidth: "1" }),
+        barItems.length >= 2 ? barItems.map((bi, bIdx) => {
+          const rowY = heroY + 48 + bIdx * 29;
+          const barColor = accentAt(bIdx);
+          const trackW = chartW - 36;
+          const fillW = Math.max(12, Math.round(trackW * bi._ratio));
+          const unitNote = bi._metric?.group === "latency" ? " (ms)" : "";
+          return /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(bi), children: [
+            /* @__PURE__ */ jsx13(
+              "text",
+              {
+                x: chartX + 18,
+                y: rowY + 9,
+                fill: selectedIdx === bi._idx ? "var(--ui-text-primary)" : "var(--ui-text-secondary)",
+                fontSize: "11",
+                fontWeight: selectedIdx === bi._idx ? "650" : "500",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                children: `${String(bi.heading || "").slice(0, 28)}${unitNote}`
+              }
+            ),
+            /* @__PURE__ */ jsx13(
+              "text",
+              {
+                x: chartX + chartW - 18,
+                y: rowY + 9,
+                textAnchor: "end",
+                fill: barColor,
+                fontSize: "11.5",
+                fontWeight: "750",
+                fontFamily: "ui-monospace, SFMono-Regular, monospace",
+                children: bi._metric?.display
+              }
+            ),
+            /* @__PURE__ */ jsx13("rect", { x: chartX + 18, y: rowY + 14, width: trackW, height: "7", rx: "3.5", fill: "var(--ui-stroke-tertiary)" }),
+            /* @__PURE__ */ jsx13("rect", { x: chartX + 18, y: rowY + 14, width: fillW, height: "7", rx: "3.5", fill: barColor })
+          ] }, bi.id || bIdx);
+        }) : items.slice(0, 4).map((it, sIdx) => {
+          const rowY = heroY + 52 + sIdx * 36;
+          const col = accentAt(sIdx);
+          return /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
+            /* @__PURE__ */ jsx13("circle", { cx: chartX + 25, cy: rowY + 6, r: "5", fill: col, fillOpacity: "0.22", stroke: col, strokeWidth: "1.5" }),
+            /* @__PURE__ */ jsx13("text", { x: chartX + 38, y: rowY + 10, fill: "var(--ui-text-primary)", fontSize: "11.5", fontWeight: "600", fontFamily: "system-ui, -apple-system, sans-serif", children: String(it.heading || "").slice(0, 36) })
+          ] }, it.id || sIdx);
+        })
+      ] }),
+      bentoRows.map((row, rIdx) => {
+        const gap = 14;
+        const cardW = (CW - gap * (row.cols - 1)) / row.cols;
+        const rowY = curY;
+        curY += row.height + 14;
+        const maxBodyChars = row.cols === 3 ? 33 : row.cols === 2 ? 54 : 112;
+        const maxTitleChars = row.cols === 3 ? 30 : 44;
+        return /* @__PURE__ */ jsx13("g", { children: row.items.map((it, cIdx) => {
+          const x = PAD + cIdx * (cardW + gap);
+          const colorIdx = items.indexOf(it);
+          const col = accentAt(colorIdx);
+          const isSel = selectedIdx === it._idx;
+          const hasNum = Boolean(it._metric && it._metric.display);
+          const bodyLines = wrapText(it.body, maxBodyChars, row.cols === 3 ? 3 : 3);
+          const tagText = it._tag;
+          const tagW = Math.max(66, tagText.length * 6.2 + 16);
+          return /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
+            /* @__PURE__ */ jsx13(
+              "rect",
+              {
+                x,
+                y: rowY,
+                width: cardW,
+                height: row.height,
+                rx: "11",
+                fill: "var(--sb-surface)",
+                stroke: isSel ? col : "var(--ui-stroke-secondary)",
+                strokeWidth: isSel ? "1.8" : "1"
+              }
+            ),
+            /* @__PURE__ */ jsx13("rect", { x, y: rowY + 12, width: "3", height: row.height - 24, rx: "1.5", fill: col }),
+            hasNum ? /* @__PURE__ */ jsxs11(Fragment6, { children: [
+              /* @__PURE__ */ jsx13(
+                "text",
+                {
+                  x: x + 16,
+                  y: rowY + 34,
+                  fill: col,
+                  fontSize: "22",
+                  fontWeight: "800",
+                  fontFamily: "ui-monospace, SFMono-Regular, monospace",
+                  children: it._metric.display
+                }
+              ),
+              /* @__PURE__ */ jsx13(
+                "rect",
+                {
+                  x: x + cardW - tagW - 14,
+                  y: rowY + 16,
+                  width: tagW,
+                  height: "18",
+                  rx: "9",
+                  fill: col,
+                  fillOpacity: "0.14"
+                }
+              ),
+              /* @__PURE__ */ jsx13(
+                "text",
+                {
+                  x: x + cardW - tagW / 2 - 14,
+                  y: rowY + 28,
+                  textAnchor: "middle",
+                  fill: col,
+                  fontSize: "8.5",
+                  fontWeight: "700",
+                  letterSpacing: "0.6",
+                  fontFamily: "ui-monospace, SFMono-Regular, monospace",
+                  children: tagText
+                }
+              ),
+              /* @__PURE__ */ jsx13("rect", { x: x + 16, y: rowY + 43, width: cardW - 32, height: "3.5", rx: "2", fill: "var(--ui-stroke-tertiary)" }),
+              /* @__PURE__ */ jsx13("rect", { x: x + 16, y: rowY + 43, width: Math.max(12, Math.round((cardW - 32) * it._ratio)), height: "3.5", rx: "2", fill: col })
+            ] }) : /* @__PURE__ */ jsxs11(Fragment6, { children: [
+              /* @__PURE__ */ jsx13("rect", { x: x + 16, y: rowY + 16, width: tagW + 8, height: "19", rx: "9.5", fill: col, fillOpacity: "0.15" }),
+              /* @__PURE__ */ jsx13(
+                "text",
+                {
+                  x: x + 26,
+                  y: rowY + 28.5,
+                  fill: col,
+                  fontSize: "9",
+                  fontWeight: "700",
+                  letterSpacing: "0.7",
+                  fontFamily: "ui-monospace, SFMono-Regular, monospace",
+                  children: tagText
+                }
+              ),
+              /* @__PURE__ */ jsx13(
+                "text",
+                {
+                  x: x + cardW - 16,
+                  y: rowY + 29,
+                  textAnchor: "end",
+                  fill: "var(--ui-text-tertiary)",
+                  fontSize: "10.5",
+                  fontWeight: "650",
+                  fontFamily: "ui-monospace, SFMono-Regular, monospace",
+                  children: `0${colorIdx + 1}`
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsx13(
+              "text",
+              {
+                x: x + 16,
+                y: rowY + (hasNum ? 66 : 56),
+                fill: "var(--ui-text-primary)",
+                fontSize: "13.5",
+                fontWeight: "680",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                children: clipLabel(it.heading || `Highlight ${colorIdx + 1}`, maxTitleChars)
+              }
+            ),
+            /* @__PURE__ */ jsx13(
+              "text",
+              {
+                x: x + 16,
+                y: rowY + (hasNum ? 85 : 76),
+                fill: "var(--ui-text-secondary)",
+                fontSize: "11.5",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                children: bodyLines.map((ln, lIdx) => /* @__PURE__ */ jsx13("tspan", { x: x + 16, dy: lIdx === 0 ? 0 : 16, children: ln }, lIdx))
+              }
+            ),
+            renderCiteBadgesSvg(it.cites, x + cardW - 14, rowY + row.height - 24, col)
+          ] }, it.id || `${rIdx}-${cIdx}`);
+        }) }, `row-${rIdx}`);
+      })
+    ] });
+  }
+  function renderTimelineLayout() {
+    const startY = HEADER_H + 18;
+    const cardH = 96;
+    const gap = 12;
+    const spineX = PAD + 26;
+    const cardX = PAD + 68;
+    const cardW = CW - 68;
+    const lastY = startY + (items.length - 1) * (cardH + gap) + 34;
+    return /* @__PURE__ */ jsxs11("g", { children: [
+      /* @__PURE__ */ jsx13("line", { x1: spineX, y1: startY + 34, x2: spineX, y2: lastY, stroke: "var(--ui-stroke-secondary)", strokeWidth: "2.5", strokeDasharray: "4 4" }),
+      items.map((it, idx) => {
+        const y = startY + idx * (cardH + gap);
+        const col = accentAt(idx);
+        const isSel = selectedIdx === it._idx;
+        const hasNum = Boolean(it._metric && it._metric.display);
+        const bodyLines = wrapText(it.body, hasNum ? 74 : 96, 2);
+        return /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
+          /* @__PURE__ */ jsx13("line", { x1: spineX + 16, y1: y + 34, x2: cardX, y2: y + 34, stroke: col, strokeOpacity: "0.65", strokeWidth: "1.5" }),
+          /* @__PURE__ */ jsx13("circle", { cx: spineX, cy: y + 34, r: "17", fill: "var(--sb-bg)", stroke: col, strokeWidth: "2" }),
+          /* @__PURE__ */ jsx13("circle", { cx: spineX, cy: y + 34, r: "12", fill: col, fillOpacity: "0.18" }),
+          /* @__PURE__ */ jsx13("text", { x: spineX, y: y + 38, textAnchor: "middle", fill: col, fontSize: "11", fontWeight: "750", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: `0${idx + 1}` }),
+          /* @__PURE__ */ jsx13(
+            "rect",
+            {
+              x: cardX,
+              y,
+              width: cardW,
+              height: cardH,
+              rx: "11",
+              fill: "var(--sb-surface)",
+              stroke: isSel ? col : "var(--ui-stroke-secondary)",
+              strokeWidth: isSel ? "1.8" : "1"
+            }
+          ),
+          /* @__PURE__ */ jsx13("rect", { x: cardX, y: y + 12, width: "3", height: cardH - 24, rx: "1.5", fill: col }),
+          /* @__PURE__ */ jsx13("text", { x: cardX + 18, y: y + 29, fill: "var(--ui-text-primary)", fontSize: "14.5", fontWeight: "700", fontFamily: "system-ui, -apple-system, sans-serif", children: String(it.heading || `Step ${idx + 1}`).slice(0, 56) }),
+          /* @__PURE__ */ jsx13("text", { x: cardX + 18, y: y + 50, fill: "var(--ui-text-secondary)", fontSize: "12", fontFamily: "system-ui, -apple-system, sans-serif", children: bodyLines.map((ln, li) => /* @__PURE__ */ jsx13("tspan", { x: cardX + 18, dy: li === 0 ? 0 : 17, children: ln }, li)) }),
+          hasNum ? /* @__PURE__ */ jsxs11("g", { children: [
+            /* @__PURE__ */ jsx13("rect", { x: cardX + cardW - 146, y: y + 16, width: "128", height: "46", rx: "8", fill: col, fillOpacity: "0.12", stroke: col, strokeOpacity: "0.32", strokeWidth: "1" }),
+            /* @__PURE__ */ jsx13("text", { x: cardX + cardW - 82, y: y + 42, textAnchor: "middle", fill: col, fontSize: "20", fontWeight: "800", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: it._metric.display }),
+            /* @__PURE__ */ jsx13("text", { x: cardX + cardW - 82, y: y + 55, textAnchor: "middle", fill: "var(--ui-text-tertiary)", fontSize: "8.5", fontWeight: "700", letterSpacing: "0.7", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: it._tag })
+          ] }) : null,
+          renderCiteBadgesSvg(it.cites, cardX + cardW - 18, y + cardH - 24, col)
+        ] }, it.id || idx);
+      })
+    ] });
+  }
+  function renderComparisonLayout() {
+    const half = Math.ceil(items.length / 2);
+    const leftItems = items.slice(0, half);
+    const rightItems = items.slice(half);
+    const gap = 28;
+    const colW = (CW - gap) / 2;
+    const topY = HEADER_H + 16;
+    const cardStartY = topY + 40;
+    const colA = accentAt(0);
+    const colB = accentAt(1);
+    const midX = PAD + colW + gap / 2;
+    const maxRows = Math.max(leftItems.length, rightItems.length, 1);
+    const dividerBottom = cardStartY + maxRows * 124 + Math.max(0, maxRows - 1) * 12;
+    const renderCol = (list, x, color, label, offsetIdx) => /* @__PURE__ */ jsxs11("g", { children: [
+      /* @__PURE__ */ jsx13("rect", { x, y: topY, width: colW, height: "30", rx: "8", fill: color, fillOpacity: "0.14", stroke: color, strokeOpacity: "0.36", strokeWidth: "1" }),
+      /* @__PURE__ */ jsx13("circle", { cx: x + 14, cy: topY + 15, r: "4", fill: color }),
+      /* @__PURE__ */ jsx13("text", { x: x + 26, y: topY + 19, fill: color, fontSize: "11", fontWeight: "750", letterSpacing: "0.8", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: label }),
+      list.map((it, idx) => {
+        const y = cardStartY + idx * 136;
+        const isSel = selectedIdx === it._idx;
+        const hasNum = Boolean(it._metric && it._metric.display);
+        const bodyLines = wrapText(it.body, 48, 3);
+        return /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
+          /* @__PURE__ */ jsx13(
+            "rect",
+            {
+              x,
+              y,
+              width: colW,
+              height: "124",
+              rx: "10",
+              fill: "var(--sb-surface)",
+              stroke: isSel ? color : "var(--ui-stroke-secondary)",
+              strokeWidth: isSel ? "1.8" : "1"
+            }
+          ),
+          /* @__PURE__ */ jsx13("text", { x: x + 16, y: y + 26, fill: "var(--ui-text-primary)", fontSize: "13.5", fontWeight: "700", fontFamily: "system-ui, -apple-system, sans-serif", children: String(it.heading || `Factor ${offsetIdx + idx + 1}`).slice(0, 34) }),
+          hasNum ? /* @__PURE__ */ jsx13("text", { x: x + colW - 16, y: y + 28, textAnchor: "end", fill: color, fontSize: "18", fontWeight: "800", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: it._metric.display }) : null,
+          hasNum ? /* @__PURE__ */ jsxs11(Fragment6, { children: [
+            /* @__PURE__ */ jsx13("rect", { x: x + 16, y: y + 36, width: colW - 32, height: "4", rx: "2", fill: "var(--ui-stroke-tertiary)" }),
+            /* @__PURE__ */ jsx13("rect", { x: x + 16, y: y + 36, width: Math.max(12, Math.round((colW - 32) * it._ratio)), height: "4", rx: "2", fill: color })
+          ] }) : null,
+          /* @__PURE__ */ jsx13("text", { x: x + 16, y: y + (hasNum ? 58 : 48), fill: "var(--ui-text-secondary)", fontSize: "11.5", fontFamily: "system-ui, -apple-system, sans-serif", children: bodyLines.map((ln, li) => /* @__PURE__ */ jsx13("tspan", { x: x + 16, dy: li === 0 ? 0 : 16, children: ln }, li)) }),
+          renderCiteBadgesSvg(it.cites, x + colW - 14, y + 98, color)
+        ] }, it.id || idx);
+      })
+    ] });
+    return /* @__PURE__ */ jsxs11("g", { children: [
+      /* @__PURE__ */ jsx13("line", { x1: midX, y1: topY + 38, x2: midX, y2: dividerBottom, stroke: "var(--ui-stroke-tertiary)", strokeWidth: "1", strokeDasharray: "3 4" }),
+      /* @__PURE__ */ jsx13("circle", { cx: midX, cy: topY + 15, r: "13", fill: "var(--sb-surface)", stroke: "var(--ui-stroke-secondary)", strokeWidth: "1" }),
+      /* @__PURE__ */ jsx13("text", { x: midX, y: topY + 19, textAnchor: "middle", fill: "var(--ui-text-tertiary)", fontSize: "9.5", fontWeight: "750", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: "VS" }),
+      renderCol(leftItems, PAD, colA, `GROUP A  (${leftItems.length})`, 0),
+      renderCol(rightItems, PAD + colW + gap, colB, `GROUP B  (${rightItems.length})`, half)
+    ] });
+  }
+  function renderHubSpokeLayout() {
+    const satellites = rest.slice(0, 6);
+    const leftSats = satellites.filter((_, i) => i % 2 === 0);
+    const rightSats = satellites.filter((_, i) => i % 2 === 1);
+    const stageTop = HEADER_H + 18;
+    const stageH = H - FOOTER_H - stageTop - 12;
+    const cx = W / 2;
+    const cy = stageTop + stageH / 2;
+    const hubR = 82;
+    const hubCol = accentAt(0);
+    const cardW = 286;
+    const cardH = 112;
+    const renderSide = (list, side) => {
+      const isLeft = side === "left";
+      const x = isLeft ? PAD : W - PAD - cardW;
+      const step = list.length ? stageH / list.length : stageH;
+      return list.map((it, idx) => {
+        const y = stageTop + idx * step + (step - cardH) / 2;
+        const colorIdx = items.indexOf(it);
+        const col = accentAt(colorIdx);
+        const isSel = selectedIdx === it._idx;
+        const anchorX = isLeft ? x + cardW : x;
+        const anchorY = y + cardH / 2;
+        const hubEdgeX = isLeft ? cx - hubR : cx + hubR;
+        const ctrlOffset = isLeft ? -48 : 48;
+        const d = `M ${hubEdgeX} ${cy} C ${hubEdgeX + ctrlOffset} ${cy}, ${anchorX - ctrlOffset} ${anchorY}, ${anchorX} ${anchorY}`;
+        const bodyLines = wrapText(it.body, 36, 3);
+        return /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
+          /* @__PURE__ */ jsx13("path", { d, fill: "none", stroke: col, strokeOpacity: "0.55", strokeWidth: "1.8" }),
+          /* @__PURE__ */ jsx13("circle", { cx: anchorX, cy: anchorY, r: "4", fill: col }),
+          /* @__PURE__ */ jsx13(
+            "rect",
+            {
+              x,
+              y,
+              width: cardW,
+              height: cardH,
+              rx: "10",
+              fill: "var(--sb-surface)",
+              stroke: isSel ? col : "var(--ui-stroke-secondary)",
+              strokeWidth: isSel ? "1.8" : "1"
+            }
+          ),
+          /* @__PURE__ */ jsx13("text", { x: x + 14, y: y + 25, fill: "var(--ui-text-primary)", fontSize: "12.5", fontWeight: "700", fontFamily: "system-ui, -apple-system, sans-serif", children: clipLabel(it.heading || "", it._metric?.display ? 26 : 34) }),
+          it._metric?.display ? /* @__PURE__ */ jsx13("text", { x: x + cardW - 14, y: y + 26, textAnchor: "end", fill: col, fontSize: "15.5", fontWeight: "800", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: it._metric.display }) : null,
+          /* @__PURE__ */ jsx13("text", { x: x + 14, y: y + 45, fill: "var(--ui-text-secondary)", fontSize: "11", fontFamily: "system-ui, -apple-system, sans-serif", children: bodyLines.map((ln, li) => /* @__PURE__ */ jsx13("tspan", { x: x + 14, dy: li === 0 ? 0 : 15, children: ln }, li)) }),
+          renderCiteBadgesSvg(it.cites, x + cardW - 12, y + cardH - 22, col)
+        ] }, it.id || `${side}-${idx}`);
+      });
+    };
+    const hubHeadingLines = wrapText(hero.heading || spec.title || "Core Topic", 16, 2);
+    return /* @__PURE__ */ jsxs11("g", { children: [
+      renderSide(leftSats, "left"),
+      renderSide(rightSats, "right"),
+      /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(hero), children: [
+        /* @__PURE__ */ jsx13("circle", { cx, cy, r: hubR + 10, fill: hubCol, fillOpacity: "0.08", stroke: hubCol, strokeOpacity: "0.24", strokeDasharray: "4 4" }),
+        /* @__PURE__ */ jsx13("circle", { cx, cy, r: hubR, fill: "var(--sb-surface)", stroke: hubCol, strokeWidth: "2.5" }),
+        hero._metric?.display ? /* @__PURE__ */ jsx13("text", { x: cx, y: cy - 10, textAnchor: "middle", fill: hubCol, fontSize: "26", fontWeight: "800", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: hero._metric.display }) : null,
+        /* @__PURE__ */ jsx13(
+          "text",
+          {
+            x: cx,
+            y: cy + (hero._metric?.display ? 12 : -4),
+            textAnchor: "middle",
+            fill: "var(--ui-text-primary)",
+            fontSize: "12",
+            fontWeight: "700",
+            fontFamily: "system-ui, -apple-system, sans-serif",
+            children: hubHeadingLines.map((ln, li) => /* @__PURE__ */ jsx13("tspan", { x: cx, dy: li === 0 ? 0 : 15, children: ln }, li))
+          }
+        ),
+        /* @__PURE__ */ jsx13("text", { x: cx, y: cy + 46, textAnchor: "middle", fill: "var(--ui-text-tertiary)", fontSize: "8.5", fontWeight: "700", letterSpacing: "0.8", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: "CORE HUB" })
+      ] })
+    ] });
+  }
+  function renderPyramidLayout() {
+    const tiers = items.slice(0, 6);
+    const n = tiers.length;
+    const topY = HEADER_H + 22;
+    const tierH = 74;
+    const gap = 10;
+    const pyrCenter = PAD + 188;
+    const maxW = 360;
+    const minW = 104;
+    const noteX = PAD + 404;
+    const noteW = CW - 404;
+    return /* @__PURE__ */ jsx13("g", { children: tiers.map((it, idx) => {
+      const y = topY + idx * (tierH + gap);
+      const col = accentAt(idx);
+      const isSel = selectedIdx === it._idx;
+      const wTop = minW + (maxW - minW) * idx / Math.max(n, 1);
+      const wBot = minW + (maxW - minW) * (idx + 1) / Math.max(n, 1);
+      const pts = [
+        `${pyrCenter - wTop / 2},${y}`,
+        `${pyrCenter + wTop / 2},${y}`,
+        `${pyrCenter + wBot / 2},${y + tierH}`,
+        `${pyrCenter - wBot / 2},${y + tierH}`
+      ].join(" ");
+      const rightMidX = pyrCenter + (wTop + wBot) / 4;
+      const midY = y + tierH / 2;
+      const bodyLines = wrapText(it.body, 56, 2);
+      return /* @__PURE__ */ jsxs11("g", { style: { cursor: "pointer" }, onClick: () => handleBlockClick(it), children: [
+        /* @__PURE__ */ jsx13("polygon", { points: pts, fill: col, fillOpacity: isSel ? "0.28" : "0.16", stroke: col, strokeWidth: isSel ? "2" : "1.3" }),
+        /* @__PURE__ */ jsx13(
+          "text",
+          {
+            x: pyrCenter,
+            y: midY + (it._metric?.display ? 1 : 5),
+            textAnchor: "middle",
+            fill: col,
+            fontSize: it._metric?.display ? "18" : "13",
+            fontWeight: "800",
+            fontFamily: "ui-monospace, SFMono-Regular, monospace",
+            children: it._metric?.display || `TIER 0${idx + 1}`
+          }
+        ),
+        it._metric?.display ? /* @__PURE__ */ jsx13("text", { x: pyrCenter, y: midY + 17, textAnchor: "middle", fill: "var(--ui-text-secondary)", fontSize: "8.5", fontWeight: "700", letterSpacing: "0.7", fontFamily: "ui-monospace, SFMono-Regular, monospace", children: it._tag }) : null,
+        /* @__PURE__ */ jsx13("line", { x1: rightMidX + 4, y1: midY, x2: noteX, y2: midY, stroke: col, strokeOpacity: "0.6", strokeWidth: "1.3", strokeDasharray: "3 3" }),
+        /* @__PURE__ */ jsx13("circle", { cx: noteX, cy: midY, r: "3.5", fill: col }),
+        /* @__PURE__ */ jsx13(
+          "rect",
+          {
+            x: noteX,
+            y,
+            width: noteW,
+            height: tierH,
+            rx: "10",
+            fill: "var(--sb-surface)",
+            stroke: isSel ? col : "var(--ui-stroke-secondary)",
+            strokeWidth: isSel ? "1.8" : "1"
+          }
+        ),
+        /* @__PURE__ */ jsx13("text", { x: noteX + 16, y: y + 24, fill: "var(--ui-text-primary)", fontSize: "13", fontWeight: "700", fontFamily: "system-ui, -apple-system, sans-serif", children: String(it.heading || `Tier ${idx + 1}`).slice(0, 44) }),
+        /* @__PURE__ */ jsx13("text", { x: noteX + 16, y: y + 43, fill: "var(--ui-text-secondary)", fontSize: "11.5", fontFamily: "system-ui, -apple-system, sans-serif", children: bodyLines.map((ln, li) => /* @__PURE__ */ jsx13("tspan", { x: noteX + 16, dy: li === 0 ? 0 : 15, children: ln }, li)) }),
+        renderCiteBadgesSvg(it.cites, noteX + noteW - 14, y + tierH - 22, col)
+      ] }, it.id || idx);
+    }) });
+  }
+  const selectedBlock = selectedIdx != null ? items[selectedIdx] : null;
   return /* @__PURE__ */ jsxs11("div", { style: { display: "flex", flexDirection: "column", gap: 10 }, children: [
-    /* @__PURE__ */ jsxs11("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
-      /* @__PURE__ */ jsx12("span", { className: "sb-kind-tag", children: layout }),
-      /* @__PURE__ */ jsxs11("div", { style: { display: "flex", gap: 5 }, children: [
-        /* @__PURE__ */ jsxs11("button", { type: "button", className: "sb-btn", onClick: handleCopySvg, children: [
-          /* @__PURE__ */ jsx12(Icon, { name: "Copy", size: 12 }),
+    /* @__PURE__ */ jsxs11("div", { className: "sb-inf-toolbar", children: [
+      /* @__PURE__ */ jsx13("div", { className: "sb-seg", role: "group", "aria-label": "Infographic layout", children: LAYOUT_OPTIONS.map((opt) => /* @__PURE__ */ jsx13(
+        "button",
+        {
+          type: "button",
+          className: "sb-seg-btn",
+          "data-active": layout === opt.id,
+          onClick: () => setLayout(opt.id),
+          children: opt.label
+        },
+        opt.id
+      )) }),
+      /* @__PURE__ */ jsxs11("div", { style: { display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }, children: [
+        /* @__PURE__ */ jsx13(
+          "select",
+          {
+            className: "sb-select",
+            value: paletteKey,
+            onChange: (e) => setPaletteKey(e.target.value),
+            "aria-label": "Infographic color palette",
+            title: "Switch visual color palette",
+            children: Object.entries(PALETTES).map(([k, p]) => /* @__PURE__ */ jsx13("option", { value: k, children: p.label }, k))
+          }
+        ),
+        /* @__PURE__ */ jsxs11("button", { type: "button", className: "sb-btn", onClick: handleCopySvg, title: "Copy standalone vector SVG", children: [
+          /* @__PURE__ */ jsx13(Icon, { name: "Copy", size: 12 }),
           " Copy SVG"
         ] }),
-        /* @__PURE__ */ jsxs11("button", { type: "button", className: "sb-btn", onClick: handleDownloadSvg, children: [
-          /* @__PURE__ */ jsx12(Icon, { name: "Download", size: 12 }),
+        /* @__PURE__ */ jsxs11("button", { type: "button", className: "sb-btn", onClick: handleDownloadSvg, title: "Download vector .svg file", children: [
+          /* @__PURE__ */ jsx13(Icon, { name: "Download", size: 12 }),
           " SVG"
+        ] }),
+        /* @__PURE__ */ jsxs11("button", { type: "button", className: "sb-btn sb-btn-primary", disabled: exportingPng, onClick: handleDownloadPng, title: "Download high-resolution 2x PNG", children: [
+          /* @__PURE__ */ jsx13(Icon, { name: "ImageDown", size: 12 }),
+          " ",
+          exportingPng ? "Exporting..." : "PNG"
         ] })
       ] })
     ] }),
-    spec.hero_image_url ? /* @__PURE__ */ jsx12(
+    spec.hero_image_url ? /* @__PURE__ */ jsx13(
       "img",
       {
         src: spec.hero_image_url,
@@ -4197,7 +6713,7 @@ function InfographicView({ artifact, onOpenChunk }) {
         style: { width: "100%", maxHeight: 200, objectFit: "cover", borderRadius: 10, border: "1px solid var(--ui-stroke-secondary)" }
       }
     ) : null,
-    /* @__PURE__ */ jsx12("div", { className: "sb-svg-stage", children: /* @__PURE__ */ jsxs11(
+    /* @__PURE__ */ jsx13("div", { className: "sb-svg-stage", children: /* @__PURE__ */ jsxs11(
       "svg",
       {
         ref: svgRef,
@@ -4207,193 +6723,799 @@ function InfographicView({ artifact, onOpenChunk }) {
         viewBox: `0 0 ${W} ${H}`,
         style: { display: "block", background: "var(--sb-bg)" },
         children: [
-          /* @__PURE__ */ jsx12("title", { id: titleId, children: spec.title || "Infographic" }),
-          /* @__PURE__ */ jsx12("desc", { id: descId, children: spec.subtitle || `Structured ${layout} infographic with ${blocks.length} cited items.` }),
-          /* @__PURE__ */ jsx12("rect", { x: "0", y: "0", width: W, height: H, fill: "var(--sb-bg)" }),
-          /* @__PURE__ */ jsx12("text", { x: "24", y: "38", fill: "var(--ui-text-primary)", fontSize: "20", fontWeight: "700", fontFamily: "system-ui, -apple-system, sans-serif", children: String(spec.title || "Infographic").slice(0, 62) }),
-          spec.subtitle ? /* @__PURE__ */ jsx12("text", { x: "24", y: "59", fill: "var(--ui-text-secondary)", fontSize: "12.5", fontFamily: "system-ui, -apple-system, sans-serif", children: String(spec.subtitle).slice(0, 96) }) : null,
-          /* @__PURE__ */ jsx12("line", { x1: "24", y1: "74", x2: W - 24, y2: "74", stroke: "var(--ui-stroke-tertiary)", strokeWidth: "1" }),
-          isTimeline ? /* @__PURE__ */ jsx12("line", { x1: "48", y1: headerH + 22, x2: "48", y2: H - 36, stroke: "var(--ui-stroke-secondary)", strokeWidth: "2" }) : null,
-          blocks.map((blk, idx) => {
-            const col = idx % cols;
-            const row = Math.floor(idx / cols);
-            const cardW = isTimeline ? W - 96 : (W - 48 - gap) / 2;
-            const x = isTimeline ? 72 : 24 + col * (cardW + gap);
-            const y = headerH + row * (cardH + gap);
-            const bodyLines = wrapText(blk.body, isTimeline ? 80 : 45, 4);
-            return /* @__PURE__ */ jsxs11("g", { children: [
-              isTimeline ? /* @__PURE__ */ jsxs11(Fragment5, { children: [
-                /* @__PURE__ */ jsx12("circle", { cx: "48", cy: y + 28, r: "13", fill: "var(--sb-accent-soft)", stroke: "var(--ui-accent)", strokeWidth: "1.5" }),
-                /* @__PURE__ */ jsx12("text", { x: "48", y: y + 32, textAnchor: "middle", fill: "var(--ui-accent)", fontSize: "11", fontWeight: "700", fontFamily: "ui-monospace, monospace", children: idx + 1 })
-              ] }) : null,
-              /* @__PURE__ */ jsx12(
-                "rect",
-                {
-                  x,
-                  y,
-                  width: cardW,
-                  height: cardH,
-                  rx: "10",
-                  fill: "var(--sb-surface)",
-                  stroke: "var(--ui-stroke-secondary)",
-                  strokeWidth: "1"
-                }
-              ),
-              blk.value ? /* @__PURE__ */ jsx12(
-                "text",
-                {
-                  x: x + 16,
-                  y: y + 32,
-                  fill: "var(--ui-accent)",
-                  fontSize: isTimeline ? "15" : "24",
-                  fontWeight: "750",
-                  fontFamily: "ui-monospace, SFMono-Regular, monospace",
-                  children: String(blk.value).slice(0, 22)
-                }
-              ) : null,
-              /* @__PURE__ */ jsx12(
-                "text",
-                {
-                  x: x + 16,
-                  y: y + (blk.value ? 55 : 30),
-                  fill: "var(--ui-text-primary)",
-                  fontSize: "13.5",
-                  fontWeight: "650",
-                  fontFamily: "system-ui, -apple-system, sans-serif",
-                  children: String(blk.heading || `Item ${idx + 1}`).slice(0, isTimeline ? 64 : 38)
-                }
-              ),
-              /* @__PURE__ */ jsx12(
-                "text",
-                {
-                  x: x + 16,
-                  y: y + (blk.value ? 76 : 52),
-                  fill: "var(--ui-text-secondary)",
-                  fontSize: "12",
-                  fontFamily: "system-ui, -apple-system, sans-serif",
-                  children: bodyLines.map((ln, lIdx) => /* @__PURE__ */ jsx12("tspan", { x: x + 16, dy: lIdx === 0 ? 0 : 16, children: ln }, lIdx))
-                }
-              )
-            ] }, blk.id || idx);
-          })
+          /* @__PURE__ */ jsx13("title", { id: titleId, children: spec.title || "Infographic" }),
+          /* @__PURE__ */ jsx13("desc", { id: descId, children: spec.subtitle || `Structured ${layout} infographic with ${blocks.length} cited items.` }),
+          /* @__PURE__ */ jsxs11("defs", { children: [
+            /* @__PURE__ */ jsxs11("linearGradient", { id: `sb-top-grad-${uid}`, x1: "0%", y1: "0%", x2: "100%", y2: "0%", children: [
+              /* @__PURE__ */ jsx13("stop", { offset: "0%", stopColor: accentAt(0) }),
+              /* @__PURE__ */ jsx13("stop", { offset: "50%", stopColor: accentAt(1) }),
+              /* @__PURE__ */ jsx13("stop", { offset: "100%", stopColor: accentAt(2) })
+            ] }),
+            /* @__PURE__ */ jsxs11("linearGradient", { id: `sb-hero-wash-${uid}`, x1: "0%", y1: "0%", x2: "100%", y2: "100%", children: [
+              /* @__PURE__ */ jsx13("stop", { offset: "0%", stopColor: accentAt(0), stopOpacity: "0.11" }),
+              /* @__PURE__ */ jsx13("stop", { offset: "48%", stopColor: "var(--sb-surface)", stopOpacity: "1" }),
+              /* @__PURE__ */ jsx13("stop", { offset: "100%", stopColor: "var(--sb-surface)", stopOpacity: "1" })
+            ] }),
+            /* @__PURE__ */ jsxs11("pattern", { id: `sb-bayer-grid-${uid}`, width: "8", height: "8", patternUnits: "userSpaceOnUse", children: [
+              /* @__PURE__ */ jsx13("rect", { x: "0", y: "0", width: "1.5", height: "1.5", fill: accentAt(0), fillOpacity: "0.22" }),
+              /* @__PURE__ */ jsx13("rect", { x: "4", y: "4", width: "1.5", height: "1.5", fill: accentAt(1), fillOpacity: "0.18" })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsx13("rect", { x: "0", y: "0", width: W, height: H, fill: "var(--sb-bg)" }),
+          /* @__PURE__ */ jsx13("rect", { x: "0", y: "0", width: W, height: "92", fill: `url(#sb-bayer-grid-${uid})`, opacity: "0.7" }),
+          renderHeader(),
+          layout === "stat-grid" ? renderBentoLayout() : null,
+          layout === "timeline" ? renderTimelineLayout() : null,
+          layout === "comparison" ? renderComparisonLayout() : null,
+          layout === "hub-spoke" ? renderHubSpokeLayout() : null,
+          layout === "pyramid" ? renderPyramidLayout() : null,
+          renderFooter()
         ]
       }
     ) }),
+    selectedBlock ? /* @__PURE__ */ jsxs11("div", { className: "sb-inf-detail", children: [
+      /* @__PURE__ */ jsxs11("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }, children: [
+        /* @__PURE__ */ jsxs11("div", { style: { display: "flex", alignItems: "center", gap: 8, minWidth: 0 }, children: [
+          selectedBlock._metric?.display ? /* @__PURE__ */ jsx13("span", { className: "sb-mono", style: { fontWeight: 750, fontSize: 13, color: accentAt(selectedBlock._idx) }, children: selectedBlock._metric.display }) : null,
+          /* @__PURE__ */ jsx13("span", { style: { fontWeight: 650, color: "var(--ui-text-primary)", fontSize: 12.5 }, children: selectedBlock.heading })
+        ] }),
+        /* @__PURE__ */ jsxs11("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
+          (selectedBlock.cites || []).map((cid) => /* @__PURE__ */ jsxs11(
+            "button",
+            {
+              type: "button",
+              className: "sb-btn",
+              onClick: () => onOpenChunk?.(cid),
+              children: [
+                /* @__PURE__ */ jsx13(Icon, { name: "BookOpen", size: 12 }),
+                " Inspect Passage [",
+                enriched.citeNum[cid] || 1,
+                "]"
+              ]
+            },
+            cid
+          )),
+          /* @__PURE__ */ jsx13("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setSelectedIdx(null), "aria-label": "Close detail", children: /* @__PURE__ */ jsx13(Icon, { name: "X", size: 12 }) })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsx13("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", lineHeight: 1.5 }, children: selectedBlock.body })
+    ] }) : null,
     /* @__PURE__ */ jsxs11("div", { style: { display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }, children: [
-      /* @__PURE__ */ jsx12("span", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: "Cited passages:" }),
-      Array.from(new Set(blocks.flatMap((b) => b.cites || []))).map((cid, idx) => /* @__PURE__ */ jsx12("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: idx + 1 }, cid))
+      /* @__PURE__ */ jsx13("span", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: "Cited passages:" }),
+      enriched.citeOrder.map((cid, idx) => /* @__PURE__ */ jsx13("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: idx + 1 }, cid))
     ] })
   ] });
 }
 
 // desktop-src/components/renderers/DataTableView.jsx
-import { useMemo as useMemo2, useState as useState8 } from "react";
-import { jsx as jsx13, jsxs as jsxs12 } from "react/jsx-runtime";
+import { Fragment as Fragment7, useMemo as useMemo3, useState as useState9 } from "react";
+import { Fragment as Fragment8, jsx as jsx14, jsxs as jsxs12 } from "react/jsx-runtime";
+var BADGE_TONES = [
+  { color: "#3b82f6", bg: "rgba(59, 130, 246, 0.13)", border: "rgba(59, 130, 246, 0.30)" },
+  { color: "#10b981", bg: "rgba(16, 185, 129, 0.13)", border: "rgba(16, 185, 129, 0.30)" },
+  { color: "#38bdf8", bg: "rgba(56, 189, 248, 0.13)", border: "rgba(56, 189, 248, 0.30)" },
+  { color: "#f59e0b", bg: "rgba(245, 158, 11, 0.13)", border: "rgba(245, 158, 11, 0.30)" },
+  { color: "#f43f5e", bg: "rgba(244, 63, 94, 0.13)", border: "rgba(244, 63, 94, 0.30)" },
+  { color: "#8b5cf6", bg: "rgba(139, 92, 246, 0.13)", border: "rgba(139, 92, 246, 0.30)" }
+];
+function hashTone(label) {
+  const s = String(label || "");
+  let h = 0;
+  for (let i = 0; i < s.length; i += 1) {
+    h = h * 31 + s.charCodeAt(i) >>> 0;
+  }
+  return BADGE_TONES[h % BADGE_TONES.length];
+}
+function cleanSourceLabel(raw) {
+  return String(raw || "").replace(/\.(md|markdown|txt|pdf|docx|csv|json|html)$/i, "").trim();
+}
+function parseCellMetric(val) {
+  const raw = String(val ?? "").trim();
+  if (!raw || /^(qualitative|n\/a|none|null|-|--)$/i.test(raw)) {
+    return { isMetric: false, isPlaceholder: Boolean(raw), display: raw || "-", num: null, unit: "", group: "none" };
+  }
+  const m = raw.match(/^([~$+<>=]*)\s*(-?\d+(?:[.,]\d+)?)\s*(%|ms|us|s|sec|min|hr|h|x|GB|MB|KB|MiB|GiB|TB|k|M|B|px|fps|rps|qps)?$/i);
+  if (!m) {
+    return { isMetric: false, isPlaceholder: false, display: raw, num: null, unit: "", group: "text" };
+  }
+  const num = parseFloat(m[2].replace(/,/g, ""));
+  const unit = m[3] || "";
+  const uLow = unit.toLowerCase();
+  let group = "count";
+  if (unit === "%") group = "percent";
+  else if (["ms", "us", "s", "sec"].includes(uLow)) group = "latency";
+  else if (uLow === "x") group = "multiplier";
+  else if (["gb", "mb", "kb", "mib", "gib", "tb"].includes(uLow)) group = "memory";
+  else if ((m[1] || "").includes("$")) group = "currency";
+  return {
+    isMetric: Number.isFinite(num),
+    isPlaceholder: false,
+    display: `${m[1] || ""}${m[2]}${unit}`,
+    num: Number.isFinite(num) ? num : null,
+    unit,
+    group
+  };
+}
+function barColorForGroup(group) {
+  if (group === "percent") return "#10b981";
+  if (group === "latency") return "#38bdf8";
+  if (group === "currency") return "#f59e0b";
+  return "var(--ui-accent)";
+}
 function DataTableView({ artifact, onOpenChunk }) {
   const cols = artifact?.spec?.columns || [];
   const rows = artifact?.spec?.rows || [];
-  const [query, setQuery] = useState8("");
-  const [sort, setSort] = useState8({ key: null, dir: "asc" });
-  const filtered = useMemo2(() => {
+  const [query, setQuery] = useState9("");
+  const [sort, setSort] = useState9({ key: null, dir: "asc" });
+  const [viewMode, setViewMode] = useState9("table");
+  const [density, setDensity] = useState9("comfortable");
+  const [activeFacet, setActiveFacet] = useState9("ALL");
+  const [metricsOnly, setMetricsOnly] = useState9(false);
+  const [expandedRowId, setExpandedRowId] = useState9(null);
+  const [hiddenCols, setHiddenCols] = useState9({});
+  const [showColMenu, setShowColMenu] = useState9(false);
+  const meta = useMemo3(() => {
+    const colRoles = {};
+    let facetCol = null;
+    let metricCol = null;
+    let textCol = null;
+    for (const c of cols) {
+      const k = String(c.key || "").toLowerCase();
+      const lbl = String(c.label || "").toLowerCase();
+      const vals = rows.map((r) => String(r.cells?.[c.key] ?? "").trim()).filter(Boolean);
+      const distinct = Array.from(new Set(vals));
+      const metricHits = vals.filter((v) => parseCellMetric(v).isMetric).length;
+      const avgLen = vals.length ? vals.reduce((a, b) => a + b.length, 0) / vals.length : 0;
+      if (c.type === "number" || /metric|score|latency|rate|value|count|amount|pct|percent|time|size/.test(k + " " + lbl) || vals.length && metricHits / vals.length >= 0.25) {
+        colRoles[c.key] = "metric";
+        if (!metricCol) metricCol = c.key;
+      } else if (c.type === "url") {
+        colRoles[c.key] = "url";
+      } else if (!facetCol && (/source|category|group|type|status|component|engine|system|doc/.test(k + " " + lbl) || distinct.length >= 2 && distinct.length <= 8 && avgLen < 48)) {
+        colRoles[c.key] = "badge";
+        facetCol = c.key;
+      } else if (/section|topic|stage|phase|area|tag/.test(k + " " + lbl) || distinct.length <= Math.max(2, rows.length * 0.8) && avgLen < 38) {
+        colRoles[c.key] = "tag";
+      } else {
+        colRoles[c.key] = avgLen > 45 ? "longtext" : "text";
+        if (avgLen > 45 && !textCol) textCol = c.key;
+      }
+    }
+    const facetCounts = [];
+    if (facetCol) {
+      const map = /* @__PURE__ */ new Map();
+      for (const r of rows) {
+        const v = String(r.cells?.[facetCol] ?? "").trim();
+        if (!v) continue;
+        map.set(v, (map.get(v) || 0) + 1);
+      }
+      for (const [value, count] of map.entries()) {
+        facetCounts.push({ value, label: cleanSourceLabel(value), count, tone: hashTone(value) });
+      }
+      facetCounts.sort((a, b) => b.count - a.count);
+    }
+    const groupMax = {};
+    let quantifiedCount = 0;
+    let peakMetric = null;
+    const chartEntries = [];
+    rows.forEach((r, idx) => {
+      if (!metricCol) return;
+      const pm = parseCellMetric(r.cells?.[metricCol]);
+      if (pm.isMetric && pm.num != null) {
+        quantifiedCount += 1;
+        groupMax[pm.group] = Math.max(groupMax[pm.group] || 0, Math.abs(pm.num));
+        const score = pm.group === "percent" ? 1e4 + pm.num : 1e3 + pm.num;
+        if (!peakMetric || score > peakMetric.score) {
+          peakMetric = { display: pm.display, group: pm.group, score, label: r.cells?.[facetCol] || r.cells?.[cols[0]?.key] || "" };
+        }
+        chartEntries.push({
+          row: r,
+          idx,
+          metric: pm,
+          source: facetCol ? cleanSourceLabel(r.cells?.[facetCol] || "") : "",
+          title: cols.find((c) => colRoles[c.key] === "tag") && r.cells?.[cols.find((c) => colRoles[c.key] === "tag").key] || cols[0] && cleanSourceLabel(r.cells?.[cols[0].key]) || `Row ${idx + 1}`,
+          detail: textCol ? String(r.cells?.[textCol] || "") : ""
+        });
+      }
+    });
+    const distinctSources = facetCounts.length || new Set(rows.flatMap((r) => r.cites || [])).size;
+    return {
+      colRoles,
+      facetCol,
+      metricCol,
+      textCol,
+      facetCounts,
+      groupMax,
+      quantifiedCount,
+      peakMetric,
+      distinctSources,
+      chartEntries
+    };
+  }, [cols, rows]);
+  const visibleCols = useMemo3(
+    () => cols.filter((c) => !hiddenCols[c.key]),
+    [cols, hiddenCols]
+  );
+  const filtered = useMemo3(() => {
     const q = query.trim().toLowerCase();
-    let list = q ? rows.filter(
-      (r) => Object.values(r.cells || {}).some((v) => String(v ?? "").toLowerCase().includes(q))
-    ) : [...rows];
+    let list = rows.filter((r) => {
+      if (activeFacet !== "ALL" && meta.facetCol) {
+        if (String(r.cells?.[meta.facetCol] ?? "").trim() !== activeFacet) return false;
+      }
+      if (metricsOnly && meta.metricCol) {
+        if (!parseCellMetric(r.cells?.[meta.metricCol]).isMetric) return false;
+      }
+      if (q) {
+        const hit = Object.values(r.cells || {}).some((v) => String(v ?? "").toLowerCase().includes(q));
+        if (!hit) return false;
+      }
+      return true;
+    });
     if (sort.key) {
-      list.sort((a, b) => {
+      list = [...list].sort((a, b) => {
         const av = a.cells?.[sort.key] ?? "";
         const bv = b.cells?.[sort.key] ?? "";
-        const an = Number(av);
-        const bn = Number(bv);
-        const cmp = !Number.isNaN(an) && !Number.isNaN(bn) && av !== "" && bv !== "" ? an - bn : String(av).localeCompare(String(bv));
+        const am = parseCellMetric(av);
+        const bm = parseCellMetric(bv);
+        let cmp = 0;
+        if (am.isMetric && bm.isMetric) {
+          cmp = (am.num ?? 0) - (bm.num ?? 0);
+        } else if (am.isMetric !== bm.isMetric) {
+          cmp = am.isMetric ? -1 : 1;
+        } else {
+          cmp = String(av).localeCompare(String(bv));
+        }
         return sort.dir === "asc" ? cmp : -cmp;
       });
     }
     return list;
-  }, [rows, query, sort]);
+  }, [rows, query, sort, activeFacet, metricsOnly, meta.facetCol, meta.metricCol]);
   if (!cols.length) {
-    return /* @__PURE__ */ jsx13("div", { className: "sb-empty", children: "No table columns available." });
+    return /* @__PURE__ */ jsx14("div", { className: "sb-empty", children: "No table columns available." });
   }
   function toggleSort(key) {
-    setSort((prev) => prev.key === key ? { key, dir: prev.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" });
+    setSort((prev) => {
+      if (prev.key !== key) return { key, dir: "asc" };
+      if (prev.dir === "asc") return { key, dir: "desc" };
+      return { key: null, dir: "asc" };
+    });
+  }
+  function toggleCol(key) {
+    const shownCount = cols.filter((c) => !hiddenCols[c.key]).length;
+    if (!hiddenCols[key] && shownCount <= 1) return;
+    setHiddenCols((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+  function metricRatio(pm) {
+    if (!pm.isMetric || pm.num == null) return 0;
+    if (pm.group === "percent") return Math.max(0.05, Math.min(1, Math.abs(pm.num) / 100));
+    const mx = meta.groupMax[pm.group] || Math.abs(pm.num) || 1;
+    return Math.max(0.08, Math.min(1, Math.abs(pm.num) / mx));
   }
   function toMarkdown() {
-    const head = "| " + cols.map((c) => c.label || c.key).join(" | ") + " |";
-    const sep = "| " + cols.map(() => "---").join(" | ") + " |";
-    const body = filtered.map((r) => "| " + cols.map((c) => String(r.cells?.[c.key] ?? "").replace(/\|/g, "\\|")).join(" | ") + " |");
+    const useCols = visibleCols;
+    const head = "| " + useCols.map((c) => c.label || c.key).join(" | ") + " |";
+    const sep = "| " + useCols.map((c) => meta.colRoles[c.key] === "metric" ? "---:" : "---").join(" | ") + " |";
+    const body = filtered.map((r) => "| " + useCols.map((c) => String(r.cells?.[c.key] ?? "").replace(/\|/g, "\\|")).join(" | ") + " |");
     return [head, sep, ...body].join("\n");
   }
   function exportCsv() {
-    const out = [cols.map((c) => c.label || c.key).concat("Citations")];
+    const useCols = visibleCols;
+    const out = [useCols.map((c) => c.label || c.key).concat("Citations")];
     for (const r of filtered) {
-      out.push(cols.map((c) => String(r.cells?.[c.key] ?? "")).concat((r.cites || []).join("; ")));
+      out.push(useCols.map((c) => String(r.cells?.[c.key] ?? "")).concat((r.cites || []).join("; ")));
     }
     const csv = out.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
     downloadTextFile(`${artifact.id || "table"}.csv`, csv, "text/csv;charset=utf-8");
   }
-  return /* @__PURE__ */ jsxs12("div", { style: { display: "flex", flexDirection: "column", gap: 10 }, children: [
-    /* @__PURE__ */ jsxs12("div", { style: { display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }, children: [
-      /* @__PURE__ */ jsx13(
-        "input",
+  function exportJson() {
+    const payload = filtered.map((r) => ({
+      ...r.cells,
+      citations: r.cites || []
+    }));
+    downloadTextFile(`${artifact.id || "table"}.json`, JSON.stringify(payload, null, 2), "application/json;charset=utf-8");
+  }
+  async function copyRow(e, row) {
+    e.stopPropagation();
+    const line = visibleCols.map((c) => `${c.label || c.key}: ${row.cells?.[c.key] ?? ""}`).join(" | ");
+    await copyText(line);
+    sdk.host?.notify?.({ kind: "success", title: "SourceBook", message: "Copied row to clipboard." });
+  }
+  function renderCell(col, row) {
+    const val = row.cells?.[col.key] ?? "";
+    const role = meta.colRoles[col.key];
+    if (role === "badge") {
+      const tone = hashTone(val);
+      const label = cleanSourceLabel(val);
+      return /* @__PURE__ */ jsxs12(
+        "span",
         {
-          className: "sb-input",
-          style: { flex: 1, minWidth: 150 },
-          value: query,
-          onChange: (e) => setQuery(e.target.value),
-          placeholder: "Filter rows..."
+          className: "sb-dt-badge",
+          title: String(val),
+          style: { background: tone.bg, borderColor: tone.border, color: tone.color },
+          children: [
+            /* @__PURE__ */ jsx14("span", { className: "sb-dt-dot", style: { background: tone.color } }),
+            /* @__PURE__ */ jsx14("span", { className: "sb-dt-badge-txt", children: label })
+          ]
         }
-      ),
-      /* @__PURE__ */ jsxs12(
+      );
+    }
+    if (role === "tag") {
+      return /* @__PURE__ */ jsx14("span", { className: "sb-dt-tag", title: String(val), children: String(val) });
+    }
+    if (role === "metric") {
+      const pm = parseCellMetric(val);
+      if (!pm.isMetric) {
+        return /* @__PURE__ */ jsx14("span", { className: "sb-dt-qual", children: pm.display });
+      }
+      const ratio = metricRatio(pm);
+      const color = barColorForGroup(pm.group);
+      return /* @__PURE__ */ jsxs12("div", { className: "sb-dt-metric-cell", children: [
+        /* @__PURE__ */ jsx14("span", { className: "sb-mono sb-dt-metric-val", style: { color }, children: pm.display }),
+        /* @__PURE__ */ jsx14("div", { className: "sb-dt-bar-track", children: /* @__PURE__ */ jsx14("div", { className: "sb-dt-bar-fill", style: { width: `${Math.round(ratio * 100)}%`, background: color } }) })
+      ] });
+    }
+    if (role === "url" && /^https?:\/\//i.test(String(val))) {
+      return /* @__PURE__ */ jsx14("a", { className: "sb-link", href: String(val), target: "_blank", rel: "noreferrer", onClick: (e) => e.stopPropagation(), children: String(val).replace(/^https?:\/\/(www\.)?/, "").slice(0, 34) });
+    }
+    return /* @__PURE__ */ jsx14("div", { className: density === "compact" ? "sb-dt-clamp-1" : "sb-dt-clamp-2", children: String(val) });
+  }
+  const chartGroups = useMemo3(() => {
+    const visibleIds = new Set(filtered.map((r) => r.id));
+    const byGroup = /* @__PURE__ */ new Map();
+    for (const entry of meta.chartEntries) {
+      if (entry.row.id && !visibleIds.has(entry.row.id)) continue;
+      const g = entry.metric.group;
+      if (!byGroup.has(g)) byGroup.set(g, []);
+      byGroup.get(g).push(entry);
+    }
+    const labels = {
+      percent: "Percentages (%)",
+      latency: "Latency & Timing",
+      multiplier: "Multipliers",
+      memory: "Memory & Storage",
+      currency: "Financial Values",
+      count: "Numeric Counts"
+    };
+    return Array.from(byGroup.entries()).map(([group, entries]) => ({
+      group,
+      label: labels[group] || group,
+      color: barColorForGroup(group),
+      entries: [...entries].sort((a, b) => (b.metric.num ?? 0) - (a.metric.num ?? 0))
+    }));
+  }, [meta.chartEntries, filtered]);
+  const pctQuantified = rows.length ? Math.round(meta.quantifiedCount / rows.length * 100) : 0;
+  return /* @__PURE__ */ jsxs12("div", { className: "sb-dt-root", children: [
+    /* @__PURE__ */ jsxs12("div", { className: "sb-dt-kpis", children: [
+      /* @__PURE__ */ jsxs12("div", { className: "sb-dt-kpi", children: [
+        /* @__PURE__ */ jsx14("div", { className: "sb-dt-kpi-lbl", children: "Rows" }),
+        /* @__PURE__ */ jsx14("div", { className: "sb-dt-kpi-val sb-mono", children: filtered.length === rows.length ? rows.length : `${filtered.length} / ${rows.length}` })
+      ] }),
+      /* @__PURE__ */ jsxs12("div", { className: "sb-dt-kpi", children: [
+        /* @__PURE__ */ jsx14("div", { className: "sb-dt-kpi-lbl", children: "Quantified" }),
+        /* @__PURE__ */ jsxs12("div", { style: { display: "flex", alignItems: "center", gap: 8 }, children: [
+          /* @__PURE__ */ jsxs12("span", { className: "sb-dt-kpi-val sb-mono", style: { color: "#10b981" }, children: [
+            meta.quantifiedCount,
+            "/",
+            rows.length
+          ] }),
+          /* @__PURE__ */ jsx14("div", { className: "sb-dt-bar-track", style: { flex: 1, maxWidth: 68 }, children: /* @__PURE__ */ jsx14("div", { className: "sb-dt-bar-fill", style: { width: `${pctQuantified}%`, background: "#10b981" } }) })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs12("div", { className: "sb-dt-kpi", children: [
+        /* @__PURE__ */ jsx14("div", { className: "sb-dt-kpi-lbl", children: "Sources" }),
+        /* @__PURE__ */ jsx14("div", { className: "sb-dt-kpi-val sb-mono", children: meta.distinctSources })
+      ] }),
+      /* @__PURE__ */ jsxs12("div", { className: "sb-dt-kpi", children: [
+        /* @__PURE__ */ jsx14("div", { className: "sb-dt-kpi-lbl", children: "Peak Metric" }),
+        /* @__PURE__ */ jsx14("div", { className: "sb-dt-kpi-val sb-mono", style: { color: "var(--ui-accent)" }, children: meta.peakMetric ? meta.peakMetric.display : `${cols.length} cols` })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxs12("div", { className: "sb-dt-toolbar", children: [
+      /* @__PURE__ */ jsxs12("div", { className: "sb-dt-search-wrap", children: [
+        /* @__PURE__ */ jsx14(Icon, { name: "Search", size: 13, style: { color: "var(--ui-text-tertiary)", flexShrink: 0 } }),
+        /* @__PURE__ */ jsx14(
+          "input",
+          {
+            className: "sb-dt-search",
+            value: query,
+            onChange: (e) => setQuery(e.target.value),
+            placeholder: "Search rows, metrics, or findings...",
+            "aria-label": "Filter table rows"
+          }
+        ),
+        query ? /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-dt-clear", onClick: () => setQuery(""), "aria-label": "Clear filter", children: /* @__PURE__ */ jsx14(Icon, { name: "X", size: 12 }) }) : null
+      ] }),
+      /* @__PURE__ */ jsxs12("div", { className: "sb-seg", role: "group", "aria-label": "Data view mode", children: [
+        /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "table", onClick: () => setViewMode("table"), children: [
+          /* @__PURE__ */ jsx14(Icon, { name: "Table", size: 12 }),
+          " Table"
+        ] }),
+        /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "cards", onClick: () => setViewMode("cards"), children: [
+          /* @__PURE__ */ jsx14(Icon, { name: "LayoutGrid", size: 12 }),
+          " Cards"
+        ] }),
+        /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "chart", onClick: () => setViewMode("chart"), children: [
+          /* @__PURE__ */ jsx14(Icon, { name: "BarChart2", size: 12 }),
+          " Chart"
+        ] })
+      ] }),
+      viewMode === "table" ? /* @__PURE__ */ jsxs12("div", { style: { display: "flex", gap: 5, position: "relative" }, children: [
+        /* @__PURE__ */ jsxs12(
+          "button",
+          {
+            type: "button",
+            className: "sb-btn",
+            onClick: () => setDensity((d) => d === "comfortable" ? "compact" : "comfortable"),
+            title: "Toggle row density",
+            children: [
+              /* @__PURE__ */ jsx14(Icon, { name: "List", size: 12 }),
+              " ",
+              density === "comfortable" ? "Comfortable" : "Compact"
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxs12(
+          "button",
+          {
+            type: "button",
+            className: "sb-btn",
+            "data-active": showColMenu,
+            onClick: () => setShowColMenu((v) => !v),
+            title: "Show or hide columns",
+            children: [
+              /* @__PURE__ */ jsx14(Icon, { name: "Columns3", size: 12 }),
+              " Columns"
+            ]
+          }
+        ),
+        showColMenu ? /* @__PURE__ */ jsxs12("div", { className: "sb-dt-col-menu", children: [
+          /* @__PURE__ */ jsx14("div", { style: { fontSize: 10.5, fontWeight: 650, color: "var(--ui-text-tertiary)", padding: "2px 6px 4px", textTransform: "uppercase", letterSpacing: "0.05em" }, children: "Visible Columns" }),
+          cols.map((c) => /* @__PURE__ */ jsxs12("label", { className: "sb-dt-col-opt", children: [
+            /* @__PURE__ */ jsx14(
+              "input",
+              {
+                type: "checkbox",
+                className: "sb-checkbox",
+                style: { margin: 0 },
+                checked: !hiddenCols[c.key],
+                onChange: () => toggleCol(c.key)
+              }
+            ),
+            /* @__PURE__ */ jsx14("span", { children: c.label || c.key })
+          ] }, c.key))
+        ] }) : null
+      ] }) : null,
+      /* @__PURE__ */ jsxs12("div", { style: { display: "flex", gap: 5 }, children: [
+        /* @__PURE__ */ jsxs12(
+          "button",
+          {
+            type: "button",
+            className: "sb-btn",
+            onClick: async () => {
+              await copyText(toMarkdown());
+              sdk.host?.notify?.({ kind: "success", title: "SourceBook", message: "Copied Markdown table." });
+            },
+            title: "Copy filtered rows as Markdown",
+            children: [
+              /* @__PURE__ */ jsx14(Icon, { name: "Copy", size: 12 }),
+              " MD"
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-btn", onClick: exportCsv, title: "Download CSV", children: [
+          /* @__PURE__ */ jsx14(Icon, { name: "Download", size: 12 }),
+          " CSV"
+        ] }),
+        /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-btn", onClick: exportJson, title: "Download JSON", children: [
+          /* @__PURE__ */ jsx14(Icon, { name: "FileJson", size: 12 }),
+          " JSON"
+        ] })
+      ] })
+    ] }),
+    meta.facetCounts.length > 1 || meta.quantifiedCount > 0 ? /* @__PURE__ */ jsxs12("div", { className: "sb-dt-facets", children: [
+      meta.facetCounts.length > 1 ? /* @__PURE__ */ jsxs12(Fragment8, { children: [
+        /* @__PURE__ */ jsxs12(
+          "button",
+          {
+            type: "button",
+            className: "sb-dt-facet-chip",
+            "data-active": activeFacet === "ALL",
+            onClick: () => setActiveFacet("ALL"),
+            children: [
+              "All ",
+              /* @__PURE__ */ jsx14("span", { className: "sb-dt-facet-n", children: rows.length })
+            ]
+          }
+        ),
+        meta.facetCounts.map((f) => /* @__PURE__ */ jsxs12(
+          "button",
+          {
+            type: "button",
+            className: "sb-dt-facet-chip",
+            "data-active": activeFacet === f.value,
+            onClick: () => setActiveFacet((prev) => prev === f.value ? "ALL" : f.value),
+            title: f.value,
+            children: [
+              /* @__PURE__ */ jsx14("span", { className: "sb-dt-dot", style: { background: f.tone.color } }),
+              /* @__PURE__ */ jsx14("span", { children: f.label.length > 19 ? f.label.slice(0, 17).trimEnd() + "..." : f.label }),
+              /* @__PURE__ */ jsx14("span", { className: "sb-dt-facet-n", children: f.count })
+            ]
+          },
+          f.value
+        ))
+      ] }) : null,
+      meta.quantifiedCount > 0 && meta.quantifiedCount < rows.length ? /* @__PURE__ */ jsxs12(
         "button",
         {
           type: "button",
-          className: "sb-btn",
-          onClick: async () => {
-            await copyText(toMarkdown());
-            sdk.host?.notify?.({ kind: "success", title: "SourceBook", message: "Copied Markdown table." });
-          },
+          className: "sb-dt-facet-chip",
+          style: { marginLeft: "auto" },
+          "data-active": metricsOnly,
+          onClick: () => setMetricsOnly((v) => !v),
+          title: "Show only rows with quantified numeric metrics",
           children: [
-            /* @__PURE__ */ jsx13(Icon, { name: "Copy", size: 12 }),
-            " Markdown"
+            /* @__PURE__ */ jsx14(Icon, { name: "Filter", size: 11 }),
+            " Metrics only ",
+            /* @__PURE__ */ jsx14("span", { className: "sb-dt-facet-n", children: meta.quantifiedCount })
           ]
         }
-      ),
-      /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-btn", onClick: exportCsv, children: [
-        /* @__PURE__ */ jsx13(Icon, { name: "Download", size: 12 }),
-        " CSV"
-      ] })
-    ] }),
-    /* @__PURE__ */ jsx13("div", { className: "sb-table-wrap sb-scroll", style: { maxHeight: 420 }, children: /* @__PURE__ */ jsxs12("table", { className: "sb-table", children: [
-      /* @__PURE__ */ jsx13("thead", { children: /* @__PURE__ */ jsxs12("tr", { children: [
-        cols.map((c) => /* @__PURE__ */ jsxs12("th", { onClick: () => toggleSort(c.key), children: [
-          c.label || c.key,
-          " ",
-          sort.key === c.key ? sort.dir === "asc" ? "\u2191" : "\u2193" : ""
-        ] }, c.key)),
-        /* @__PURE__ */ jsx13("th", { children: "Cite" })
+      ) : null
+    ] }) : null,
+    viewMode === "table" ? /* @__PURE__ */ jsx14("div", { className: "sb-table-wrap sb-scroll sb-dt-table-stage", children: /* @__PURE__ */ jsxs12("table", { className: "sb-table", "data-density": density, children: [
+      /* @__PURE__ */ jsx14("thead", { children: /* @__PURE__ */ jsxs12("tr", { children: [
+        /* @__PURE__ */ jsx14("th", { style: { width: 28, cursor: "default" } }),
+        visibleCols.map((c) => {
+          const isMetric = meta.colRoles[c.key] === "metric";
+          const active = sort.key === c.key;
+          return /* @__PURE__ */ jsx14(
+            "th",
+            {
+              "data-sorted": active ? sort.dir : void 0,
+              style: { textAlign: isMetric ? "right" : "left" },
+              onClick: () => toggleSort(c.key),
+              children: /* @__PURE__ */ jsxs12("span", { className: "sb-dt-th-inner", style: { justifyContent: isMetric ? "flex-end" : "flex-start" }, children: [
+                /* @__PURE__ */ jsx14("span", { children: c.label || c.key }),
+                /* @__PURE__ */ jsx14(
+                  Icon,
+                  {
+                    name: active ? sort.dir === "asc" ? "ArrowUp" : "ArrowDown" : "ArrowUpDown",
+                    size: 11,
+                    style: { opacity: active ? 1 : 0.35, color: active ? "var(--ui-accent)" : "currentColor" }
+                  }
+                )
+              ] })
+            },
+            c.key
+          );
+        }),
+        /* @__PURE__ */ jsx14("th", { style: { width: 82, textAlign: "right", cursor: "default" }, children: "Actions" })
       ] }) }),
-      /* @__PURE__ */ jsx13("tbody", { children: filtered.map((r, rIdx) => /* @__PURE__ */ jsxs12("tr", { children: [
-        cols.map((c) => /* @__PURE__ */ jsx13("td", { className: c.type === "number" ? "sb-num" : void 0, children: String(r.cells?.[c.key] ?? "") }, c.key)),
-        /* @__PURE__ */ jsx13("td", { style: { whiteSpace: "nowrap" }, children: (r.cites || []).map((cid, idx) => /* @__PURE__ */ jsx13("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: idx + 1 }, cid)) })
-      ] }, r.id || rIdx)) })
-    ] }) })
+      /* @__PURE__ */ jsx14("tbody", { children: filtered.length === 0 ? /* @__PURE__ */ jsx14("tr", { children: /* @__PURE__ */ jsx14("td", { colSpan: visibleCols.length + 2, style: { textAlign: "center", padding: "32px 16px", color: "var(--ui-text-tertiary)" }, children: "No rows match your current filter." }) }) : filtered.map((r, rIdx) => {
+        const rowKey = r.id || `row-${rIdx}`;
+        const isExp = expandedRowId === rowKey;
+        return /* @__PURE__ */ jsxs12(Fragment7, { children: [
+          /* @__PURE__ */ jsxs12(
+            "tr",
+            {
+              className: "sb-dt-row",
+              "data-expanded": isExp,
+              onClick: () => setExpandedRowId((prev) => prev === rowKey ? null : rowKey),
+              children: [
+                /* @__PURE__ */ jsx14("td", { style: { width: 28, color: "var(--ui-text-tertiary)", paddingRight: 4 }, children: /* @__PURE__ */ jsx14(Icon, { name: isExp ? "ChevronDown" : "ChevronRight", size: 13 }) }),
+                visibleCols.map((c) => {
+                  const isMetric = meta.colRoles[c.key] === "metric";
+                  return /* @__PURE__ */ jsx14(
+                    "td",
+                    {
+                      className: isMetric ? "sb-num" : void 0,
+                      style: {
+                        textAlign: isMetric ? "right" : "left",
+                        width: meta.colRoles[c.key] === "metric" ? 112 : meta.colRoles[c.key] === "badge" ? 196 : meta.colRoles[c.key] === "tag" ? 168 : void 0
+                      },
+                      children: renderCell(c, r)
+                    },
+                    c.key
+                  );
+                }),
+                /* @__PURE__ */ jsx14("td", { style: { whiteSpace: "nowrap", textAlign: "right" }, children: /* @__PURE__ */ jsxs12("div", { className: "sb-dt-row-actions", children: [
+                  /* @__PURE__ */ jsx14(
+                    "button",
+                    {
+                      type: "button",
+                      className: "sb-dt-copy-btn",
+                      onClick: (e) => copyRow(e, r),
+                      title: "Copy row",
+                      "aria-label": "Copy row",
+                      children: /* @__PURE__ */ jsx14(Icon, { name: "Copy", size: 12 })
+                    }
+                  ),
+                  (r.cites || []).map((cid, idx) => /* @__PURE__ */ jsx14(
+                    "button",
+                    {
+                      type: "button",
+                      className: "sb-cite",
+                      onClick: (e) => {
+                        e.stopPropagation();
+                        onOpenChunk?.(cid);
+                      },
+                      title: `Inspect passage ${cid}`,
+                      children: idx + 1
+                    },
+                    cid
+                  ))
+                ] }) })
+              ]
+            }
+          ),
+          isExp ? /* @__PURE__ */ jsx14("tr", { className: "sb-dt-detail-row", children: /* @__PURE__ */ jsx14("td", { colSpan: visibleCols.length + 2, children: /* @__PURE__ */ jsxs12("div", { className: "sb-dt-detail-panel", children: [
+            /* @__PURE__ */ jsx14("div", { className: "sb-dt-detail-grid", children: cols.map((c) => /* @__PURE__ */ jsxs12("div", { className: "sb-dt-detail-field", style: meta.colRoles[c.key] === "longtext" ? { gridColumn: "1 / -1" } : void 0, children: [
+              /* @__PURE__ */ jsx14("div", { className: "sb-dt-detail-key", children: c.label || c.key }),
+              /* @__PURE__ */ jsx14("div", { className: "sb-dt-detail-val", children: String(r.cells?.[c.key] ?? "") })
+            ] }, c.key)) }),
+            (r.cites || []).length ? /* @__PURE__ */ jsxs12("div", { style: { display: "flex", alignItems: "center", gap: 6, marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
+              /* @__PURE__ */ jsx14("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Source passages:" }),
+              (r.cites || []).map((cid, idx) => /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-btn", onClick: () => onOpenChunk?.(cid), children: [
+                /* @__PURE__ */ jsx14(Icon, { name: "BookOpen", size: 12 }),
+                " Inspect [",
+                idx + 1,
+                "]"
+              ] }, cid))
+            ] }) : null
+          ] }) }) }) : null
+        ] }, rowKey);
+      }) })
+    ] }) }) : null,
+    viewMode === "cards" ? /* @__PURE__ */ jsx14("div", { className: "sb-dt-cards-grid", children: filtered.map((r, idx) => {
+      const facetVal = meta.facetCol ? r.cells?.[meta.facetCol] : "";
+      const tone = hashTone(facetVal);
+      const pm = meta.metricCol ? parseCellMetric(r.cells?.[meta.metricCol]) : null;
+      const tagCol = cols.find((c) => meta.colRoles[c.key] === "tag");
+      const bodyCol = cols.find((c) => meta.colRoles[c.key] === "longtext") || cols[cols.length - 1];
+      return /* @__PURE__ */ jsxs12("div", { className: "sb-dt-card", children: [
+        /* @__PURE__ */ jsxs12("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }, children: [
+          facetVal ? /* @__PURE__ */ jsxs12("span", { className: "sb-dt-badge", style: { background: tone.bg, borderColor: tone.border, color: tone.color }, children: [
+            /* @__PURE__ */ jsx14("span", { className: "sb-dt-dot", style: { background: tone.color } }),
+            /* @__PURE__ */ jsx14("span", { className: "sb-dt-badge-txt", children: cleanSourceLabel(facetVal) })
+          ] }) : /* @__PURE__ */ jsx14("span", {}),
+          pm?.isMetric ? /* @__PURE__ */ jsx14("span", { className: "sb-mono", style: { fontSize: 17, fontWeight: 750, color: barColorForGroup(pm.group) }, children: pm.display }) : pm ? /* @__PURE__ */ jsx14("span", { className: "sb-dt-qual", children: pm.display }) : null
+        ] }),
+        tagCol && r.cells?.[tagCol.key] ? /* @__PURE__ */ jsx14("div", { style: { fontWeight: 650, fontSize: 13, color: "var(--ui-text-primary)" }, children: String(r.cells[tagCol.key]) }) : null,
+        bodyCol && r.cells?.[bodyCol.key] ? /* @__PURE__ */ jsx14("div", { style: { fontSize: 12.5, color: "var(--ui-text-secondary)", lineHeight: 1.55 }, children: String(r.cells[bodyCol.key]) }) : null,
+        /* @__PURE__ */ jsxs12("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: 8, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
+          /* @__PURE__ */ jsx14("div", { style: { display: "flex", gap: 4, alignItems: "center" }, children: (r.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: cIdx + 1 }, cid)) }),
+          /* @__PURE__ */ jsxs12("button", { type: "button", className: "sb-btn sb-btn-ghost", onClick: (e) => copyRow(e, r), children: [
+            /* @__PURE__ */ jsx14(Icon, { name: "Copy", size: 11 }),
+            " Copy"
+          ] })
+        ] })
+      ] }, r.id || idx);
+    }) }) : null,
+    viewMode === "chart" ? /* @__PURE__ */ jsx14("div", { className: "sb-dt-chart-stage", children: chartGroups.length === 0 ? /* @__PURE__ */ jsxs12("div", { className: "sb-empty", children: [
+      /* @__PURE__ */ jsx14(Icon, { name: "BarChart2", size: 22 }),
+      /* @__PURE__ */ jsx14("div", { style: { fontWeight: 600, color: "var(--ui-text-secondary)" }, children: "No numeric metrics in current selection" }),
+      /* @__PURE__ */ jsx14("div", { style: { fontSize: 12 }, children: "Clear filters or add quantitative sources to plot visual comparison bars." })
+    ] }) : chartGroups.map((grp) => /* @__PURE__ */ jsxs12("div", { className: "sb-dt-chart-group", children: [
+      /* @__PURE__ */ jsxs12("div", { className: "sb-dt-chart-head", children: [
+        /* @__PURE__ */ jsxs12("span", { style: { display: "inline-flex", alignItems: "center", gap: 7, fontWeight: 650, fontSize: 12, color: "var(--ui-text-primary)" }, children: [
+          /* @__PURE__ */ jsx14("span", { className: "sb-dt-dot", style: { background: grp.color, width: 8, height: 8 } }),
+          grp.label
+        ] }),
+        /* @__PURE__ */ jsxs12("span", { className: "sb-mono", style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: [
+          grp.entries.length,
+          " benchmark",
+          grp.entries.length === 1 ? "" : "s"
+        ] })
+      ] }),
+      /* @__PURE__ */ jsx14("div", { style: { display: "flex", flexDirection: "column", gap: 11 }, children: grp.entries.map((entry, eIdx) => {
+        const pct = Math.round(metricRatio(entry.metric) * 100);
+        return /* @__PURE__ */ jsxs12("div", { className: "sb-dt-chart-row", children: [
+          /* @__PURE__ */ jsxs12("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10 }, children: [
+            /* @__PURE__ */ jsxs12("div", { style: { display: "flex", alignItems: "center", gap: 8, minWidth: 0 }, children: [
+              /* @__PURE__ */ jsx14("span", { style: { fontWeight: 600, fontSize: 12.5, color: "var(--ui-text-primary)" }, children: entry.title }),
+              entry.source ? /* @__PURE__ */ jsx14("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: entry.source }) : null
+            ] }),
+            /* @__PURE__ */ jsxs12("div", { style: { display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }, children: [
+              /* @__PURE__ */ jsx14("span", { className: "sb-mono", style: { fontSize: 14, fontWeight: 750, color: grp.color }, children: entry.metric.display }),
+              (entry.row.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), children: cIdx + 1 }, cid))
+            ] })
+          ] }),
+          /* @__PURE__ */ jsx14("div", { className: "sb-dt-bar-track", style: { height: 8 }, children: /* @__PURE__ */ jsx14("div", { className: "sb-dt-bar-fill", style: { width: `${pct}%`, background: grp.color } }) }),
+          entry.detail ? /* @__PURE__ */ jsx14("div", { style: { fontSize: 11.5, color: "var(--ui-text-secondary)", lineHeight: 1.45 }, children: entry.detail }) : null
+        ] }, entry.row.id || eIdx);
+      }) })
+    ] }, grp.group)) }) : null,
+    /* @__PURE__ */ jsxs12("div", { className: "sb-dt-footer", children: [
+      /* @__PURE__ */ jsxs12("span", { children: [
+        "Showing ",
+        /* @__PURE__ */ jsx14("strong", { className: "sb-mono", children: filtered.length }),
+        " of ",
+        /* @__PURE__ */ jsx14("strong", { className: "sb-mono", children: rows.length }),
+        " rows",
+        sort.key ? ` | Sorted by ${cols.find((c) => c.key === sort.key)?.label || sort.key} (${sort.dir})` : ""
+      ] }),
+      /* @__PURE__ */ jsx14("span", { children: viewMode === "table" ? "Click any row to inspect full details" : `${meta.distinctSources} active sources` })
+    ] })
   ] });
 }
 
 // desktop-src/components/renderers/SlideDeckView.jsx
-import { useEffect as useEffect6, useState as useState9 } from "react";
-import { jsx as jsx14, jsxs as jsxs13 } from "react/jsx-runtime";
+import { useEffect as useEffect7, useState as useState10 } from "react";
+import { Fragment as Fragment9, jsx as jsx15, jsxs as jsxs13 } from "react/jsx-runtime";
+var SLIDE_THEMES = {
+  editorial: {
+    label: "Editorial",
+    accent: "var(--ui-accent)",
+    secondary: "#10b981",
+    bg: "var(--sb-surface)",
+    cardBg: "color-mix(in srgb, var(--sb-bg) 72%, var(--sb-surface))",
+    fg: "var(--ui-text-primary)",
+    muted: "var(--ui-text-secondary)",
+    dim: "var(--ui-text-tertiary)",
+    border: "var(--ui-stroke-secondary)"
+  },
+  keynote: {
+    label: "Keynote",
+    accent: "#38bdf8",
+    secondary: "#6366f1",
+    bg: "linear-gradient(155deg, #0d1322 0%, #090d16 60%, #101729 100%)",
+    cardBg: "rgba(255, 255, 255, 0.045)",
+    fg: "#f4f7fb",
+    muted: "#a6b3c8",
+    dim: "#6c7a93",
+    border: "rgba(148, 163, 184, 0.22)"
+  },
+  midnight: {
+    label: "Midnight",
+    accent: "#10b981",
+    secondary: "#14b8a6",
+    bg: "linear-gradient(160deg, #0b1110 0%, #0a0c0e 100%)",
+    cardBg: "rgba(16, 185, 129, 0.06)",
+    fg: "#ecfdf5",
+    muted: "#9cb5aa",
+    dim: "#5e786e",
+    border: "rgba(16, 185, 129, 0.24)"
+  },
+  paper: {
+    label: "Paper",
+    accent: "#2563eb",
+    secondary: "#0d9488",
+    bg: "linear-gradient(180deg, #faf8f4 0%, #f3efe7 100%)",
+    cardBg: "rgba(24, 24, 27, 0.04)",
+    fg: "#18181b",
+    muted: "#52525b",
+    dim: "#71717a",
+    border: "rgba(24, 24, 27, 0.14)"
+  }
+};
+var LAYOUT_ACCENTS = {
+  title: "#3b82f6",
+  stat: "#10b981",
+  "two-col": "#38bdf8",
+  bullets: "#3b82f6",
+  quote: "#f59e0b",
+  section: "#8b5cf6",
+  closing: "#10b981"
+};
+function parsePct(val) {
+  const m = String(val || "").trim().match(/^(\d+(?:\.\d+)?)\s*%$/);
+  if (!m) return null;
+  const n = parseFloat(m[1]);
+  return Number.isFinite(n) ? Math.max(0.05, Math.min(1, n / 100)) : null;
+}
 function SlideDeckView({ nbId, artifact, onOpenChunk }) {
   const slides = artifact?.spec?.slides || [];
-  const [idx, setIdx] = useState9(0);
-  const [showNotes, setShowNotes] = useState9(true);
-  const [presenting, setPresenting] = useState9(false);
-  const [elapsedSec, setElapsedSec] = useState9(0);
-  useEffect6(() => {
+  const [idx, setIdx] = useState10(0);
+  const [showNotes, setShowNotes] = useState10(true);
+  const [presenting, setPresenting] = useState10(false);
+  const [viewMode, setViewMode] = useState10("stage");
+  const [themeKey, setThemeKey] = useState10("editorial");
+  const [elapsedSec, setElapsedSec] = useState10(0);
+  useEffect7(() => {
     setIdx(0);
     setPresenting(false);
+    setViewMode("stage");
   }, [artifact?.id]);
-  useEffect6(() => {
+  useEffect7(() => {
     if (!presenting) {
       setElapsedSec(0);
       return void 0;
@@ -4405,9 +7527,11 @@ function SlideDeckView({ nbId, artifact, onOpenChunk }) {
     return void 0;
   }, [presenting]);
   if (!slides.length) {
-    return /* @__PURE__ */ jsx14("div", { className: "sb-empty", children: "No slides in this deck." });
+    return /* @__PURE__ */ jsx15("div", { className: "sb-empty", children: "No slides in this deck." });
   }
   const sl = slides[idx] || slides[0];
+  const nextSl = slides[idx + 1] || null;
+  const theme = SLIDE_THEMES[themeKey] || SLIDE_THEMES.editorial;
   const mins = String(Math.floor(elapsedSec / 60)).padStart(2, "0");
   const secs = String(elapsedSec % 60).padStart(2, "0");
   function toMarp() {
@@ -4442,43 +7566,296 @@ ${s.notes}
       sdk.host?.notify?.({ kind: "error", title: "SourceBook", message: err.message || "Could not export HTML deck." });
     }
   }
-  function renderSlideCard(large = false) {
-    return /* @__PURE__ */ jsxs13("section", { className: "sb-slide-stage", style: large ? { maxWidth: 960, width: "100%", padding: "32px 40px" } : void 0, children: [
-      /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
-        /* @__PURE__ */ jsx14("span", { className: "sb-kind-tag", children: sl.layout || "slide" }),
-        /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: [
-          String(idx + 1).padStart(2, "0"),
-          " / ",
-          String(slides.length).padStart(2, "0")
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxs13("div", { style: { display: "flex", flexDirection: "column", gap: 10, marginBlock: "auto" }, children: [
-        /* @__PURE__ */ jsx14("h2", { style: { margin: 0, fontSize: large ? sl.layout === "title" ? 32 : 24 : sl.layout === "title" ? 21 : 17, fontWeight: 700, lineHeight: 1.25 }, children: sl.title }),
-        sl.stat?.value ? /* @__PURE__ */ jsxs13("div", { style: { display: "flex", alignItems: "baseline", gap: 12 }, children: [
-          /* @__PURE__ */ jsx14("span", { className: "sb-mono", style: { fontSize: large ? 48 : 32, fontWeight: 750, color: "var(--ui-accent)", lineHeight: 1 }, children: sl.stat.value }),
-          /* @__PURE__ */ jsx14("span", { style: { fontSize: large ? 15 : 12.5, color: "var(--ui-text-secondary)" }, children: sl.stat.label })
-        ] }) : null,
-        sl.image_url ? /* @__PURE__ */ jsx14(
-          "img",
+  function renderSlideBody(slide, large) {
+    const layout = slide.layout || "bullets";
+    const bullets = slide.bullets || [];
+    const statVal = slide.stat?.value;
+    const pct = statVal ? parsePct(statVal) : null;
+    if (layout === "title" || layout === "section") {
+      return /* @__PURE__ */ jsxs13("div", { className: "sb-sl-cover", children: [
+        /* @__PURE__ */ jsxs13(
+          "div",
           {
-            src: sl.image_url,
-            alt: sl.title || "Slide illustration",
-            style: { width: "100%", maxHeight: large ? 240 : 150, objectFit: "cover", borderRadius: 8, border: "1px solid var(--ui-stroke-tertiary)" }
+            className: "sb-sl-eyebrow",
+            style: { color: theme.accent, borderColor: theme.border, background: theme.cardBg },
+            children: [
+              /* @__PURE__ */ jsx15("span", { className: "sb-dt-dot", style: { background: theme.accent } }),
+              /* @__PURE__ */ jsx15("span", { children: layout === "title" ? "SOURCEBOOK BRIEFING DECK" : "SECTION BREAK" })
+            ]
           }
-        ) : null,
-        sl.body ? /* @__PURE__ */ jsx14("p", { style: { margin: 0, fontSize: large ? 15.5 : 13, color: "var(--ui-text-secondary)", lineHeight: 1.5 }, children: sl.body }) : null,
-        (sl.bullets || []).length > 0 ? /* @__PURE__ */ jsx14("ul", { style: { margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: large ? 8 : 5, fontSize: large ? 15 : 12.5 }, children: sl.bullets.map((b, bIdx) => /* @__PURE__ */ jsx14("li", { children: b }, bIdx)) }) : null
-      ] }),
-      /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
-        /* @__PURE__ */ jsx14("div", { style: { display: "flex", gap: 4 }, children: (sl.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: cIdx + 1 }, cid)) }),
-        /* @__PURE__ */ jsx14("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: artifact?.spec?.title || "SourceBook Deck" })
-      ] })
+        ),
+        /* @__PURE__ */ jsx15(
+          "h2",
+          {
+            style: {
+              margin: 0,
+              fontSize: large ? 40 : 30,
+              fontWeight: 780,
+              lineHeight: 1.14,
+              letterSpacing: "-0.025em",
+              color: theme.fg,
+              maxWidth: "24ch"
+            },
+            children: slide.title
+          }
+        ),
+        /* @__PURE__ */ jsx15(
+          "div",
+          {
+            style: {
+              width: 72,
+              height: 3,
+              borderRadius: 99,
+              background: `linear-gradient(90deg, ${theme.accent}, ${theme.secondary})`
+            }
+          }
+        ),
+        slide.body ? /* @__PURE__ */ jsx15("p", { style: { margin: 0, fontSize: large ? 17 : 14.5, color: theme.muted, maxWidth: "52ch", lineHeight: 1.55 }, children: slide.body }) : null
+      ] });
+    }
+    if (layout === "stat" && statVal) {
+      const r = 46;
+      const circ = 2 * Math.PI * r;
+      const dash = circ * (pct ?? 0.78);
+      return /* @__PURE__ */ jsxs13("div", { className: "sb-sl-stat-split", children: [
+        /* @__PURE__ */ jsxs13(
+          "div",
+          {
+            className: "sb-sl-stat-hero",
+            style: { background: theme.cardBg, borderColor: theme.border },
+            children: [
+              /* @__PURE__ */ jsx15(
+                DitherCanvas,
+                {
+                  variant: "mesh",
+                  animated: false,
+                  color: theme.accent,
+                  secondaryColor: theme.secondary,
+                  opacity: 0.22,
+                  cols: 96,
+                  rows: 36,
+                  style: { position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }
+                }
+              ),
+              /* @__PURE__ */ jsxs13("div", { style: { position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }, children: [
+                /* @__PURE__ */ jsxs13("svg", { width: large ? 136 : 112, height: large ? 136 : 112, viewBox: "0 0 116 116", "aria-hidden": "true", children: [
+                  /* @__PURE__ */ jsx15("circle", { cx: "58", cy: "58", r, fill: "none", stroke: theme.border, strokeWidth: "8" }),
+                  /* @__PURE__ */ jsx15(
+                    "circle",
+                    {
+                      cx: "58",
+                      cy: "58",
+                      r,
+                      fill: "none",
+                      stroke: theme.accent,
+                      strokeWidth: "8",
+                      strokeLinecap: "round",
+                      strokeDasharray: `${dash.toFixed(1)} ${circ.toFixed(1)}`,
+                      transform: "rotate(-90 58 58)"
+                    }
+                  ),
+                  /* @__PURE__ */ jsx15(
+                    "text",
+                    {
+                      x: "58",
+                      y: "64",
+                      textAnchor: "middle",
+                      fill: theme.accent,
+                      fontSize: String(statVal).length >= 5 ? "20" : "26",
+                      fontWeight: "800",
+                      fontFamily: "ui-monospace, SFMono-Regular, monospace",
+                      children: statVal
+                    }
+                  )
+                ] }),
+                slide.stat.label ? /* @__PURE__ */ jsx15("div", { style: { fontSize: large ? 13 : 11.5, fontWeight: 600, color: theme.muted, textAlign: "center", maxWidth: 200 }, children: slide.stat.label }) : null
+              ] })
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxs13("div", { style: { display: "flex", flexDirection: "column", gap: 14, justifyContent: "center", minWidth: 0 }, children: [
+          /* @__PURE__ */ jsx15("h2", { style: { margin: 0, fontSize: large ? 25 : 20, fontWeight: 720, lineHeight: 1.24, letterSpacing: "-0.02em", color: theme.fg }, children: slide.title }),
+          bullets.length > 0 ? /* @__PURE__ */ jsx15("div", { style: { display: "flex", flexDirection: "column", gap: 8 }, children: bullets.map((b, bIdx) => /* @__PURE__ */ jsxs13(
+            "div",
+            {
+              className: "sb-sl-point",
+              style: { background: theme.cardBg, borderColor: theme.border, color: theme.fg },
+              children: [
+                /* @__PURE__ */ jsxs13("span", { className: "sb-mono sb-sl-step", style: { color: theme.accent }, children: [
+                  "0",
+                  bIdx + 1
+                ] }),
+                /* @__PURE__ */ jsx15("span", { style: { fontSize: large ? 14 : 12.5, lineHeight: 1.48, color: theme.muted }, children: b })
+              ]
+            },
+            bIdx
+          )) }) : null
+        ] })
+      ] });
+    }
+    if (layout === "quote") {
+      return /* @__PURE__ */ jsxs13("div", { className: "sb-sl-quote-wrap", children: [
+        /* @__PURE__ */ jsx15("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: theme.accent }, children: slide.title }),
+        /* @__PURE__ */ jsxs13(
+          "blockquote",
+          {
+            style: {
+              margin: 0,
+              padding: "12px 0 12px 24px",
+              borderLeft: `3.5px solid ${theme.accent}`,
+              fontSize: large ? 28 : 22,
+              fontWeight: 550,
+              lineHeight: 1.38,
+              color: theme.fg,
+              maxWidth: "46ch"
+            },
+            children: [
+              '"',
+              slide.body || bullets[0] || slide.title,
+              '"'
+            ]
+          }
+        )
+      ] });
+    }
+    if (layout === "closing") {
+      return /* @__PURE__ */ jsxs13("div", { style: { display: "flex", flexDirection: "column", gap: 18, marginBlock: "auto" }, children: [
+        /* @__PURE__ */ jsxs13("div", { style: { display: "flex", flexDirection: "column", gap: 6 }, children: [
+          /* @__PURE__ */ jsx15("span", { className: "sb-mono", style: { fontSize: 10.5, fontWeight: 700, letterSpacing: "0.1em", color: theme.secondary }, children: "KEY TAKEAWAYS" }),
+          /* @__PURE__ */ jsx15("h2", { style: { margin: 0, fontSize: large ? 30 : 23, fontWeight: 750, lineHeight: 1.2, letterSpacing: "-0.02em", color: theme.fg }, children: slide.title })
+        ] }),
+        bullets.length > 0 ? /* @__PURE__ */ jsx15("div", { className: "sb-sl-cards-grid", style: { gridTemplateColumns: bullets.length >= 3 ? "repeat(2, minmax(0, 1fr))" : "1fr" }, children: bullets.map((b, bIdx) => /* @__PURE__ */ jsxs13(
+          "div",
+          {
+            className: "sb-sl-card",
+            style: { background: theme.cardBg, borderColor: theme.border, borderTopColor: bIdx % 2 === 0 ? theme.accent : theme.secondary },
+            children: [
+              /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 10, fontWeight: 700, color: bIdx % 2 === 0 ? theme.accent : theme.secondary }, children: [
+                "SOURCE 0",
+                bIdx + 1
+              ] }),
+              /* @__PURE__ */ jsx15("span", { style: { fontSize: large ? 14 : 12.5, color: theme.fg, lineHeight: 1.45 }, children: b })
+            ]
+          },
+          bIdx
+        )) }) : null
+      ] });
+    }
+    const useTwoCol = layout === "two-col" || bullets.length >= 3;
+    return /* @__PURE__ */ jsxs13("div", { style: { display: "flex", flexDirection: "column", gap: 16, marginBlock: "auto" }, children: [
+      /* @__PURE__ */ jsx15(
+        "h2",
+        {
+          style: {
+            margin: 0,
+            fontSize: large ? 27 : 21,
+            fontWeight: 730,
+            lineHeight: 1.22,
+            letterSpacing: "-0.02em",
+            color: theme.fg
+          },
+          children: slide.title
+        }
+      ),
+      slide.image_url ? /* @__PURE__ */ jsx15(
+        "img",
+        {
+          src: slide.image_url,
+          alt: slide.title || "Slide illustration",
+          style: { width: "100%", maxHeight: large ? 220 : 140, objectFit: "cover", borderRadius: 9, border: `1px solid ${theme.border}` }
+        }
+      ) : null,
+      slide.body ? /* @__PURE__ */ jsx15("p", { style: { margin: 0, fontSize: large ? 15 : 13, color: theme.muted, lineHeight: 1.55 }, children: slide.body }) : null,
+      bullets.length > 0 ? /* @__PURE__ */ jsx15(
+        "div",
+        {
+          className: "sb-sl-cards-grid",
+          style: { gridTemplateColumns: useTwoCol ? "repeat(2, minmax(0, 1fr))" : "1fr" },
+          children: bullets.map((b, bIdx) => /* @__PURE__ */ jsxs13(
+            "div",
+            {
+              className: "sb-sl-card",
+              style: {
+                background: theme.cardBg,
+                borderColor: theme.border,
+                borderLeft: `2.5px solid ${bIdx % 2 === 0 ? theme.accent : theme.secondary}`
+              },
+              children: [
+                /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 10, fontWeight: 700, color: bIdx % 2 === 0 ? theme.accent : theme.secondary }, children: [
+                  "0",
+                  bIdx + 1
+                ] }),
+                /* @__PURE__ */ jsx15("span", { style: { fontSize: large ? 14.5 : 12.5, lineHeight: 1.48, color: theme.fg }, children: b })
+              ]
+            },
+            bIdx
+          ))
+        }
+      ) : null
     ] });
+  }
+  function renderSlideCard(slide, slideIdx, large = false) {
+    const layout = slide.layout || "bullets";
+    const isHero = layout === "title" || layout === "closing" || layout === "section";
+    return /* @__PURE__ */ jsxs13(
+      "section",
+      {
+        className: "sb-slide-stage sb-slide-stage-rich",
+        style: {
+          background: theme.bg,
+          borderColor: theme.border,
+          color: theme.fg,
+          ...large ? { maxWidth: 1020, width: "100%", padding: "36px 44px" } : {}
+        },
+        children: [
+          /* @__PURE__ */ jsx15(
+            "div",
+            {
+              className: "sb-sl-top-ribbon",
+              style: { background: `linear-gradient(90deg, ${theme.accent}, ${theme.secondary})` }
+            }
+          ),
+          isHero ? /* @__PURE__ */ jsx15(
+            DitherCanvas,
+            {
+              variant: "aurora",
+              animated: presenting,
+              color: theme.accent,
+              secondaryColor: theme.secondary,
+              opacity: themeKey === "paper" ? 0.14 : 0.24,
+              cols: 160,
+              rows: 28,
+              style: { position: "absolute", inset: "0 0 auto 0", width: "100%", height: 110, pointerEvents: "none" }
+            }
+          ) : null,
+          /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative" }, children: [
+            /* @__PURE__ */ jsx15(
+              "span",
+              {
+                className: "sb-kind-tag",
+                style: { background: theme.cardBg, borderColor: theme.border, color: theme.muted },
+                children: layout
+              }
+            ),
+            /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 11, color: theme.dim }, children: [
+              String(slideIdx + 1).padStart(2, "0"),
+              " / ",
+              String(slides.length).padStart(2, "0")
+            ] })
+          ] }),
+          /* @__PURE__ */ jsx15("div", { style: { position: "relative", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", minHeight: 0 }, children: renderSlideBody(slide, large) }),
+          /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", paddingTop: 10, borderTop: `1px solid ${theme.border}` }, children: [
+            /* @__PURE__ */ jsx15("div", { style: { display: "flex", gap: 5, alignItems: "center" }, children: (slide.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: cIdx + 1 }, cid)) }),
+            /* @__PURE__ */ jsx15("span", { style: { fontSize: 11, color: theme.dim }, children: artifact?.spec?.title || "SourceBook Deck" })
+          ] })
+        ]
+      }
+    );
   }
   return /* @__PURE__ */ jsxs13(
     "div",
     {
-      style: { display: "flex", flexDirection: "column", gap: 10 },
+      style: { display: "flex", flexDirection: "column", gap: 11 },
       tabIndex: 0,
       onKeyDown: (e) => {
         if (e.key === "ArrowRight") setIdx((i) => Math.min(slides.length - 1, i + 1));
@@ -4486,52 +7863,115 @@ ${s.notes}
         if (e.key === "Escape" && presenting) setPresenting(false);
       },
       children: [
-        /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6, flexWrap: "wrap" }, children: [
-          /* @__PURE__ */ jsxs13("div", { style: { display: "flex", alignItems: "center", gap: 5 }, children: [
-            /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-btn sb-btn-icon", disabled: idx === 0, onClick: () => setIdx((i) => Math.max(0, i - 1)), children: /* @__PURE__ */ jsx14(Icon, { name: "ChevronLeft", size: 13 }) }),
-            /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 12, color: "var(--ui-text-secondary)", padding: "0 4px" }, children: [
-              idx + 1,
-              " / ",
-              slides.length
+        /* @__PURE__ */ jsxs13("div", { className: "sb-inf-toolbar", children: [
+          /* @__PURE__ */ jsxs13("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }, children: [
+            /* @__PURE__ */ jsxs13("div", { style: { display: "flex", alignItems: "center", gap: 4 }, children: [
+              /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-btn sb-btn-icon", disabled: idx === 0, onClick: () => setIdx((i) => Math.max(0, i - 1)), children: /* @__PURE__ */ jsx15(Icon, { name: "ChevronLeft", size: 13 }) }),
+              /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 12, color: "var(--ui-text-secondary)", padding: "0 4px" }, children: [
+                idx + 1,
+                " / ",
+                slides.length
+              ] }),
+              /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-btn sb-btn-icon", disabled: idx >= slides.length - 1, onClick: () => setIdx((i) => Math.min(slides.length - 1, i + 1)), children: /* @__PURE__ */ jsx15(Icon, { name: "ChevronRight", size: 13 }) })
             ] }),
-            /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-btn sb-btn-icon", disabled: idx >= slides.length - 1, onClick: () => setIdx((i) => Math.min(slides.length - 1, i + 1)), children: /* @__PURE__ */ jsx14(Icon, { name: "ChevronRight", size: 13 }) })
+            /* @__PURE__ */ jsxs13("div", { className: "sb-seg", role: "group", "aria-label": "Deck view", children: [
+              /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "stage", onClick: () => setViewMode("stage"), children: "Stage" }),
+              /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-seg-btn", "data-active": viewMode === "grid", onClick: () => setViewMode("grid"), children: "Overview Grid" })
+            ] }),
+            /* @__PURE__ */ jsx15(
+              "select",
+              {
+                className: "sb-select",
+                value: themeKey,
+                onChange: (e) => setThemeKey(e.target.value),
+                "aria-label": "Presentation theme",
+                title: "Switch slide deck visual theme",
+                children: Object.entries(SLIDE_THEMES).map(([k, t]) => /* @__PURE__ */ jsxs13("option", { value: k, children: [
+                  "Theme: ",
+                  t.label
+                ] }, k))
+              }
+            )
           ] }),
           /* @__PURE__ */ jsxs13("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" }, children: [
             /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => setPresenting(true), title: "Launch full-window Presenter Mode", children: [
-              /* @__PURE__ */ jsx14(Icon, { name: "Play", size: 12 }),
+              /* @__PURE__ */ jsx15(Icon, { name: "Play", size: 12 }),
               " Present"
             ] }),
-            /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-btn", "data-active": showNotes, onClick: () => setShowNotes((v) => !v), children: "Notes" }),
-            /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-btn", onClick: () => copyText(toMarp()), children: [
-              /* @__PURE__ */ jsx14(Icon, { name: "Copy", size: 12 }),
+            /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-btn", "data-active": showNotes, onClick: () => setShowNotes((v) => !v), children: "Notes" }),
+            /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-btn", onClick: () => {
+              copyText(toMarp());
+              sdk.host?.notify?.({ kind: "success", title: "SourceBook", message: "Copied Marp deck Markdown." });
+            }, children: [
+              /* @__PURE__ */ jsx15(Icon, { name: "Copy", size: 12 }),
               " Marp"
             ] }),
             /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-btn", onClick: downloadHtmlDeck, title: "Download self-contained offline HTML presentation", children: [
-              /* @__PURE__ */ jsx14(Icon, { name: "Download", size: 12 }),
+              /* @__PURE__ */ jsx15(Icon, { name: "Download", size: 12 }),
               " HTML Deck"
             ] })
           ] })
         ] }),
-        renderSlideCard(false),
-        showNotes && sl.notes ? /* @__PURE__ */ jsxs13("div", { className: "sb-quote-box", children: [
-          /* @__PURE__ */ jsx14("strong", { style: { display: "block", fontSize: 11, color: "var(--ui-text-tertiary)", marginBottom: 3 }, children: "SPEAKER NOTES" }),
-          sl.notes
-        ] }) : null,
-        /* @__PURE__ */ jsx14("div", { className: "sb-slide-strip sb-scroll", children: slides.map((s, sIdx) => /* @__PURE__ */ jsxs13(
-          "button",
-          {
-            type: "button",
-            className: "sb-slide-thumb",
-            "data-active": sIdx === idx,
-            onClick: () => setIdx(sIdx),
-            children: [
-              /* @__PURE__ */ jsx14("div", { className: "sb-mono", style: { fontSize: 10, color: "var(--ui-text-tertiary)" }, children: sIdx + 1 }),
-              /* @__PURE__ */ jsx14("div", { style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontWeight: 550, marginTop: 2 }, children: s.title })
-            ]
-          },
-          sIdx
-        )) }),
-        presenting ? /* @__PURE__ */ jsx14(
+        viewMode === "grid" ? /* @__PURE__ */ jsx15("div", { className: "sb-sl-overview-grid", children: slides.map((s, sIdx) => {
+          const lColor = LAYOUT_ACCENTS[s.layout] || "var(--ui-accent)";
+          return /* @__PURE__ */ jsxs13(
+            "button",
+            {
+              type: "button",
+              className: "sb-sl-overview-card",
+              "data-active": sIdx === idx,
+              onClick: () => {
+                setIdx(sIdx);
+                setViewMode("stage");
+              },
+              children: [
+                /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
+                  /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 10.5, fontWeight: 700, color: lColor }, children: [
+                    String(sIdx + 1).padStart(2, "0"),
+                    " \xB7 ",
+                    String(s.layout || "slide").toUpperCase()
+                  ] }),
+                  s.stat?.value ? /* @__PURE__ */ jsx15("span", { className: "sb-mono", style: { fontSize: 12, fontWeight: 800, color: lColor }, children: s.stat.value }) : null
+                ] }),
+                /* @__PURE__ */ jsx15("div", { style: { fontSize: 13, fontWeight: 650, color: "var(--ui-text-primary)", lineHeight: 1.32, textAlign: "left" }, children: s.title }),
+                (s.bullets || []).length > 0 ? /* @__PURE__ */ jsxs13("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)", textAlign: "left" }, children: [
+                  s.bullets.length,
+                  " takeaway",
+                  s.bullets.length === 1 ? "" : "s"
+                ] }) : null
+              ]
+            },
+            sIdx
+          );
+        }) }) : /* @__PURE__ */ jsxs13(Fragment9, { children: [
+          renderSlideCard(sl, idx, false),
+          showNotes && sl.notes ? /* @__PURE__ */ jsxs13("div", { className: "sb-quote-box", children: [
+            /* @__PURE__ */ jsx15("strong", { style: { display: "block", fontSize: 10.5, letterSpacing: "0.06em", color: "var(--ui-text-tertiary)", marginBottom: 3 }, children: "SPEAKER NOTES" }),
+            sl.notes
+          ] }) : null,
+          /* @__PURE__ */ jsx15("div", { className: "sb-slide-strip sb-scroll", children: slides.map((s, sIdx) => {
+            const lColor = LAYOUT_ACCENTS[s.layout] || "var(--ui-accent)";
+            return /* @__PURE__ */ jsxs13(
+              "button",
+              {
+                type: "button",
+                className: "sb-slide-thumb",
+                "data-active": sIdx === idx,
+                onClick: () => setIdx(sIdx),
+                children: [
+                  /* @__PURE__ */ jsx15("div", { style: { height: 2.5, borderRadius: 2, background: sIdx === idx ? lColor : "var(--ui-stroke-tertiary)", marginBottom: 6 } }),
+                  /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
+                    /* @__PURE__ */ jsx15("span", { className: "sb-mono", style: { fontSize: 10, color: sIdx === idx ? lColor : "var(--ui-text-tertiary)", fontWeight: 700 }, children: String(sIdx + 1).padStart(2, "0") }),
+                    /* @__PURE__ */ jsx15("span", { className: "sb-mono", style: { fontSize: 9, textTransform: "uppercase", color: "var(--ui-text-tertiary)" }, children: s.stat?.value || s.layout || "slide" })
+                  ] }),
+                  /* @__PURE__ */ jsx15("div", { style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontWeight: 580, marginTop: 4, color: "var(--ui-text-primary)" }, children: s.title })
+                ]
+              },
+              sIdx
+            );
+          }) })
+        ] }),
+        presenting ? /* @__PURE__ */ jsx15(
           "div",
           {
             className: "sb-modal-backdrop",
@@ -4540,32 +7980,44 @@ ${s.notes}
             children: /* @__PURE__ */ jsxs13(
               "div",
               {
-                style: { width: "min(980px, 95vw)", display: "flex", flexDirection: "column", gap: 12 },
+                style: { width: "min(1040px, 95vw)", display: "flex", flexDirection: "column", gap: 12 },
                 onClick: (e) => e.stopPropagation(),
                 children: [
                   /* @__PURE__ */ jsxs13("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
                     /* @__PURE__ */ jsxs13("div", { style: { display: "flex", alignItems: "center", gap: 10 }, children: [
-                      /* @__PURE__ */ jsx14("span", { className: "sb-kind-tag", children: "Presenter Mode" }),
-                      /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: [
+                      /* @__PURE__ */ jsx15("span", { className: "sb-kind-tag", children: "Presenter Mode" }),
+                      /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 12.5, color: "var(--ui-text-secondary)" }, children: [
                         mins,
                         ":",
                         secs
+                      ] }),
+                      /* @__PURE__ */ jsxs13("span", { className: "sb-mono", style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: [
+                        "Slide ",
+                        idx + 1,
+                        " of ",
+                        slides.length
                       ] })
                     ] }),
                     /* @__PURE__ */ jsxs13("div", { style: { display: "flex", gap: 6 }, children: [
-                      /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-btn", disabled: idx === 0, onClick: () => setIdx((i) => Math.max(0, i - 1)), children: "Prev" }),
-                      /* @__PURE__ */ jsx14("button", { type: "button", className: "sb-btn", disabled: idx >= slides.length - 1, onClick: () => setIdx((i) => Math.min(slides.length - 1, i + 1)), children: "Next" }),
+                      /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-btn", disabled: idx === 0, onClick: () => setIdx((i) => Math.max(0, i - 1)), children: "Prev" }),
+                      /* @__PURE__ */ jsx15("button", { type: "button", className: "sb-btn", disabled: idx >= slides.length - 1, onClick: () => setIdx((i) => Math.min(slides.length - 1, i + 1)), children: "Next" }),
                       /* @__PURE__ */ jsxs13("button", { type: "button", className: "sb-btn", onClick: () => setPresenting(false), children: [
-                        /* @__PURE__ */ jsx14(Icon, { name: "X", size: 13 }),
+                        /* @__PURE__ */ jsx15(Icon, { name: "X", size: 13 }),
                         " Exit"
                       ] })
                     ] })
                   ] }),
-                  renderSlideCard(true),
-                  sl.notes ? /* @__PURE__ */ jsxs13("div", { className: "sb-quote-box", style: { background: "var(--sb-surface)" }, children: [
-                    /* @__PURE__ */ jsx14("strong", { style: { display: "block", fontSize: 11, color: "var(--ui-text-tertiary)", marginBottom: 3 }, children: "SPEAKER NOTES" }),
-                    sl.notes
-                  ] }) : null
+                  renderSlideCard(sl, idx, true),
+                  /* @__PURE__ */ jsxs13("div", { style: { display: "grid", gridTemplateColumns: nextSl ? "1.6fr 1fr" : "1fr", gap: 10 }, children: [
+                    sl.notes ? /* @__PURE__ */ jsxs13("div", { className: "sb-quote-box", style: { background: "var(--sb-surface)" }, children: [
+                      /* @__PURE__ */ jsx15("strong", { style: { display: "block", fontSize: 10.5, letterSpacing: "0.06em", color: "var(--ui-text-tertiary)", marginBottom: 3 }, children: "SPEAKER NOTES" }),
+                      sl.notes
+                    ] }) : /* @__PURE__ */ jsx15("div", {}),
+                    nextSl ? /* @__PURE__ */ jsxs13("div", { className: "sb-ledger-row", style: { gap: 4, cursor: "pointer" }, onClick: () => setIdx((i) => Math.min(slides.length - 1, i + 1)), children: [
+                      /* @__PURE__ */ jsx15("span", { className: "sb-mono", style: { fontSize: 10, color: "var(--ui-text-tertiary)", letterSpacing: "0.06em" }, children: "UP NEXT" }),
+                      /* @__PURE__ */ jsx15("strong", { style: { fontSize: 12.5, color: "var(--ui-text-primary)" }, children: nextSl.title })
+                    ] }) : null
+                  ] })
                 ]
               }
             )
@@ -4577,7 +8029,7 @@ ${s.notes}
 }
 
 // desktop-src/components/StudioPanel.jsx
-import { Fragment as Fragment6, jsx as jsx15, jsxs as jsxs14 } from "react/jsx-runtime";
+import { Fragment as Fragment10, jsx as jsx16, jsxs as jsxs14 } from "react/jsx-runtime";
 var STUDIO_FORMATS = [
   { kind: "report", label: "Study Guide", icon: "FileText" },
   { kind: "audio", label: "Audio Overview", icon: "Headphones" },
@@ -4603,22 +8055,22 @@ function StudioPanel({
   onRefresh,
   onError
 }) {
-  const [activeArt, setActiveArt] = useState10(null);
-  const [loadingArt, setLoadingArt] = useState10(false);
-  const [runningKind, setRunningKind] = useState10("");
-  const [stage, setStage] = useState10("");
-  const [focusPrompt, setFocusPrompt] = useState10("");
-  const [showOpts, setShowOpts] = useState10(false);
-  const [template, setTemplate] = useState10("briefing");
-  const [audioStyle, setAudioStyle] = useState10("deep_dive");
-  const [count, setCount] = useState10(8);
-  const [language, setLanguage] = useState10("English");
-  const [includeImages, setIncludeImages] = useState10(false);
-  const cancelPollRef = useRef7(null);
-  useEffect7(() => {
+  const [activeArt, setActiveArt] = useState11(null);
+  const [loadingArt, setLoadingArt] = useState11(false);
+  const [runningKind, setRunningKind] = useState11("");
+  const [stage, setStage] = useState11("");
+  const [focusPrompt, setFocusPrompt] = useState11("");
+  const [showOpts, setShowOpts] = useState11(false);
+  const [template, setTemplate] = useState11("briefing");
+  const [audioStyle, setAudioStyle] = useState11("deep_dive");
+  const [count, setCount] = useState11(8);
+  const [language, setLanguage] = useState11("English");
+  const [includeImages, setIncludeImages] = useState11(false);
+  const cancelPollRef = useRef8(null);
+  useEffect8(() => {
     return () => cancelPollRef.current?.();
   }, []);
-  useEffect7(() => {
+  useEffect8(() => {
     if (!nbId || !selectedArtifactId) {
       setActiveArt(null);
       return;
@@ -4692,13 +8144,13 @@ function StudioPanel({
     }
   }
   function renderViewer() {
-    if (loadingArt) return /* @__PURE__ */ jsx15("div", { className: "sb-empty", children: "Loading artifact..." });
+    if (loadingArt) return /* @__PURE__ */ jsx16("div", { className: "sb-empty", children: "Loading artifact..." });
     if (!activeArt) return null;
     switch (activeArt.kind) {
       case "report":
-        return /* @__PURE__ */ jsx15(StudyGuideView, { artifact: activeArt, onOpenChunk });
+        return /* @__PURE__ */ jsx16(StudyGuideView, { artifact: activeArt, onOpenChunk });
       case "audio":
-        return /* @__PURE__ */ jsx15(
+        return /* @__PURE__ */ jsx16(
           AudioOverviewView,
           {
             nbId,
@@ -4708,7 +8160,7 @@ function StudioPanel({
           }
         );
       case "flashcards":
-        return /* @__PURE__ */ jsx15(
+        return /* @__PURE__ */ jsx16(
           FlashcardsView,
           {
             nbId,
@@ -4719,23 +8171,23 @@ function StudioPanel({
           }
         );
       case "quiz":
-        return /* @__PURE__ */ jsx15(QuizView, { artifact: activeArt, onOpenChunk });
+        return /* @__PURE__ */ jsx16(QuizView, { artifact: activeArt, onOpenChunk });
       case "mindmap":
-        return /* @__PURE__ */ jsx15(MindMapView, { artifact: activeArt, onOpenChunk });
+        return /* @__PURE__ */ jsx16(MindMapView, { artifact: activeArt, onOpenChunk });
       case "infographic":
-        return /* @__PURE__ */ jsx15(InfographicView, { artifact: activeArt, onOpenChunk });
+        return /* @__PURE__ */ jsx16(InfographicView, { artifact: activeArt, onOpenChunk });
       case "table":
-        return /* @__PURE__ */ jsx15(DataTableView, { artifact: activeArt, onOpenChunk });
+        return /* @__PURE__ */ jsx16(DataTableView, { artifact: activeArt, onOpenChunk });
       case "slides":
-        return /* @__PURE__ */ jsx15(SlideDeckView, { nbId, artifact: activeArt, onOpenChunk });
+        return /* @__PURE__ */ jsx16(SlideDeckView, { nbId, artifact: activeArt, onOpenChunk });
       default:
-        return /* @__PURE__ */ jsx15("pre", { className: "sb-mono", style: { fontSize: 11 }, children: JSON.stringify(activeArt.spec, null, 2) });
+        return /* @__PURE__ */ jsx16("pre", { className: "sb-mono", style: { fontSize: 11 }, children: JSON.stringify(activeArt.spec, null, 2) });
     }
   }
-  return /* @__PURE__ */ jsx15("aside", { className: "sb-pane sb-pane-right", "aria-label": "Studio", children: selectedArtifactId && activeArt ? /* @__PURE__ */ jsxs14("div", { className: "sb-viewer", children: [
+  return /* @__PURE__ */ jsx16("aside", { className: "sb-pane sb-pane-right", "aria-label": "Studio", children: selectedArtifactId && activeArt ? /* @__PURE__ */ jsxs14("div", { className: "sb-viewer", children: [
     /* @__PURE__ */ jsxs14("div", { className: "sb-viewer-head", children: [
       /* @__PURE__ */ jsxs14("div", { style: { display: "flex", alignItems: "center", gap: 6, minWidth: 0 }, children: [
-        /* @__PURE__ */ jsx15(
+        /* @__PURE__ */ jsx16(
           "button",
           {
             type: "button",
@@ -4745,19 +8197,19 @@ function StudioPanel({
               onSelectArtifact?.(null);
               if (expanded) onToggleExpand?.();
             },
-            children: /* @__PURE__ */ jsx15(Icon, { name: "ArrowLeft", size: 14 })
+            children: /* @__PURE__ */ jsx16(Icon, { name: "ArrowLeft", size: 14 })
           }
         ),
         /* @__PURE__ */ jsxs14("div", { style: { minWidth: 0 }, children: [
-          /* @__PURE__ */ jsx15("div", { className: "sb-src-title", title: activeArt.title, children: activeArt.title }),
+          /* @__PURE__ */ jsx16("div", { className: "sb-src-title", title: activeArt.title, children: activeArt.title }),
           /* @__PURE__ */ jsxs14("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)", display: "flex", gap: 6, alignItems: "center" }, children: [
-            /* @__PURE__ */ jsx15("span", { children: KIND_META[activeArt.kind]?.label || activeArt.kind }),
+            /* @__PURE__ */ jsx16("span", { children: KIND_META[activeArt.kind]?.label || activeArt.kind }),
             activeArt.grounding?.model ? /* @__PURE__ */ jsxs14("span", { children: [
               "| ",
               activeArt.grounding.model
             ] }) : null,
-            !activeArt.grounding?.model && activeArt.grounding?.mode === "extractive" ? /* @__PURE__ */ jsx15("span", { children: "| Local extractive" }) : null,
-            activeArt.stale ? /* @__PURE__ */ jsx15("span", { className: "sb-verdict", "data-v": "partial", children: "Stale" }) : null
+            !activeArt.grounding?.model && activeArt.grounding?.mode === "extractive" ? /* @__PURE__ */ jsx16("span", { children: "| Local extractive" }) : null,
+            activeArt.stale ? /* @__PURE__ */ jsx16("span", { className: "sb-verdict", "data-v": "partial", children: "Stale" }) : null
           ] })
         ] })
       ] }),
@@ -4771,27 +8223,27 @@ function StudioPanel({
             onClick: () => runGenerator(activeArt.kind, activeArt.params || {}),
             title: "Underlying source changed: regenerate artifact from updated sources",
             children: [
-              /* @__PURE__ */ jsx15(Icon, { name: "RefreshCw", size: 12 }),
+              /* @__PURE__ */ jsx16(Icon, { name: "RefreshCw", size: 12 }),
               " Refresh"
             ]
           }
         ) : null,
-        /* @__PURE__ */ jsx15(
+        /* @__PURE__ */ jsx16(
           "button",
           {
             type: "button",
             className: "sb-btn sb-btn-icon",
             title: expanded ? "Dock Studio rail" : "Expand Studio canvas",
             onClick: onToggleExpand,
-            children: /* @__PURE__ */ jsx15(Icon, { name: expanded ? "Minimize2" : "Maximize2", size: 13 })
+            children: /* @__PURE__ */ jsx16(Icon, { name: expanded ? "Minimize2" : "Maximize2", size: 13 })
           }
         )
       ] })
     ] }),
-    /* @__PURE__ */ jsx15("div", { className: "sb-viewer-body sb-scroll", children: renderViewer() })
-  ] }) : /* @__PURE__ */ jsxs14(Fragment6, { children: [
+    /* @__PURE__ */ jsx16("div", { className: "sb-viewer-body sb-scroll", children: renderViewer() })
+  ] }) : /* @__PURE__ */ jsxs14(Fragment10, { children: [
     /* @__PURE__ */ jsxs14("div", { className: "sb-pane-head", children: [
-      /* @__PURE__ */ jsx15("span", { className: "sb-pane-title", children: "Studio" }),
+      /* @__PURE__ */ jsx16("span", { className: "sb-pane-title", children: "Studio" }),
       /* @__PURE__ */ jsxs14("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
         /* @__PURE__ */ jsxs14(
           "button",
@@ -4802,16 +8254,16 @@ function StudioPanel({
             onClick: () => setShowOpts((v) => !v),
             title: "Configure report template, audio style, item count, language, and AI illustrations",
             children: [
-              /* @__PURE__ */ jsx15(Icon, { name: "SlidersHorizontal", size: 12 }),
+              /* @__PURE__ */ jsx16(Icon, { name: "SlidersHorizontal", size: 12 }),
               " Options"
             ]
           }
         ),
-        /* @__PURE__ */ jsx15("span", { className: "sb-num", style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: artifacts.length })
+        /* @__PURE__ */ jsx16("span", { className: "sb-num", style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: artifacts.length })
       ] })
     ] }),
     /* @__PURE__ */ jsxs14("div", { style: { padding: "10px 12px 0", display: "flex", flexDirection: "column", gap: 8 }, children: [
-      /* @__PURE__ */ jsx15(
+      /* @__PURE__ */ jsx16(
         "input",
         {
           className: "sb-input",
@@ -4824,47 +8276,47 @@ function StudioPanel({
       showOpts ? /* @__PURE__ */ jsxs14("div", { className: "sb-ledger-row", style: { gap: 7, padding: "8px 10px" }, children: [
         /* @__PURE__ */ jsxs14("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }, children: [
           /* @__PURE__ */ jsxs14("label", { className: "sb-field", children: [
-            /* @__PURE__ */ jsx15("span", { className: "sb-label", style: { fontSize: 10.5 }, children: "Report template" }),
+            /* @__PURE__ */ jsx16("span", { className: "sb-label", style: { fontSize: 10.5 }, children: "Report template" }),
             /* @__PURE__ */ jsxs14("select", { className: "sb-select", value: template, onChange: (e) => setTemplate(e.target.value), children: [
-              /* @__PURE__ */ jsx15("option", { value: "briefing", children: "Briefing" }),
-              /* @__PURE__ */ jsx15("option", { value: "study_guide", children: "Study Guide" }),
-              /* @__PURE__ */ jsx15("option", { value: "faq", children: "FAQ" }),
-              /* @__PURE__ */ jsx15("option", { value: "timeline", children: "Timeline" }),
-              /* @__PURE__ */ jsx15("option", { value: "blog", children: "Blog Post" }),
-              /* @__PURE__ */ jsx15("option", { value: "exec_memo", children: "Exec Memo" })
+              /* @__PURE__ */ jsx16("option", { value: "briefing", children: "Briefing" }),
+              /* @__PURE__ */ jsx16("option", { value: "study_guide", children: "Study Guide" }),
+              /* @__PURE__ */ jsx16("option", { value: "faq", children: "FAQ" }),
+              /* @__PURE__ */ jsx16("option", { value: "timeline", children: "Timeline" }),
+              /* @__PURE__ */ jsx16("option", { value: "blog", children: "Blog Post" }),
+              /* @__PURE__ */ jsx16("option", { value: "exec_memo", children: "Exec Memo" })
             ] })
           ] }),
           /* @__PURE__ */ jsxs14("label", { className: "sb-field", children: [
-            /* @__PURE__ */ jsx15("span", { className: "sb-label", style: { fontSize: 10.5 }, children: "Audio style" }),
+            /* @__PURE__ */ jsx16("span", { className: "sb-label", style: { fontSize: 10.5 }, children: "Audio style" }),
             /* @__PURE__ */ jsxs14("select", { className: "sb-select", value: audioStyle, onChange: (e) => setAudioStyle(e.target.value), children: [
-              /* @__PURE__ */ jsx15("option", { value: "deep_dive", children: "Deep Dive" }),
-              /* @__PURE__ */ jsx15("option", { value: "debate", children: "Debate" }),
-              /* @__PURE__ */ jsx15("option", { value: "brief", children: "Quick Brief" }),
-              /* @__PURE__ */ jsx15("option", { value: "critique", children: "Critique" })
+              /* @__PURE__ */ jsx16("option", { value: "deep_dive", children: "Deep Dive" }),
+              /* @__PURE__ */ jsx16("option", { value: "debate", children: "Debate" }),
+              /* @__PURE__ */ jsx16("option", { value: "brief", children: "Quick Brief" }),
+              /* @__PURE__ */ jsx16("option", { value: "critique", children: "Critique" })
             ] })
           ] }),
           /* @__PURE__ */ jsxs14("label", { className: "sb-field", children: [
-            /* @__PURE__ */ jsx15("span", { className: "sb-label", style: { fontSize: 10.5 }, children: "Items / slides" }),
+            /* @__PURE__ */ jsx16("span", { className: "sb-label", style: { fontSize: 10.5 }, children: "Items / slides" }),
             /* @__PURE__ */ jsxs14("select", { className: "sb-select", value: count, onChange: (e) => setCount(Number(e.target.value)), children: [
-              /* @__PURE__ */ jsx15("option", { value: 5, children: "5" }),
-              /* @__PURE__ */ jsx15("option", { value: 8, children: "8" }),
-              /* @__PURE__ */ jsx15("option", { value: 12, children: "12" })
+              /* @__PURE__ */ jsx16("option", { value: 5, children: "5" }),
+              /* @__PURE__ */ jsx16("option", { value: 8, children: "8" }),
+              /* @__PURE__ */ jsx16("option", { value: 12, children: "12" })
             ] })
           ] }),
           /* @__PURE__ */ jsxs14("label", { className: "sb-field", children: [
-            /* @__PURE__ */ jsx15("span", { className: "sb-label", style: { fontSize: 10.5 }, children: "Language" }),
+            /* @__PURE__ */ jsx16("span", { className: "sb-label", style: { fontSize: 10.5 }, children: "Language" }),
             /* @__PURE__ */ jsxs14("select", { className: "sb-select", value: language, onChange: (e) => setLanguage(e.target.value), children: [
-              /* @__PURE__ */ jsx15("option", { value: "English", children: "English" }),
-              /* @__PURE__ */ jsx15("option", { value: "Spanish", children: "Spanish" }),
-              /* @__PURE__ */ jsx15("option", { value: "French", children: "French" }),
-              /* @__PURE__ */ jsx15("option", { value: "German", children: "German" }),
-              /* @__PURE__ */ jsx15("option", { value: "Japanese", children: "Japanese" }),
-              /* @__PURE__ */ jsx15("option", { value: "Portuguese", children: "Portuguese" })
+              /* @__PURE__ */ jsx16("option", { value: "English", children: "English" }),
+              /* @__PURE__ */ jsx16("option", { value: "Spanish", children: "Spanish" }),
+              /* @__PURE__ */ jsx16("option", { value: "French", children: "French" }),
+              /* @__PURE__ */ jsx16("option", { value: "German", children: "German" }),
+              /* @__PURE__ */ jsx16("option", { value: "Japanese", children: "Japanese" }),
+              /* @__PURE__ */ jsx16("option", { value: "Portuguese", children: "Portuguese" })
             ] })
           ] })
         ] }),
         capabilities?.image_generate ? /* @__PURE__ */ jsxs14("label", { style: { display: "flex", alignItems: "center", gap: 7, fontSize: 11.5, color: "var(--ui-text-secondary)", cursor: "pointer" }, children: [
-          /* @__PURE__ */ jsx15(
+          /* @__PURE__ */ jsx16(
             "input",
             {
               type: "checkbox",
@@ -4877,7 +8329,7 @@ function StudioPanel({
         ] }) : null
       ] }) : null
     ] }),
-    /* @__PURE__ */ jsx15("div", { className: "sb-studio-grid", children: STUDIO_FORMATS.map((fmt) => /* @__PURE__ */ jsxs14(
+    /* @__PURE__ */ jsx16("div", { className: "sb-studio-grid", children: STUDIO_FORMATS.map((fmt) => /* @__PURE__ */ jsxs14(
       "button",
       {
         type: "button",
@@ -4885,18 +8337,21 @@ function StudioPanel({
         disabled: !hasActiveSources || Boolean(runningKind),
         onClick: () => runGenerator(fmt.kind),
         children: [
-          /* @__PURE__ */ jsx15(Icon, { name: fmt.icon, size: 14, style: { color: "var(--ui-accent)", flexShrink: 0 } }),
-          /* @__PURE__ */ jsx15("span", { children: runningKind === fmt.kind ? "Generating..." : fmt.label })
+          /* @__PURE__ */ jsx16(Icon, { name: fmt.icon, size: 14, style: { color: "var(--ui-accent)", flexShrink: 0 } }),
+          /* @__PURE__ */ jsx16("span", { children: runningKind === fmt.kind ? "Generating..." : fmt.label })
         ]
       },
       fmt.kind
     )) }),
-    runningKind ? /* @__PURE__ */ jsx15("div", { style: { padding: "0 12px 8px", fontSize: 11.5, color: "var(--ui-text-secondary)" }, children: stage }) : null,
-    /* @__PURE__ */ jsx15("div", { className: "sb-pane-head", style: { borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: /* @__PURE__ */ jsx15("span", { className: "sb-pane-title", children: "Artifacts" }) }),
-    /* @__PURE__ */ jsx15("div", { className: "sb-art-list sb-scroll", children: artifacts.length === 0 ? /* @__PURE__ */ jsxs14("div", { className: "sb-empty", children: [
-      /* @__PURE__ */ jsx15(Icon, { name: "Layers", size: 22 }),
-      /* @__PURE__ */ jsx15("div", { style: { fontWeight: 600, color: "var(--ui-text-secondary)" }, children: "No artifacts yet" }),
-      /* @__PURE__ */ jsx15("div", { style: { fontSize: 11.5 }, children: "Pick any format above to turn your active sources into an interactive artifact or Audio Overview." })
+    runningKind ? /* @__PURE__ */ jsxs14("div", { style: { padding: "0 12px 8px", fontSize: 11.5, color: "var(--ui-text-secondary)", display: "flex", alignItems: "center", gap: 7 }, children: [
+      /* @__PURE__ */ jsx16(HermesSpinner, { size: 12 }),
+      /* @__PURE__ */ jsx16("span", { children: stage })
+    ] }) : null,
+    /* @__PURE__ */ jsx16("div", { className: "sb-pane-head", style: { borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: /* @__PURE__ */ jsx16("span", { className: "sb-pane-title", children: "Artifacts" }) }),
+    /* @__PURE__ */ jsx16("div", { className: "sb-art-list sb-scroll", children: artifacts.length === 0 ? /* @__PURE__ */ jsxs14("div", { className: "sb-empty", children: [
+      /* @__PURE__ */ jsx16(Icon, { name: "Layers", size: 22 }),
+      /* @__PURE__ */ jsx16("div", { style: { fontWeight: 600, color: "var(--ui-text-secondary)" }, children: "No artifacts yet" }),
+      /* @__PURE__ */ jsx16("div", { style: { fontSize: 11.5 }, children: "Pick any format above to turn your active sources into an interactive artifact or Audio Overview." })
     ] }) : artifacts.map((art) => {
       const meta = KIND_META[art.kind] || { label: art.kind, icon: "FileText" };
       return /* @__PURE__ */ jsxs14(
@@ -4915,23 +8370,23 @@ function StudioPanel({
           },
           children: [
             /* @__PURE__ */ jsxs14("div", { style: { display: "flex", alignItems: "center", gap: 9, minWidth: 0 }, children: [
-              /* @__PURE__ */ jsx15(Icon, { name: meta.icon, size: 14, style: { color: "var(--ui-accent)", flexShrink: 0 } }),
+              /* @__PURE__ */ jsx16(Icon, { name: meta.icon, size: 14, style: { color: "var(--ui-accent)", flexShrink: 0 } }),
               /* @__PURE__ */ jsxs14("div", { style: { minWidth: 0 }, children: [
-                /* @__PURE__ */ jsx15("div", { className: "sb-src-title", title: art.title, children: art.title }),
+                /* @__PURE__ */ jsx16("div", { className: "sb-src-title", title: art.title, children: art.title }),
                 /* @__PURE__ */ jsxs14("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)", display: "flex", alignItems: "center", gap: 5 }, children: [
-                  /* @__PURE__ */ jsx15("span", { children: meta.label }),
-                  art.stale ? /* @__PURE__ */ jsx15("span", { className: "sb-verdict", "data-v": "partial", children: "Stale" }) : null
+                  /* @__PURE__ */ jsx16("span", { children: meta.label }),
+                  art.stale ? /* @__PURE__ */ jsx16("span", { className: "sb-verdict", "data-v": "partial", children: "Stale" }) : null
                 ] })
               ] })
             ] }),
-            /* @__PURE__ */ jsx15(
+            /* @__PURE__ */ jsx16(
               "button",
               {
                 type: "button",
                 className: "sb-btn sb-btn-ghost sb-btn-icon sb-btn-danger",
                 title: "Delete artifact",
                 onClick: (e) => deleteArtifact(e, art.id),
-                children: /* @__PURE__ */ jsx15(Icon, { name: "Trash2", size: 13 })
+                children: /* @__PURE__ */ jsx16(Icon, { name: "Trash2", size: 13 })
               }
             )
           ]
@@ -4943,7 +8398,7 @@ function StudioPanel({
 }
 
 // desktop-src/components/BrandMark.jsx
-import { jsx as jsx16, jsxs as jsxs15 } from "react/jsx-runtime";
+import { jsx as jsx17, jsxs as jsxs15 } from "react/jsx-runtime";
 function BrandMark({ size = 16, accent = "var(--ui-accent, #3b82f6)", className = "", style }) {
   return /* @__PURE__ */ jsxs15(
     "svg",
@@ -4956,51 +8411,83 @@ function BrandMark({ size = 16, accent = "var(--ui-accent, #3b82f6)", className 
       style: { display: "block", flexShrink: 0, ...style },
       "aria-hidden": "true",
       children: [
-        /* @__PURE__ */ jsx16("polygon", { points: "59,10 74,10 74,34 66.5,26.5 59,34", fill: accent }),
-        /* @__PURE__ */ jsx16("polygon", { points: "79.5,10 100,10 100,37.5 79.5,48.5", fill: "currentColor" }),
-        /* @__PURE__ */ jsx16("polygon", { points: "47,10 53.5,10 53.5,30.5 44.5,30.5 100,70.5 100,95 24,22", fill: "currentColor" }),
-        /* @__PURE__ */ jsx16("polygon", { points: "20,24.5 95.5,97.5 72.5,110 48,110 20,90 20,82.5 36.5,73.5 58,89 74.5,89 20,50", fill: "currentColor" })
+        /* @__PURE__ */ jsx17("polygon", { points: "59,10 74,10 74,34 66.5,26.5 59,34", fill: accent }),
+        /* @__PURE__ */ jsx17("polygon", { points: "79.5,10 100,10 100,37.5 79.5,48.5", fill: "currentColor" }),
+        /* @__PURE__ */ jsx17("polygon", { points: "47,10 53.5,10 53.5,30.5 44.5,30.5 100,70.5 100,95 24,22", fill: "currentColor" }),
+        /* @__PURE__ */ jsx17("polygon", { points: "20,24.5 95.5,97.5 72.5,110 48,110 20,90 20,82.5 36.5,73.5 58,89 74.5,89 20,50", fill: "currentColor" })
       ]
     }
   );
 }
 
 // desktop-src/SourceBookWorkspace.jsx
-import { Fragment as Fragment7, jsx as jsx17, jsxs as jsxs16 } from "react/jsx-runtime";
+import { Fragment as Fragment11, jsx as jsx18, jsxs as jsxs16 } from "react/jsx-runtime";
 function SourceBookWorkspace({ ctx, externalState }) {
   const profile = typeof sdk.useValue === "function" && sdk.host?.state?.profile ? sdk.useValue(sdk.host.state.profile) : "default";
   const connectionId = typeof sdk.useValue === "function" && sdk.host?.state?.connectionId ? sdk.useValue(sdk.host.state.connectionId) : "local";
   const epoch = typeof sdk.useGatewayActivationEpoch === "function" ? sdk.useGatewayActivationEpoch() : 0;
-  const [notebooks, setNotebooks] = useState11([]);
-  const [nbId, setNbId] = useState11("");
-  const [notebook, setNotebook] = useState11(null);
-  const [sources, setSources] = useState11([]);
-  const [notes, setNotes] = useState11([]);
-  const [messages, setMessages] = useState11([]);
-  const [claims, setClaims] = useState11([]);
-  const [contradictions, setContradictions] = useState11(null);
-  const [coverage, setCoverage] = useState11(null);
-  const [artifacts, setArtifacts] = useState11([]);
-  const [modelsInfo, setModelsInfo] = useState11(null);
-  const [capabilities, setCapabilities] = useState11(null);
-  const [centerTab, setCenterTab] = useState11("chat");
-  const [selectedArtifactId, setSelectedArtifactId] = useState11(null);
-  const [inspectorTarget, setInspectorTarget] = useState11(null);
-  const [leftCollapsed, setLeftCollapsed] = useState11(false);
-  const [studioExpanded, setStudioExpanded] = useState11(false);
-  const [nbMenuOpen, setNbMenuOpen] = useState11(false);
-  const [modelMenuOpen, setModelMenuOpen] = useState11(false);
-  const [customProvider, setCustomProvider] = useState11("");
-  const [customModel, setCustomModel] = useState11("");
-  const [createOpen, setCreateOpen] = useState11(false);
-  const [newTitle, setNewTitle] = useState11("");
-  const [searchOpen, setSearchOpen] = useState11(false);
-  const [searchQuery, setSearchQuery] = useState11("");
-  const [searchHits, setSearchHits] = useState11([]);
-  const [loading, setLoading] = useState11(true);
-  const [error, setError] = useState11("");
-  const reqSeqRef = useRef8(0);
+  const liveHostModel = typeof sdk.useValue === "function" && sdk.host?.state?.model ? sdk.useValue(sdk.host.state.model) : "";
+  const [notebooks, setNotebooks] = useState12([]);
+  const [nbId, setNbId] = useState12("");
+  const [notebook, setNotebook] = useState12(null);
+  const [sources, setSources] = useState12([]);
+  const [notes, setNotes] = useState12([]);
+  const [messages, setMessages] = useState12([]);
+  const [claims, setClaims] = useState12([]);
+  const [contradictions, setContradictions] = useState12(null);
+  const [coverage, setCoverage] = useState12(null);
+  const [artifacts, setArtifacts] = useState12([]);
+  const [modelsInfo, setModelsInfo] = useState12(null);
+  const [gatewayModelCatalog, setGatewayModelCatalog] = useState12([]);
+  const [capabilities, setCapabilities] = useState12(null);
+  const [centerTab, setCenterTab] = useState12("chat");
+  const [selectedArtifactId, setSelectedArtifactId] = useState12(null);
+  const [inspectorTarget, setInspectorTarget] = useState12(null);
+  const [leftCollapsed, setLeftCollapsed] = useState12(false);
+  const [studioExpanded, setStudioExpanded] = useState12(false);
+  const [nbMenuOpen, setNbMenuOpen] = useState12(false);
+  const [modelMenuOpen, setModelMenuOpen] = useState12(false);
+  const [modelSearch, setModelSearch] = useState12("");
+  const [showCustomModel, setShowCustomModel] = useState12(false);
+  const [customProvider, setCustomProvider] = useState12("");
+  const [customModel, setCustomModel] = useState12("");
+  const [createOpen, setCreateOpen] = useState12(false);
+  const [newTitle, setNewTitle] = useState12("");
+  const [searchOpen, setSearchOpen] = useState12(false);
+  const [searchQuery, setSearchQuery] = useState12("");
+  const [searchHits, setSearchHits] = useState12([]);
+  const [loading, setLoading] = useState12(true);
+  const [error, setError] = useState12("");
+  const reqSeqRef = useRef9(0);
   const storageKey = `activeNotebook::${connectionId || "local"}::${profile || "default"}`;
+  const loadGatewayCatalog = useCallback(async () => {
+    if (typeof sdk.host?.request !== "function") return;
+    try {
+      const res = await sdk.host.request("model.options", {
+        include_unconfigured: false,
+        explicit_only: false
+      });
+      const providers = Array.isArray(res?.providers) ? res.providers : [];
+      const flat = [];
+      for (const p of providers) {
+        if (!p || !p.slug) continue;
+        const pName = p.name || p.slug;
+        const mList = Array.isArray(p.models) ? p.models : [];
+        for (const m of mList) {
+          const mid = typeof m === "string" ? m : m?.id || m?.name || "";
+          if (!mid) continue;
+          flat.push({
+            provider: p.slug,
+            providerLabel: pName,
+            model: mid,
+            source: "hermes"
+          });
+        }
+      }
+      setGatewayModelCatalog(flat);
+    } catch {
+    }
+  }, []);
   const loadNotebookData = useCallback(async (targetNb) => {
     if (!targetNb) {
       setNotebook(null);
@@ -5052,6 +8539,7 @@ function SourceBookWorkspace({ ctx, externalState }) {
         api("/models").catch(() => null),
         api("/capabilities").catch(() => null)
       ]);
+      loadGatewayCatalog();
       if (currentScopeKey() !== startScope || currentEpoch() !== startEpoch) return;
       if (mInfo) setModelsInfo(mInfo);
       if (caps) setCapabilities(caps);
@@ -5072,13 +8560,13 @@ function SourceBookWorkspace({ ctx, externalState }) {
     } finally {
       setLoading(false);
     }
-  }, [ctx, storageKey, loadNotebookData]);
-  useEffect8(() => {
+  }, [ctx, storageKey, loadNotebookData, loadGatewayCatalog]);
+  useEffect9(() => {
     setSelectedArtifactId(null);
     setInspectorTarget(null);
     loadNotebooks();
   }, [profile, connectionId, epoch, loadNotebooks]);
-  useEffect8(() => {
+  useEffect9(() => {
     if (!ctx?.onEvent) return void 0;
     return ctx.onEvent("plugin.sourcebook.notebook.changed", (ev) => {
       const target = ev?.payload?.nb || ev?.nb;
@@ -5087,7 +8575,7 @@ function SourceBookWorkspace({ ctx, externalState }) {
       }
     });
   }, [ctx, nbId, loadNotebookData]);
-  useEffect8(() => {
+  useEffect9(() => {
     if (!ctx?.addEventListener) return void 0;
     return ctx.addEventListener(window, "keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
@@ -5102,7 +8590,7 @@ function SourceBookWorkspace({ ctx, externalState }) {
       }
     });
   }, [ctx]);
-  useEffect8(() => {
+  useEffect9(() => {
     const pending = externalState?.get?.()?.pendingJump;
     if (pending && pending.nb) {
       externalState.set({ ...externalState.get(), pendingJump: null });
@@ -5190,25 +8678,98 @@ Cited chunk: \`${chunk.id}\``,
       setError(err.message || "Could not save passage.");
     }
   }
+  const mergedCatalog = useMemo4(() => {
+    const seen = /* @__PURE__ */ new Set();
+    const out = [];
+    const push = (item) => {
+      const p = String(item.provider || "").trim();
+      const m = String(item.model || "").trim();
+      if (!m) return;
+      const key = `${p.toLowerCase()}::${m.toLowerCase()}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push({
+        provider: p,
+        providerLabel: item.providerLabel || p || "Hermes",
+        model: m,
+        source: item.source || "config"
+      });
+    };
+    for (const row of gatewayModelCatalog) push(row);
+    for (const row of modelsInfo?.options || []) {
+      if (row.source !== "active") push(row);
+    }
+    const q = modelSearch.trim().toLowerCase();
+    if (!q) return out;
+    return out.filter(
+      (it) => it.model.toLowerCase().includes(q) || it.provider.toLowerCase().includes(q) || it.providerLabel.toLowerCase().includes(q)
+    );
+  }, [gatewayModelCatalog, modelsInfo, modelSearch]);
+  const groupedCatalog = useMemo4(() => {
+    const groups = /* @__PURE__ */ new Map();
+    for (const item of mergedCatalog) {
+      const gKey = item.provider || "configured";
+      if (!groups.has(gKey)) {
+        groups.set(gKey, { slug: gKey, label: item.providerLabel || gKey, items: [] });
+      }
+      groups.get(gKey).items.push(item);
+    }
+    return Array.from(groups.values());
+  }, [mergedCatalog]);
+  const hasNativeCatalogMenu = typeof sdk.ModelCatalogMenu === "function" && Boolean(sdk.ModelMenuCloseContext) && typeof sdk.DropdownMenu === "function" && typeof sdk.DropdownMenuTrigger === "function" && typeof sdk.DropdownMenuContent === "function";
+  const NativeModelCatalogMenu = sdk.ModelCatalogMenu;
+  const NativeModelMenuCloseContext = sdk.ModelMenuCloseContext;
+  const NativeDropdownMenu = sdk.DropdownMenu;
+  const NativeDropdownMenuTrigger = sdk.DropdownMenuTrigger;
+  const NativeDropdownMenuContent = sdk.DropdownMenuContent;
+  const NativeDropdownMenuItem = sdk.DropdownMenuItem;
+  const NativeDropdownMenuSeparator = sdk.DropdownMenuSeparator;
+  const nativeModelController = useMemo4(() => {
+    if (!hasNativeCatalogMenu || !notebook) return null;
+    return {
+      allowSpeed: false,
+      current: {
+        effort: "",
+        fast: false,
+        model: notebook.model || modelsInfo?.active?.model || liveHostModel || "",
+        provider: notebook.provider || modelsInfo?.active?.provider || ""
+      },
+      presetFor: () => ({}),
+      applyPreset: (_preset, row) => {
+        patchNotebook({ provider: row.provider || "", model: row.model || "" });
+        setModelMenuOpen(false);
+      },
+      select: (model, provider) => {
+        patchNotebook({ provider: provider || "", model: model || "" });
+        setModelMenuOpen(false);
+      },
+      setOptions: (_patch, row) => {
+        if (row?.model) {
+          patchNotebook({ provider: row.provider || "", model: row.model });
+        }
+      }
+    };
+  }, [hasNativeCatalogMenu, notebook, modelsInfo, liveHostModel]);
   const covPct = coverage?.total_chunks ? Math.round(coverage.touched_chunks / coverage.total_chunks * 100) : 0;
   const hasActiveSources = sources.some((s) => s.enabled);
-  const activeModelLabel = notebook?.model ? notebook.model : modelsInfo?.active?.model ? `Auto: ${modelsInfo.active.model}` : "Auto (Hermes)";
+  const defaultModelName = modelsInfo?.active?.model || liveHostModel || "";
+  const activeModelLabel = notebook?.model ? notebook.model : defaultModelName ? `Auto: ${defaultModelName}` : "Auto (Hermes)";
   return /* @__PURE__ */ jsxs16("div", { className: "sb-root", style: { position: "relative" }, children: [
-    /* @__PURE__ */ jsx17(Styles, {}),
+    /* @__PURE__ */ jsx18(Styles, {}),
     /* @__PURE__ */ jsxs16("header", { className: "sb-topbar", children: [
       /* @__PURE__ */ jsxs16("div", { className: "sb-topbar-left", children: [
         /* @__PURE__ */ jsxs16("div", { className: "sb-brand", children: [
-          /* @__PURE__ */ jsx17("span", { className: "sb-brand-mark", children: /* @__PURE__ */ jsx17(BrandMark, { size: 15 }) }),
-          /* @__PURE__ */ jsx17("span", { children: "SourceBook" })
+          /* @__PURE__ */ jsx18("span", { className: "sb-brand-mark", children: /* @__PURE__ */ jsx18(BrandMark, { size: 15 }) }),
+          /* @__PURE__ */ jsx18("span", { children: "SourceBook" })
         ] }),
-        /* @__PURE__ */ jsx17(
+        /* @__PURE__ */ jsx18(
           "button",
           {
             type: "button",
             className: "sb-btn sb-btn-ghost sb-btn-icon",
             title: leftCollapsed ? "Show Sources rail" : "Hide Sources rail",
             onClick: () => setLeftCollapsed((v) => !v),
-            children: /* @__PURE__ */ jsx17(Icon, { name: "PanelLeft", size: 14 })
+            children: /* @__PURE__ */ jsx18(Icon, { name: "PanelLeft", size: 14 })
           }
         ),
         /* @__PURE__ */ jsxs16("div", { style: { position: "relative" }, children: [
@@ -5223,8 +8784,8 @@ Cited chunk: \`${chunk.id}\``,
               },
               "aria-expanded": nbMenuOpen,
               children: [
-                /* @__PURE__ */ jsx17("span", { className: "sb-nb-select-label", children: notebook?.title || (loading ? "Loading..." : "Select notebook") }),
-                /* @__PURE__ */ jsx17(Icon, { name: "ChevronDown", size: 13 })
+                /* @__PURE__ */ jsx18("span", { className: "sb-nb-select-label", children: notebook?.title || (loading ? "Loading..." : "Select notebook") }),
+                /* @__PURE__ */ jsx18(Icon, { name: "ChevronDown", size: 13 })
               ]
             }
           ),
@@ -5245,15 +8806,15 @@ Cited chunk: \`${chunk.id}\``,
                 onClick: () => selectNotebook(nb.id),
                 children: [
                   /* @__PURE__ */ jsxs16("div", { style: { minWidth: 0 }, children: [
-                    /* @__PURE__ */ jsx17("div", { className: "sb-src-title", children: nb.title }),
+                    /* @__PURE__ */ jsx18("div", { className: "sb-src-title", children: nb.title }),
                     /* @__PURE__ */ jsxs16("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: [
-                      /* @__PURE__ */ jsx17("span", { className: "sb-num", children: nb.source_count || 0 }),
+                      /* @__PURE__ */ jsx18("span", { className: "sb-num", children: nb.source_count || 0 }),
                       " sources | ",
-                      /* @__PURE__ */ jsx17("span", { className: "sb-num", children: nb.artifact_count || 0 }),
+                      /* @__PURE__ */ jsx18("span", { className: "sb-num", children: nb.artifact_count || 0 }),
                       " artifacts"
                     ] })
                   ] }),
-                  notebooks.length > 1 ? /* @__PURE__ */ jsx17(
+                  notebooks.length > 1 ? /* @__PURE__ */ jsx18(
                     "button",
                     {
                       type: "button",
@@ -5263,14 +8824,14 @@ Cited chunk: \`${chunk.id}\``,
                         e.stopPropagation();
                         handleDeleteNotebook(nb.id);
                       },
-                      children: /* @__PURE__ */ jsx17(Icon, { name: "Trash2", size: 12 })
+                      children: /* @__PURE__ */ jsx18(Icon, { name: "Trash2", size: 12 })
                     }
                   ) : null
                 ]
               },
               nb.id
             )),
-            /* @__PURE__ */ jsx17("div", { style: { borderTop: "1px solid var(--ui-stroke-tertiary)", marginTop: 4, paddingTop: 4 }, children: /* @__PURE__ */ jsxs16(
+            /* @__PURE__ */ jsx18("div", { style: { borderTop: "1px solid var(--ui-stroke-tertiary)", marginTop: 4, paddingTop: 4 }, children: /* @__PURE__ */ jsxs16(
               "button",
               {
                 type: "button",
@@ -5281,7 +8842,7 @@ Cited chunk: \`${chunk.id}\``,
                   setCreateOpen(true);
                 },
                 children: [
-                  /* @__PURE__ */ jsx17(Icon, { name: "Plus", size: 13 }),
+                  /* @__PURE__ */ jsx18(Icon, { name: "Plus", size: 13 }),
                   " New notebook"
                 ]
               }
@@ -5289,13 +8850,53 @@ Cited chunk: \`${chunk.id}\``,
           ] }) : null
         ] }),
         /* @__PURE__ */ jsxs16("button", { type: "button", className: "sb-btn", onClick: () => setCreateOpen(true), children: [
-          /* @__PURE__ */ jsx17(Icon, { name: "Plus", size: 13 }),
+          /* @__PURE__ */ jsx18(Icon, { name: "Plus", size: 13 }),
           " New"
         ] })
       ] }),
       /* @__PURE__ */ jsxs16("div", { className: "sb-topbar-right", children: [
-        notebook ? /* @__PURE__ */ jsxs16(Fragment7, { children: [
-          /* @__PURE__ */ jsxs16("div", { style: { position: "relative" }, children: [
+        notebook ? /* @__PURE__ */ jsxs16(Fragment11, { children: [
+          hasNativeCatalogMenu && nativeModelController ? /* @__PURE__ */ jsxs16(NativeDropdownMenu, { open: modelMenuOpen, onOpenChange: (open) => {
+            setNbMenuOpen(false);
+            setModelMenuOpen(open);
+          }, children: [
+            /* @__PURE__ */ jsx18(NativeDropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsxs16(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn",
+                "data-active": Boolean(notebook.model),
+                title: "Choose which Hermes model runs this notebook (supports every authenticated provider in your Hermes agent)",
+                children: [
+                  /* @__PURE__ */ jsx18(Icon, { name: "Cpu", size: 12 }),
+                  /* @__PURE__ */ jsx18("span", { style: { maxWidth: 158, overflow: "hidden", textOverflow: "ellipsis" }, children: activeModelLabel }),
+                  /* @__PURE__ */ jsx18(Icon, { name: "ChevronDown", size: 11 })
+                ]
+              }
+            ) }),
+            /* @__PURE__ */ jsxs16(NativeDropdownMenuContent, { align: "end", style: { width: 320, padding: 0 }, children: [
+              NativeDropdownMenuItem ? /* @__PURE__ */ jsx18("div", { style: { padding: "4px 4px 0" }, children: /* @__PURE__ */ jsx18(
+                NativeDropdownMenuItem,
+                {
+                  onSelect: async () => {
+                    await patchNotebook({ provider: "", model: "" });
+                    setModelMenuOpen(false);
+                  },
+                  children: /* @__PURE__ */ jsxs16("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", gap: 8 }, children: [
+                    /* @__PURE__ */ jsx18("span", { style: { fontWeight: !notebook.model ? 650 : 500 }, children: "Auto (Active Hermes)" }),
+                    /* @__PURE__ */ jsx18("span", { className: "sb-mono", style: { fontSize: 10.5, opacity: 0.72, maxWidth: 136, overflow: "hidden", textOverflow: "ellipsis" }, children: defaultModelName || "default" })
+                  ] })
+                }
+              ) }) : null,
+              NativeDropdownMenuSeparator ? /* @__PURE__ */ jsx18(NativeDropdownMenuSeparator, {}) : null,
+              /* @__PURE__ */ jsx18(NativeModelMenuCloseContext.Provider, { value: () => setModelMenuOpen(false), children: /* @__PURE__ */ jsx18(NativeModelCatalogMenu, { controller: nativeModelController }) }),
+              modelsInfo && !modelsInfo.override_ready ? /* @__PURE__ */ jsxs16("div", { style: { padding: "6px 10px 8px", fontSize: 10.5, color: "var(--ui-text-tertiary)", borderTop: "1px solid var(--ui-stroke-tertiary)", lineHeight: 1.4 }, children: [
+                "Enable ",
+                /* @__PURE__ */ jsx18("span", { className: "sb-mono", children: "allow_model_override" }),
+                " in Hermes config to pin overrides (see Settings)."
+              ] }) : null
+            ] })
+          ] }) : /* @__PURE__ */ jsxs16("div", { style: { position: "relative" }, children: [
             /* @__PURE__ */ jsxs16(
               "button",
               {
@@ -5306,18 +8907,23 @@ Cited chunk: \`${chunk.id}\``,
                   setNbMenuOpen(false);
                   setCustomProvider(notebook.provider || "");
                   setCustomModel(notebook.model || "");
+                  setModelSearch("");
+                  if (!modelMenuOpen) loadGatewayCatalog();
                   setModelMenuOpen((v) => !v);
                 },
-                title: "Choose which Hermes model runs this notebook",
+                title: "Choose which Hermes model runs this notebook (supports every authenticated provider in your Hermes agent)",
                 children: [
-                  /* @__PURE__ */ jsx17(Icon, { name: "Cpu", size: 12 }),
-                  /* @__PURE__ */ jsx17("span", { style: { maxWidth: 145, overflow: "hidden", textOverflow: "ellipsis" }, children: activeModelLabel }),
-                  /* @__PURE__ */ jsx17(Icon, { name: "ChevronDown", size: 11 })
+                  /* @__PURE__ */ jsx18(Icon, { name: "Cpu", size: 12 }),
+                  /* @__PURE__ */ jsx18("span", { style: { maxWidth: 158, overflow: "hidden", textOverflow: "ellipsis" }, children: activeModelLabel }),
+                  /* @__PURE__ */ jsx18(Icon, { name: "ChevronDown", size: 11 })
                 ]
               }
             ),
-            modelMenuOpen ? /* @__PURE__ */ jsxs16("div", { className: "sb-model-menu", children: [
-              /* @__PURE__ */ jsx17("div", { style: { padding: "4px 8px", fontSize: 10.5, fontWeight: 650, color: "var(--ui-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em" }, children: "Notebook Model" }),
+            modelMenuOpen ? /* @__PURE__ */ jsxs16("div", { className: "sb-model-menu", style: { width: 324 }, children: [
+              /* @__PURE__ */ jsxs16("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 8px 2px" }, children: [
+                /* @__PURE__ */ jsx18("span", { style: { fontSize: 10.5, fontWeight: 650, color: "var(--ui-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em" }, children: "Hermes Model Picker" }),
+                modelsInfo?.override_ready ? /* @__PURE__ */ jsx18("span", { className: "sb-verdict", "data-v": "supported", style: { fontSize: 10, padding: "1px 6px" }, children: "Any model ready" }) : null
+              ] }),
               /* @__PURE__ */ jsxs16(
                 "button",
                 {
@@ -5330,70 +8936,104 @@ Cited chunk: \`${chunk.id}\``,
                     setModelMenuOpen(false);
                   },
                   children: [
-                    /* @__PURE__ */ jsx17("span", { children: "Auto (Active Hermes)" }),
-                    /* @__PURE__ */ jsx17("span", { className: "sb-mono", style: { fontSize: 10.5, opacity: 0.7 }, children: modelsInfo?.active?.model || "default" })
+                    /* @__PURE__ */ jsx18("span", { children: "Auto (Active Hermes)" }),
+                    /* @__PURE__ */ jsx18("span", { className: "sb-mono", style: { fontSize: 10.5, opacity: 0.72, maxWidth: 148, overflow: "hidden", textOverflow: "ellipsis" }, children: defaultModelName || "default" })
                   ]
                 }
               ),
-              (modelsInfo?.options || []).filter((o) => o.source !== "active").slice(0, 10).map((opt) => {
-                const active = notebook.model === opt.model && (notebook.provider || "") === (opt.provider || "");
-                return /* @__PURE__ */ jsxs16(
+              mergedCatalog.length > 0 ? /* @__PURE__ */ jsxs16("div", { style: { padding: "4px 4px 2px", display: "flex", flexDirection: "column", gap: 4 }, children: [
+                /* @__PURE__ */ jsx18(
+                  "input",
+                  {
+                    className: "sb-input",
+                    style: { height: 28, fontSize: 11.5 },
+                    value: modelSearch,
+                    onChange: (e) => setModelSearch(e.target.value),
+                    placeholder: `Search ${mergedCatalog.length} Hermes models...`
+                  }
+                ),
+                /* @__PURE__ */ jsx18("div", { className: "sb-scroll", style: { maxHeight: 240, display: "flex", flexDirection: "column", gap: 6, paddingRight: 2 }, children: groupedCatalog.map((grp) => /* @__PURE__ */ jsxs16("div", { style: { display: "flex", flexDirection: "column", gap: 2 }, children: [
+                  /* @__PURE__ */ jsxs16("div", { style: { fontSize: 10, fontWeight: 650, color: "var(--ui-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", padding: "2px 6px" }, children: [
+                    grp.label,
+                    " (",
+                    grp.items.length,
+                    ")"
+                  ] }),
+                  grp.items.slice(0, 24).map((opt) => {
+                    const active = notebook.model === opt.model && (notebook.provider || "") === (opt.provider || "");
+                    return /* @__PURE__ */ jsxs16(
+                      "button",
+                      {
+                        type: "button",
+                        className: "sb-btn sb-btn-ghost",
+                        style: { width: "100%", justifyContent: "space-between", height: 26 },
+                        "data-active": active,
+                        onClick: async () => {
+                          await patchNotebook({ provider: opt.provider || "", model: opt.model });
+                          setModelMenuOpen(false);
+                        },
+                        children: [
+                          /* @__PURE__ */ jsx18("span", { className: "sb-src-title", style: { fontSize: 12 }, children: opt.model }),
+                          active ? /* @__PURE__ */ jsx18(Icon, { name: "Check", size: 12, style: { color: "var(--ui-accent)" } }) : null
+                        ]
+                      },
+                      `${opt.provider}:${opt.model}`
+                    );
+                  })
+                ] }, grp.slug)) })
+              ] }) : null,
+              /* @__PURE__ */ jsxs16("div", { style: { borderTop: "1px solid var(--ui-stroke-tertiary)", marginTop: 4, paddingTop: 4 }, children: [
+                /* @__PURE__ */ jsxs16(
                   "button",
                   {
                     type: "button",
                     className: "sb-btn sb-btn-ghost",
-                    style: { width: "100%", justifyContent: "space-between" },
-                    "data-active": active,
-                    onClick: async () => {
-                      await patchNotebook({ provider: opt.provider || "", model: opt.model });
+                    style: { width: "100%", justifyContent: "space-between", fontSize: 11 },
+                    onClick: () => setShowCustomModel((v) => !v),
+                    children: [
+                      /* @__PURE__ */ jsx18("span", { children: "Custom provider / model ID" }),
+                      /* @__PURE__ */ jsx18(Icon, { name: showCustomModel ? "ChevronDown" : "ChevronRight", size: 11 })
+                    ]
+                  }
+                ),
+                showCustomModel ? /* @__PURE__ */ jsxs16(
+                  "form",
+                  {
+                    style: { padding: "6px 4px 4px", display: "flex", flexDirection: "column", gap: 6 },
+                    onSubmit: async (e) => {
+                      e.preventDefault();
+                      await patchNotebook({ provider: customProvider.trim(), model: customModel.trim() });
                       setModelMenuOpen(false);
                     },
                     children: [
-                      /* @__PURE__ */ jsx17("span", { className: "sb-src-title", children: opt.model }),
-                      opt.provider ? /* @__PURE__ */ jsx17("span", { className: "sb-kind-tag", children: opt.provider }) : null
+                      /* @__PURE__ */ jsx18(
+                        "input",
+                        {
+                          className: "sb-input",
+                          value: customProvider,
+                          onChange: (e) => setCustomProvider(e.target.value),
+                          placeholder: "Provider (e.g. openrouter, ollama, anthropic)"
+                        }
+                      ),
+                      /* @__PURE__ */ jsx18(
+                        "input",
+                        {
+                          className: "sb-input",
+                          value: customModel,
+                          onChange: (e) => setCustomModel(e.target.value),
+                          placeholder: "Model ID (e.g. claude-opus-5-5, qwen3:32b)"
+                        }
+                      ),
+                      /* @__PURE__ */ jsx18("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: !customModel.trim(), children: "Apply model" })
                     ]
-                  },
-                  `${opt.provider}:${opt.model}`
-                );
-              }),
-              /* @__PURE__ */ jsxs16(
-                "form",
-                {
-                  style: { borderTop: "1px solid var(--ui-stroke-tertiary)", marginTop: 4, padding: "8px 6px 4px", display: "flex", flexDirection: "column", gap: 6 },
-                  onSubmit: async (e) => {
-                    e.preventDefault();
-                    await patchNotebook({ provider: customProvider.trim(), model: customModel.trim() });
-                    setModelMenuOpen(false);
-                  },
-                  children: [
-                    /* @__PURE__ */ jsx17("span", { style: { fontSize: 10.5, color: "var(--ui-text-tertiary)" }, children: "Custom provider / model ID" }),
-                    /* @__PURE__ */ jsx17(
-                      "input",
-                      {
-                        className: "sb-input",
-                        value: customProvider,
-                        onChange: (e) => setCustomProvider(e.target.value),
-                        placeholder: "Provider (optional, e.g. ollama, openrouter)"
-                      }
-                    ),
-                    /* @__PURE__ */ jsx17(
-                      "input",
-                      {
-                        className: "sb-input",
-                        value: customModel,
-                        onChange: (e) => setCustomModel(e.target.value),
-                        placeholder: "Model ID (e.g. gpt-5, qwen3:32b)"
-                      }
-                    ),
-                    /* @__PURE__ */ jsx17("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: !customModel.trim(), children: "Apply model" }),
-                    modelsInfo && !modelsInfo.override_ready ? /* @__PURE__ */ jsxs16("div", { style: { fontSize: 10.5, color: "var(--ui-text-tertiary)", lineHeight: 1.4 }, children: [
-                      "Note: To use explicit overrides, enable ",
-                      /* @__PURE__ */ jsx17("span", { className: "sb-mono", children: "allow_model_override" }),
-                      " in Hermes config (see Settings)."
-                    ] }) : null
-                  ]
-                }
-              )
+                  }
+                ) : null,
+                modelsInfo && !modelsInfo.override_ready ? /* @__PURE__ */ jsxs16("div", { style: { padding: "4px 6px", fontSize: 10.5, color: "var(--ui-text-tertiary)", lineHeight: 1.4 }, children: [
+                  "Enable ",
+                  /* @__PURE__ */ jsx18("span", { className: "sb-mono", children: "allow_model_override" }),
+                  " in Hermes config to pin overrides (see Settings)."
+                ] }) : null
+              ] })
             ] }) : null
           ] }),
           /* @__PURE__ */ jsxs16(
@@ -5404,8 +9044,8 @@ Cited chunk: \`${chunk.id}\``,
               title: "Open Coverage Map",
               onClick: () => setCenterTab("coverage"),
               children: [
-                /* @__PURE__ */ jsx17("span", { children: "Coverage" }),
-                /* @__PURE__ */ jsx17("span", { className: "sb-cov-track", children: /* @__PURE__ */ jsx17("span", { className: "sb-cov-fill", style: { width: `${covPct}%` } }) }),
+                /* @__PURE__ */ jsx18("span", { children: "Coverage" }),
+                /* @__PURE__ */ jsx18("span", { className: "sb-cov-track", children: /* @__PURE__ */ jsx18("span", { className: "sb-cov-fill sb-dither-fill", style: { width: `${covPct}%` } }) }),
                 /* @__PURE__ */ jsxs16("span", { className: "sb-mono", style: { fontWeight: 600 }, children: [
                   covPct,
                   "%"
@@ -5422,7 +9062,7 @@ Cited chunk: \`${chunk.id}\``,
               onClick: () => patchNotebook({ strict: !notebook.strict }),
               title: "Strict grounding refuses any claim unsupported by active sources",
               children: [
-                /* @__PURE__ */ jsx17(Icon, { name: "Lock", size: 12 }),
+                /* @__PURE__ */ jsx18(Icon, { name: "Lock", size: 12 }),
                 " ",
                 notebook.strict ? "Strict" : "Grounded"
               ]
@@ -5441,7 +9081,7 @@ Cited chunk: \`${chunk.id}\``,
             },
             title: "Search across all notebooks (Ctrl+K)",
             children: [
-              /* @__PURE__ */ jsx17(Icon, { name: "Search", size: 12 }),
+              /* @__PURE__ */ jsx18(Icon, { name: "Search", size: 12 }),
               " Search"
             ]
           }
@@ -5449,15 +9089,24 @@ Cited chunk: \`${chunk.id}\``,
       ] })
     ] }),
     error ? /* @__PURE__ */ jsxs16("div", { className: "sb-error-bar", role: "alert", children: [
-      /* @__PURE__ */ jsx17("span", { children: error }),
-      /* @__PURE__ */ jsx17("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setError(""), children: /* @__PURE__ */ jsx17(Icon, { name: "X", size: 13 }) })
+      /* @__PURE__ */ jsx18("span", { children: error }),
+      /* @__PURE__ */ jsx18("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setError(""), children: /* @__PURE__ */ jsx18(Icon, { name: "X", size: 13 }) })
     ] }) : null,
-    !loading && !nbId ? /* @__PURE__ */ jsxs16("div", { className: "sb-empty", style: { flex: 1, justifyContent: "center" }, children: [
-      /* @__PURE__ */ jsx17(BrandMark, { size: 38, style: { color: "var(--ui-text-primary)" } }),
-      /* @__PURE__ */ jsx17("div", { style: { fontSize: 16, fontWeight: 650, color: "var(--ui-text-primary)" }, children: "Create your first research notebook" }),
-      /* @__PURE__ */ jsx17("div", { style: { maxWidth: 440, fontSize: 13 }, children: "Collect PDFs, DOCX files, Markdown, CSV tables, YouTube videos, local folders, and web URLs in one workspace. Every answer cites exact passages and runs on any model configured in Hermes." }),
-      /* @__PURE__ */ jsxs16("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => setCreateOpen(true), children: [
-        /* @__PURE__ */ jsx17(Icon, { name: "Plus", size: 13 }),
+    !loading && !nbId ? /* @__PURE__ */ jsxs16("div", { className: "sb-empty", style: { flex: 1, justifyContent: "center", position: "relative", overflow: "hidden" }, children: [
+      /* @__PURE__ */ jsx18(
+        DitherCanvas,
+        {
+          variant: "aurora",
+          animated: false,
+          opacity: 0.22,
+          style: { position: "absolute", inset: "0 0 auto 0", width: "100%", height: 150, pointerEvents: "none" }
+        }
+      ),
+      /* @__PURE__ */ jsx18(BrandMark, { size: 38, style: { color: "var(--ui-text-primary)", position: "relative" } }),
+      /* @__PURE__ */ jsx18("div", { style: { fontSize: 16, fontWeight: 650, color: "var(--ui-text-primary)", position: "relative" }, children: "Create your first research notebook" }),
+      /* @__PURE__ */ jsx18("div", { style: { maxWidth: 440, fontSize: 13, position: "relative" }, children: "Collect PDFs, DOCX files, Markdown, CSV tables, YouTube videos, local folders, and web URLs in one workspace. Every answer cites exact passages and runs on any model configured in Hermes." }),
+      /* @__PURE__ */ jsxs16("button", { type: "button", className: "sb-btn sb-btn-primary", style: { position: "relative" }, onClick: () => setCreateOpen(true), children: [
+        /* @__PURE__ */ jsx18(Icon, { name: "Plus", size: 13 }),
         " New notebook"
       ] })
     ] }) : /* @__PURE__ */ jsxs16(
@@ -5467,7 +9116,7 @@ Cited chunk: \`${chunk.id}\``,
         "data-left-collapsed": leftCollapsed,
         "data-studio-expanded": studioExpanded,
         children: [
-          /* @__PURE__ */ jsx17(
+          /* @__PURE__ */ jsx18(
             SidebarSources,
             {
               nbId,
@@ -5480,7 +9129,7 @@ Cited chunk: \`${chunk.id}\``,
               onError: setError
             }
           ),
-          /* @__PURE__ */ jsx17(
+          /* @__PURE__ */ jsx18(
             ChatPanel,
             {
               ctx,
@@ -5499,7 +9148,7 @@ Cited chunk: \`${chunk.id}\``,
               onError: setError
             }
           ),
-          /* @__PURE__ */ jsx17(
+          /* @__PURE__ */ jsx18(
             StudioPanel,
             {
               ctx,
@@ -5519,7 +9168,7 @@ Cited chunk: \`${chunk.id}\``,
         ]
       }
     ),
-    /* @__PURE__ */ jsx17(
+    /* @__PURE__ */ jsx18(
       SourceInspector,
       {
         nbId,
@@ -5528,14 +9177,14 @@ Cited chunk: \`${chunk.id}\``,
         onPromoteQuote: handlePromoteQuote
       }
     ),
-    createOpen ? /* @__PURE__ */ jsx17("div", { className: "sb-modal-backdrop", onClick: () => setCreateOpen(false), children: /* @__PURE__ */ jsxs16("form", { className: "sb-modal", onClick: (e) => e.stopPropagation(), onSubmit: handleCreateNotebook, children: [
+    createOpen ? /* @__PURE__ */ jsx18("div", { className: "sb-modal-backdrop", onClick: () => setCreateOpen(false), children: /* @__PURE__ */ jsxs16("form", { className: "sb-modal", onClick: (e) => e.stopPropagation(), onSubmit: handleCreateNotebook, children: [
       /* @__PURE__ */ jsxs16("div", { className: "sb-modal-head", children: [
-        /* @__PURE__ */ jsx17("span", { children: "New research notebook" }),
-        /* @__PURE__ */ jsx17("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setCreateOpen(false), children: /* @__PURE__ */ jsx17(Icon, { name: "X", size: 14 }) })
+        /* @__PURE__ */ jsx18("span", { children: "New research notebook" }),
+        /* @__PURE__ */ jsx18("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setCreateOpen(false), children: /* @__PURE__ */ jsx18(Icon, { name: "X", size: 14 }) })
       ] }),
-      /* @__PURE__ */ jsx17("div", { className: "sb-modal-body", children: /* @__PURE__ */ jsxs16("label", { className: "sb-field", children: [
-        /* @__PURE__ */ jsx17("span", { className: "sb-label", children: "Notebook title" }),
-        /* @__PURE__ */ jsx17(
+      /* @__PURE__ */ jsx18("div", { className: "sb-modal-body", children: /* @__PURE__ */ jsxs16("label", { className: "sb-field", children: [
+        /* @__PURE__ */ jsx18("span", { className: "sb-label", children: "Notebook title" }),
+        /* @__PURE__ */ jsx18(
           "input",
           {
             className: "sb-input",
@@ -5548,17 +9197,17 @@ Cited chunk: \`${chunk.id}\``,
         )
       ] }) }),
       /* @__PURE__ */ jsxs16("div", { className: "sb-modal-foot", children: [
-        /* @__PURE__ */ jsx17("button", { type: "button", className: "sb-btn", onClick: () => setCreateOpen(false), children: "Cancel" }),
-        /* @__PURE__ */ jsx17("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: !newTitle.trim(), children: "Create" })
+        /* @__PURE__ */ jsx18("button", { type: "button", className: "sb-btn", onClick: () => setCreateOpen(false), children: "Cancel" }),
+        /* @__PURE__ */ jsx18("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: !newTitle.trim(), children: "Create" })
       ] })
     ] }) }) : null,
-    searchOpen ? /* @__PURE__ */ jsx17("div", { className: "sb-modal-backdrop", onClick: () => setSearchOpen(false), children: /* @__PURE__ */ jsxs16("div", { className: "sb-modal", onClick: (e) => e.stopPropagation(), children: [
+    searchOpen ? /* @__PURE__ */ jsx18("div", { className: "sb-modal-backdrop", onClick: () => setSearchOpen(false), children: /* @__PURE__ */ jsxs16("div", { className: "sb-modal", onClick: (e) => e.stopPropagation(), children: [
       /* @__PURE__ */ jsxs16("div", { className: "sb-modal-head", children: [
-        /* @__PURE__ */ jsx17("span", { children: "Search across all notebooks" }),
-        /* @__PURE__ */ jsx17("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setSearchOpen(false), children: /* @__PURE__ */ jsx17(Icon, { name: "X", size: 14 }) })
+        /* @__PURE__ */ jsx18("span", { children: "Search across all notebooks" }),
+        /* @__PURE__ */ jsx18("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setSearchOpen(false), children: /* @__PURE__ */ jsx18(Icon, { name: "X", size: 14 }) })
       ] }),
       /* @__PURE__ */ jsxs16("div", { className: "sb-modal-body", children: [
-        /* @__PURE__ */ jsx17(
+        /* @__PURE__ */ jsx18(
           "input",
           {
             className: "sb-input",
@@ -5568,7 +9217,7 @@ Cited chunk: \`${chunk.id}\``,
             autoFocus: true
           }
         ),
-        searchHits.length === 0 && searchQuery.trim() ? /* @__PURE__ */ jsx17("div", { className: "sb-empty", children: "No matching passages found." }) : null,
+        searchHits.length === 0 && searchQuery.trim() ? /* @__PURE__ */ jsx18("div", { className: "sb-empty", children: "No matching passages found." }) : null,
         searchHits.map((hit) => /* @__PURE__ */ jsxs16(
           "div",
           {
@@ -5586,9 +9235,9 @@ Cited chunk: \`${chunk.id}\``,
                   " / ",
                   hit.source_title
                 ] }),
-                /* @__PURE__ */ jsx17("span", { className: "sb-mono", style: { color: "var(--ui-accent)" }, children: hit.chunk_id })
+                /* @__PURE__ */ jsx18("span", { className: "sb-mono", style: { color: "var(--ui-accent)" }, children: hit.chunk_id })
               ] }),
-              /* @__PURE__ */ jsx17("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: hit.snippet })
+              /* @__PURE__ */ jsx18("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: hit.snippet })
             ]
           },
           `${hit.notebook_id}-${hit.chunk_id}`
@@ -5599,13 +9248,13 @@ Cited chunk: \`${chunk.id}\``,
 }
 
 // desktop-src/SettingsPage.jsx
-import { useEffect as useEffect9, useState as useState12 } from "react";
-import { jsx as jsx18, jsxs as jsxs17 } from "react/jsx-runtime";
+import { useEffect as useEffect10, useState as useState13 } from "react";
+import { jsx as jsx19, jsxs as jsxs17 } from "react/jsx-runtime";
 function SettingsPage() {
-  const [caps, setCaps] = useState12(null);
-  const [modelsInfo, setModelsInfo] = useState12(null);
-  const [err, setErr] = useState12("");
-  useEffect9(() => {
+  const [caps, setCaps] = useState13(null);
+  const [modelsInfo, setModelsInfo] = useState13(null);
+  const [err, setErr] = useState13("");
+  useEffect10(() => {
     let alive = true;
     Promise.all([api("/capabilities"), api("/models").catch(() => null)]).then(([c, m]) => {
       if (!alive) return;
@@ -5636,35 +9285,35 @@ function SettingsPage() {
     "hermes config set plugins.entries.sourcebook.llm.allow_provider_override true"
   ]).join("\n");
   return /* @__PURE__ */ jsxs17("div", { className: "sb-root", style: { height: "auto", overflow: "visible", background: "transparent" }, children: [
-    /* @__PURE__ */ jsx18(Styles, {}),
+    /* @__PURE__ */ jsx19(Styles, {}),
     /* @__PURE__ */ jsxs17("div", { style: { display: "flex", flexDirection: "column", gap: 14, maxWidth: 680 }, children: [
       /* @__PURE__ */ jsxs17("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }, children: [
         /* @__PURE__ */ jsxs17("div", { style: { display: "flex", alignItems: "center", gap: 10 }, children: [
-          /* @__PURE__ */ jsx18("span", { className: "sb-brand-mark", style: { width: 32, height: 32, borderRadius: 8 }, children: /* @__PURE__ */ jsx18(BrandMark, { size: 20 }) }),
+          /* @__PURE__ */ jsx19("span", { className: "sb-brand-mark", style: { width: 32, height: 32, borderRadius: 8 }, children: /* @__PURE__ */ jsx19(BrandMark, { size: 20 }) }),
           /* @__PURE__ */ jsxs17("div", { children: [
-            /* @__PURE__ */ jsx18("div", { style: { fontWeight: 650, fontSize: 14 }, children: "SourceBook Research Notebooks" }),
-            /* @__PURE__ */ jsx18("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", marginTop: 2 }, children: "Universal Hermes model routing, hybrid search, Claim Ledger contradictions, and 8 Studio formats including Audio Overviews." })
+            /* @__PURE__ */ jsx19("div", { style: { fontWeight: 650, fontSize: 14 }, children: "SourceBook Research Notebooks" }),
+            /* @__PURE__ */ jsx19("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", marginTop: 2 }, children: "Universal Hermes model routing, hybrid search, Claim Ledger contradictions, and 8 Studio formats including Audio Overviews." })
           ] })
         ] }),
         /* @__PURE__ */ jsxs17("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => sdk.host?.navigate?.("/sourcebook"), children: [
-          /* @__PURE__ */ jsx18(BrandMark, { size: 13, accent: "rgba(255,255,255,0.72)" }),
+          /* @__PURE__ */ jsx19(BrandMark, { size: 13, accent: "rgba(255,255,255,0.72)" }),
           " Open SourceBook"
         ] })
       ] }),
-      err ? /* @__PURE__ */ jsx18("div", { className: "sb-error-bar", style: { margin: 0 }, children: err }) : null,
-      /* @__PURE__ */ jsx18("div", { className: "sb-table-wrap", children: /* @__PURE__ */ jsxs17("table", { className: "sb-table", children: [
-        /* @__PURE__ */ jsx18("thead", { children: /* @__PURE__ */ jsxs17("tr", { children: [
-          /* @__PURE__ */ jsx18("th", { children: "Capability" }),
-          /* @__PURE__ */ jsx18("th", { children: "Status" })
+      err ? /* @__PURE__ */ jsx19("div", { className: "sb-error-bar", style: { margin: 0 }, children: err }) : null,
+      /* @__PURE__ */ jsx19("div", { className: "sb-table-wrap", children: /* @__PURE__ */ jsxs17("table", { className: "sb-table", children: [
+        /* @__PURE__ */ jsx19("thead", { children: /* @__PURE__ */ jsxs17("tr", { children: [
+          /* @__PURE__ */ jsx19("th", { children: "Capability" }),
+          /* @__PURE__ */ jsx19("th", { children: "Status" })
         ] }) }),
-        /* @__PURE__ */ jsx18("tbody", { children: rows.map(([label, status]) => /* @__PURE__ */ jsxs17("tr", { children: [
-          /* @__PURE__ */ jsx18("td", { style: { fontWeight: 550 }, children: label }),
-          /* @__PURE__ */ jsx18("td", { style: { color: "var(--ui-text-secondary)" }, children: caps ? status : "Checking..." })
+        /* @__PURE__ */ jsx19("tbody", { children: rows.map(([label, status]) => /* @__PURE__ */ jsxs17("tr", { children: [
+          /* @__PURE__ */ jsx19("td", { style: { fontWeight: 550 }, children: label }),
+          /* @__PURE__ */ jsx19("td", { style: { color: "var(--ui-text-secondary)" }, children: caps ? status : "Checking..." })
         ] }, label)) })
       ] }) }),
       /* @__PURE__ */ jsxs17("div", { className: "sb-ledger-row", children: [
         /* @__PURE__ */ jsxs17("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
-          /* @__PURE__ */ jsx18("strong", { style: { fontSize: 12 }, children: "Use any Hermes model per notebook" }),
+          /* @__PURE__ */ jsx19("strong", { style: { fontSize: 12 }, children: "Use any Hermes model per notebook" }),
           /* @__PURE__ */ jsxs17(
             "button",
             {
@@ -5675,7 +9324,7 @@ function SettingsPage() {
                 sdk.host?.notify?.({ kind: "success", title: "SourceBook", message: "Copied Hermes config commands." });
               },
               children: [
-                /* @__PURE__ */ jsx18(Icon, { name: "Copy", size: 12 }),
+                /* @__PURE__ */ jsx19(Icon, { name: "Copy", size: 12 }),
                 " Copy commands"
               ]
             }
@@ -5683,32 +9332,32 @@ function SettingsPage() {
         ] }),
         /* @__PURE__ */ jsxs17("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: [
           "SourceBook automatically works with your active Hermes model or auxiliary task slots (",
-          /* @__PURE__ */ jsx18("span", { className: "sb-mono", children: "sourcebook_chat" }),
+          /* @__PURE__ */ jsx19("span", { className: "sb-mono", children: "sourcebook_chat" }),
           ", ",
-          /* @__PURE__ */ jsx18("span", { className: "sb-mono", children: "sourcebook_studio" }),
+          /* @__PURE__ */ jsx19("span", { className: "sb-mono", children: "sourcebook_studio" }),
           ", ",
-          /* @__PURE__ */ jsx18("span", { className: "sb-mono", children: "sourcebook_audio" }),
+          /* @__PURE__ */ jsx19("span", { className: "sb-mono", children: "sourcebook_audio" }),
           ", ",
-          /* @__PURE__ */ jsx18("span", { className: "sb-mono", children: "sourcebook_ingest" }),
+          /* @__PURE__ */ jsx19("span", { className: "sb-mono", children: "sourcebook_ingest" }),
           "). To pick any provider or model per notebook directly inside SourceBook, run:"
         ] }),
-        /* @__PURE__ */ jsx18("pre", { className: "sb-mono sb-code-pre", style: { borderRadius: 7, border: "1px solid var(--ui-stroke-tertiary)" }, children: setupCmd })
+        /* @__PURE__ */ jsx19("pre", { className: "sb-mono sb-code-pre", style: { borderRadius: 7, border: "1px solid var(--ui-stroke-tertiary)" }, children: setupCmd })
       ] }),
       /* @__PURE__ */ jsxs17("div", { className: "sb-ledger-row", children: [
-        /* @__PURE__ */ jsx18("strong", { style: { fontSize: 12 }, children: "Slash commands" }),
+        /* @__PURE__ */ jsx19("strong", { style: { fontSize: 12 }, children: "Slash commands" }),
         /* @__PURE__ */ jsxs17("div", { className: "sb-mono", style: { fontSize: 11.5, color: "var(--ui-text-secondary)", lineHeight: 1.7 }, children: [
           "/sourcebook list",
-          /* @__PURE__ */ jsx18("br", {}),
+          /* @__PURE__ */ jsx19("br", {}),
           "/sourcebook use <nb_id>",
-          /* @__PURE__ */ jsx18("br", {}),
+          /* @__PURE__ */ jsx19("br", {}),
           "/sourcebook model <nb_id> <provider/model|auto>",
-          /* @__PURE__ */ jsx18("br", {}),
+          /* @__PURE__ */ jsx19("br", {}),
           "/sourcebook sync <nb_id> <local_path>",
-          /* @__PURE__ */ jsx18("br", {}),
+          /* @__PURE__ */ jsx19("br", {}),
           "/sourcebook add <nb_id> <url or text>",
-          /* @__PURE__ */ jsx18("br", {}),
+          /* @__PURE__ */ jsx19("br", {}),
           "/sourcebook ask <nb_id> <question>",
-          /* @__PURE__ */ jsx18("br", {}),
+          /* @__PURE__ */ jsx19("br", {}),
           "/sourcebook make <nb_id> <kind> [focus]"
         ] })
       ] })
@@ -5717,7 +9366,7 @@ function SettingsPage() {
 }
 
 // desktop-src/plugin.jsx
-import { jsx as jsx19, jsxs as jsxs18 } from "react/jsx-runtime";
+import { jsx as jsx20, jsxs as jsxs18 } from "react/jsx-runtime";
 var ROUTE = "/sourcebook";
 function StatusChip({ externalState }) {
   const state = typeof sdk.useValue === "function" && externalState ? sdk.useValue(externalState) : null;
@@ -5730,8 +9379,8 @@ function StatusChip({ externalState }) {
       onClick: () => sdk.host?.navigate?.(ROUTE),
       title: `Open SourceBook: ${state.title}`,
       children: [
-        /* @__PURE__ */ jsx19(BrandMark, { size: 13 }),
-        /* @__PURE__ */ jsx19("span", { children: state.title }),
+        /* @__PURE__ */ jsx20(BrandMark, { size: 13 }),
+        /* @__PURE__ */ jsx20("span", { children: state.title }),
         state.dueCards > 0 ? /* @__PURE__ */ jsxs18("span", { className: "sb-mono", children: [
           "(",
           state.dueCards,
@@ -5756,9 +9405,9 @@ function CiteDirective({ props, externalState }) {
         sdk.host?.navigate?.(ROUTE);
       },
       children: [
-        /* @__PURE__ */ jsx19(BrandMark, { size: 14 }),
-        /* @__PURE__ */ jsx19("span", { children: "SourceBook source" }),
-        chunk ? /* @__PURE__ */ jsx19("span", { className: "sb-mono", children: chunk }) : null
+        /* @__PURE__ */ jsx20(BrandMark, { size: 14 }),
+        /* @__PURE__ */ jsx20("span", { children: "SourceBook source" }),
+        chunk ? /* @__PURE__ */ jsx20("span", { className: "sb-mono", children: chunk }) : null
       ]
     }
   );
@@ -5766,7 +9415,7 @@ function CiteDirective({ props, externalState }) {
 var plugin_default = {
   id: "sourcebook",
   name: "SourceBook",
-  description: "Source-grounded research notebooks, Claim Ledger, Coverage Map, and 7-format interactive Studio.",
+  description: "Source-grounded research notebooks, Claim Ledger, Coverage Map, and 8-format interactive Studio.",
   register(ctx) {
     bindContext(ctx);
     const externalState = typeof sdk.atom === "function" ? sdk.atom({ title: "", dueCards: 0, nbId: "", pendingJump: null }) : null;
@@ -5774,7 +9423,7 @@ var plugin_default = {
       id: "page",
       area: sdk.ROUTES_AREA,
       data: { path: ROUTE },
-      render: () => /* @__PURE__ */ jsx19(SourceBookWorkspace, { ctx, externalState })
+      render: () => /* @__PURE__ */ jsx20(SourceBookWorkspace, { ctx, externalState })
     });
     ctx.register({
       id: "nav",
@@ -5797,7 +9446,7 @@ var plugin_default = {
       ctx.register({
         id: "status",
         area: sdk.STATUSBAR_AREAS.right,
-        render: () => /* @__PURE__ */ jsx19(StatusChip, { externalState })
+        render: () => /* @__PURE__ */ jsx20(StatusChip, { externalState })
       });
     }
     if (sdk.TRANSCRIPT_DIRECTIVE_AREA) {
@@ -5805,7 +9454,7 @@ var plugin_default = {
         id: "cite-directive",
         area: sdk.TRANSCRIPT_DIRECTIVE_AREA,
         data: { name: "cite" },
-        render: (props) => /* @__PURE__ */ jsx19(CiteDirective, { props, externalState })
+        render: (props) => /* @__PURE__ */ jsx20(CiteDirective, { props, externalState })
       });
     }
     if (typeof ctx.registerSettingsPage === "function") {
@@ -5813,7 +9462,7 @@ var plugin_default = {
         id: "sourcebook",
         title: "SourceBook",
         description: "Source-grounded research notebooks and Studio.",
-        render: () => /* @__PURE__ */ jsx19(SettingsPage, {})
+        render: () => /* @__PURE__ */ jsx20(SettingsPage, {})
       });
     }
   }

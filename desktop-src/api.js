@@ -107,6 +107,34 @@ export function downloadTextFile(filename, content, mime = 'text/plain;charset=u
   }
 }
 
+export function downloadBinaryBase64(filename, b64, mime = 'application/octet-stream') {
+  const raw = atob(String(b64 || ''))
+  const bytes = new Uint8Array(raw.length)
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i)
+  const blob = new Blob([bytes], { type: mime })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  if (activeCtx && typeof activeCtx.setTimeout === 'function') {
+    activeCtx.setTimeout(() => URL.revokeObjectURL(url), 1200)
+  } else {
+    URL.revokeObjectURL(url)
+  }
+}
+
+export async function loadArtifactMediaDataUrl(nbId, aid, fname) {
+  if (!nbId || !aid || !fname) return null
+  const res = await api(
+    `/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(aid)}/media-data/${encodeURIComponent(fname)}`
+  )
+  if (res?.available && res.b64) {
+    return `data:${res.mime || 'image/png'};base64,${res.b64}`
+  }
+  return null
+}
+
 // Resolve modern CSS colors (including var(--ui-*) and color-mix(...)) to concrete sRGB hex
 // via an offscreen 1x1 Canvas2D context so copied/downloaded SVGs render standalone anywhere.
 export function resolveCssColor(expr, scopeEl) {

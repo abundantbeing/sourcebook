@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon, sdk } from './sdk.js'
 import { Styles } from './styles.js'
 import { api, currentEpoch, currentScopeKey } from './api.js'
@@ -7,6 +7,7 @@ import { SourceInspector } from './components/SourceInspector.jsx'
 import { ChatPanel } from './components/ChatPanel.jsx'
 import { StudioPanel } from './components/StudioPanel.jsx'
 import { BrandMark } from './components/BrandMark.jsx'
+import { DitherCanvas } from './components/DitherSurface.jsx'
 
 export function SourceBookWorkspace({ ctx, externalState }) {
   const profile = typeof sdk.useValue === 'function' && sdk.host?.state?.profile
@@ -16,6 +17,9 @@ export function SourceBookWorkspace({ ctx, externalState }) {
     ? sdk.useValue(sdk.host.state.connectionId)
     : 'local'
   const epoch = typeof sdk.useGatewayActivationEpoch === 'function' ? sdk.useGatewayActivationEpoch() : 0
+  const liveHostModel = typeof sdk.useValue === 'function' && sdk.host?.state?.model
+    ? sdk.useValue(sdk.host.state.model)
+    : ''
 
   const [notebooks, setNotebooks] = useState([])
   const [nbId, setNbId] = useState('')
@@ -28,6 +32,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
   const [coverage, setCoverage] = useState(null)
   const [artifacts, setArtifacts] = useState([])
   const [modelsInfo, setModelsInfo] = useState(null)
+  const [gatewayModelCatalog, setGatewayModelCatalog] = useState([])
   const [capabilities, setCapabilities] = useState(null)
 
   const [centerTab, setCenterTab] = useState('chat')
@@ -37,6 +42,8 @@ export function SourceBookWorkspace({ ctx, externalState }) {
   const [studioExpanded, setStudioExpanded] = useState(false)
   const [nbMenuOpen, setNbMenuOpen] = useState(false)
   const [modelMenuOpen, setModelMenuOpen] = useState(false)
+  const [modelSearch, setModelSearch] = useState('')
+  const [showCustomModel, setShowCustomModel] = useState(false)
   const [customProvider, setCustomProvider] = useState('')
   const [customModel, setCustomModel] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
@@ -50,6 +57,37 @@ export function SourceBookWorkspace({ ctx, externalState }) {
   const reqSeqRef = useRef(0)
 
   const storageKey = `activeNotebook::${connectionId || 'local'}::${profile || 'default'}`
+
+  // Fetch the user's FULL live Hermes authenticated model catalog via gateway `model.options` RPC
+  const loadGatewayCatalog = useCallback(async () => {
+    if (typeof sdk.host?.request !== 'function') return
+    try {
+      const res = await sdk.host.request('model.options', {
+        include_unconfigured: false,
+        explicit_only: false
+      })
+      const providers = Array.isArray(res?.providers) ? res.providers : []
+      const flat = []
+      for (const p of providers) {
+        if (!p || !p.slug) continue
+        const pName = p.name || p.slug
+        const mList = Array.isArray(p.models) ? p.models : []
+        for (const m of mList) {
+          const mid = typeof m === 'string' ? m : (m?.id || m?.name || '')
+          if (!mid) continue
+          flat.push({
+            provider: p.slug,
+            providerLabel: pName,
+            model: mid,
+            source: 'hermes'
+          })
+        }
+      }
+      setGatewayModelCatalog(flat)
+    } catch {
+      // Fallback gracefully to backend /models list
+    }
+  }, [])
 
   const loadNotebookData = useCallback(async targetNb => {
     if (!targetNb) {
@@ -103,6 +141,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
         api('/models').catch(() => null),
         api('/capabilities').catch(() => null)
       ])
+      loadGatewayCatalog()
       if (currentScopeKey() !== startScope || currentEpoch() !== startEpoch) return
       if (mInfo) setModelsInfo(mInfo)
       if (caps) setCapabilities(caps)
@@ -127,7 +166,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
     } finally {
       setLoading(false)
     }
-  }, [ctx, storageKey, loadNotebookData])
+  }, [ctx, storageKey, loadNotebookData, loadGatewayCatalog])
 
   // Re-scope cleanly whenever profile, connection, or gateway epoch changes
   useEffect(() => {
@@ -258,11 +297,94 @@ export function SourceBookWorkspace({ ctx, externalState }) {
     }
   }
 
+  // Merge live Hermes gateway catalog (`model.options`) + backend config options into a deduplicated searchable list
+  const mergedCatalog = useMemo(() => {
+    const seen = new Set()
+    const out = []
+    const push = item => {
+      const p = String(item.provider || '').trim()
+      const m = String(item.model || '').trim()
+      if (!m) return
+      const key = `${p.toLowerCase()}::${m.toLowerCase()}`
+      if (seen.has(key)) return
+      seen.add(key)
+      out.push({
+        provider: p,
+        providerLabel: item.providerLabel || p || 'Hermes',
+        model: m,
+        source: item.source || 'config'
+      })
+    }
+    for (const row of gatewayModelCatalog) push(row)
+    for (const row of (modelsInfo?.options || [])) {
+      if (row.source !== 'active') push(row)
+    }
+    const q = modelSearch.trim().toLowerCase()
+    if (!q) return out
+    return out.filter(
+      it => it.model.toLowerCase().includes(q) || it.provider.toLowerCase().includes(q) || it.providerLabel.toLowerCase().includes(q)
+    )
+  }, [gatewayModelCatalog, modelsInfo, modelSearch])
+
+  const groupedCatalog = useMemo(() => {
+    const groups = new Map()
+    for (const item of mergedCatalog) {
+      const gKey = item.provider || 'configured'
+      if (!groups.has(gKey)) {
+        groups.set(gKey, { slug: gKey, label: item.providerLabel || gKey, items: [] })
+      }
+      groups.get(gKey).items.push(item)
+    }
+    return Array.from(groups.values())
+  }, [mergedCatalog])
+
+  const hasNativeCatalogMenu =
+    typeof sdk.ModelCatalogMenu === 'function' &&
+    Boolean(sdk.ModelMenuCloseContext) &&
+    typeof sdk.DropdownMenu === 'function' &&
+    typeof sdk.DropdownMenuTrigger === 'function' &&
+    typeof sdk.DropdownMenuContent === 'function'
+  const NativeModelCatalogMenu = sdk.ModelCatalogMenu
+  const NativeModelMenuCloseContext = sdk.ModelMenuCloseContext
+  const NativeDropdownMenu = sdk.DropdownMenu
+  const NativeDropdownMenuTrigger = sdk.DropdownMenuTrigger
+  const NativeDropdownMenuContent = sdk.DropdownMenuContent
+  const NativeDropdownMenuItem = sdk.DropdownMenuItem
+  const NativeDropdownMenuSeparator = sdk.DropdownMenuSeparator
+
+  const nativeModelController = useMemo(() => {
+    if (!hasNativeCatalogMenu || !notebook) return null
+    return {
+      allowSpeed: false,
+      current: {
+        effort: '',
+        fast: false,
+        model: notebook.model || modelsInfo?.active?.model || liveHostModel || '',
+        provider: notebook.provider || modelsInfo?.active?.provider || ''
+      },
+      presetFor: () => ({}),
+      applyPreset: (_preset, row) => {
+        patchNotebook({ provider: row.provider || '', model: row.model || '' })
+        setModelMenuOpen(false)
+      },
+      select: (model, provider) => {
+        patchNotebook({ provider: provider || '', model: model || '' })
+        setModelMenuOpen(false)
+      },
+      setOptions: (_patch, row) => {
+        if (row?.model) {
+          patchNotebook({ provider: row.provider || '', model: row.model })
+        }
+      }
+    }
+  }, [hasNativeCatalogMenu, notebook, modelsInfo, liveHostModel])
+
   const covPct = coverage?.total_chunks ? Math.round((coverage.touched_chunks / coverage.total_chunks) * 100) : 0
   const hasActiveSources = sources.some(s => s.enabled)
+  const defaultModelName = modelsInfo?.active?.model || liveHostModel || ''
   const activeModelLabel = notebook?.model
     ? notebook.model
-    : (modelsInfo?.active?.model ? `Auto: ${modelsInfo.active.model}` : 'Auto (Hermes)')
+    : (defaultModelName ? `Auto: ${defaultModelName}` : 'Auto (Hermes)')
 
   return (
     <div className="sb-root" style={{ position: 'relative' }}>
@@ -362,97 +484,191 @@ export function SourceBookWorkspace({ ctx, externalState }) {
         <div className="sb-topbar-right">
           {notebook ? (
             <>
-              <div style={{ position: 'relative' }}>
-                <button
-                  type="button"
-                  className="sb-btn"
-                  data-active={Boolean(notebook.model)}
-                  onClick={() => {
-                    setNbMenuOpen(false)
-                    setCustomProvider(notebook.provider || '')
-                    setCustomModel(notebook.model || '')
-                    setModelMenuOpen(v => !v)
-                  }}
-                  title="Choose which Hermes model runs this notebook"
-                >
-                  <Icon name="Cpu" size={12} />
-                  <span style={{ maxWidth: 145, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {activeModelLabel}
-                  </span>
-                  <Icon name="ChevronDown" size={11} />
-                </button>
-                {modelMenuOpen ? (
-                  <div className="sb-model-menu">
-                    <div style={{ padding: '4px 8px', fontSize: 10.5, fontWeight: 650, color: 'var(--ui-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      Notebook Model
-                    </div>
+              {hasNativeCatalogMenu && nativeModelController ? (
+                <NativeDropdownMenu open={modelMenuOpen} onOpenChange={open => {
+                  setNbMenuOpen(false)
+                  setModelMenuOpen(open)
+                }}>
+                  <NativeDropdownMenuTrigger asChild>
                     <button
                       type="button"
-                      className="sb-btn sb-btn-ghost"
-                      style={{ width: '100%', justifyContent: 'space-between' }}
-                      data-active={!notebook.model}
-                      onClick={async () => {
-                        await patchNotebook({ provider: '', model: '' })
-                        setModelMenuOpen(false)
-                      }}
+                      className="sb-btn"
+                      data-active={Boolean(notebook.model)}
+                      title="Choose which Hermes model runs this notebook (supports every authenticated provider in your Hermes agent)"
                     >
-                      <span>Auto (Active Hermes)</span>
-                      <span className="sb-mono" style={{ fontSize: 10.5, opacity: 0.7 }}>
-                        {modelsInfo?.active?.model || 'default'}
+                      <Icon name="Cpu" size={12} />
+                      <span style={{ maxWidth: 158, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {activeModelLabel}
                       </span>
+                      <Icon name="ChevronDown" size={11} />
                     </button>
-                    {(modelsInfo?.options || []).filter(o => o.source !== 'active').slice(0, 10).map(opt => {
-                      const active = notebook.model === opt.model && (notebook.provider || '') === (opt.provider || '')
-                      return (
-                        <button
-                          key={`${opt.provider}:${opt.model}`}
-                          type="button"
-                          className="sb-btn sb-btn-ghost"
-                          style={{ width: '100%', justifyContent: 'space-between' }}
-                          data-active={active}
-                          onClick={async () => {
-                            await patchNotebook({ provider: opt.provider || '', model: opt.model })
+                  </NativeDropdownMenuTrigger>
+                  <NativeDropdownMenuContent align="end" style={{ width: 320, padding: 0 }}>
+                    {NativeDropdownMenuItem ? (
+                      <div style={{ padding: '4px 4px 0' }}>
+                        <NativeDropdownMenuItem
+                          onSelect={async () => {
+                            await patchNotebook({ provider: '', model: '' })
                             setModelMenuOpen(false)
                           }}
                         >
-                          <span className="sb-src-title">{opt.model}</span>
-                          {opt.provider ? <span className="sb-kind-tag">{opt.provider}</span> : null}
-                        </button>
-                      )
-                    })}
-                    <form
-                      style={{ borderTop: '1px solid var(--ui-stroke-tertiary)', marginTop: 4, padding: '8px 6px 4px', display: 'flex', flexDirection: 'column', gap: 6 }}
-                      onSubmit={async e => {
-                        e.preventDefault()
-                        await patchNotebook({ provider: customProvider.trim(), model: customModel.trim() })
-                        setModelMenuOpen(false)
-                      }}
-                    >
-                      <span style={{ fontSize: 10.5, color: 'var(--ui-text-tertiary)' }}>Custom provider / model ID</span>
-                      <input
-                        className="sb-input"
-                        value={customProvider}
-                        onChange={e => setCustomProvider(e.target.value)}
-                        placeholder="Provider (optional, e.g. ollama, openrouter)"
-                      />
-                      <input
-                        className="sb-input"
-                        value={customModel}
-                        onChange={e => setCustomModel(e.target.value)}
-                        placeholder="Model ID (e.g. gpt-5, qwen3:32b)"
-                      />
-                      <button type="submit" className="sb-btn sb-btn-primary" disabled={!customModel.trim()}>
-                        Apply model
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: 8 }}>
+                            <span style={{ fontWeight: !notebook.model ? 650 : 500 }}>Auto (Active Hermes)</span>
+                            <span className="sb-mono" style={{ fontSize: 10.5, opacity: 0.72, maxWidth: 136, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {defaultModelName || 'default'}
+                            </span>
+                          </div>
+                        </NativeDropdownMenuItem>
+                      </div>
+                    ) : null}
+                    {NativeDropdownMenuSeparator ? <NativeDropdownMenuSeparator /> : null}
+                    <NativeModelMenuCloseContext.Provider value={() => setModelMenuOpen(false)}>
+                      <NativeModelCatalogMenu controller={nativeModelController} />
+                    </NativeModelMenuCloseContext.Provider>
+                    {modelsInfo && !modelsInfo.override_ready ? (
+                      <div style={{ padding: '6px 10px 8px', fontSize: 10.5, color: 'var(--ui-text-tertiary)', borderTop: '1px solid var(--ui-stroke-tertiary)', lineHeight: 1.4 }}>
+                        Enable <span className="sb-mono">allow_model_override</span> in Hermes config to pin overrides (see Settings).
+                      </div>
+                    ) : null}
+                  </NativeDropdownMenuContent>
+                </NativeDropdownMenu>
+              ) : (
+                <div style={{ position: 'relative' }}>
+                  <button
+                    type="button"
+                    className="sb-btn"
+                    data-active={Boolean(notebook.model)}
+                    onClick={() => {
+                      setNbMenuOpen(false)
+                      setCustomProvider(notebook.provider || '')
+                      setCustomModel(notebook.model || '')
+                      setModelSearch('')
+                      if (!modelMenuOpen) loadGatewayCatalog()
+                      setModelMenuOpen(v => !v)
+                    }}
+                    title="Choose which Hermes model runs this notebook (supports every authenticated provider in your Hermes agent)"
+                  >
+                    <Icon name="Cpu" size={12} />
+                    <span style={{ maxWidth: 158, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {activeModelLabel}
+                    </span>
+                    <Icon name="ChevronDown" size={11} />
+                  </button>
+                  {modelMenuOpen ? (
+                    <div className="sb-model-menu" style={{ width: 324 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px 2px' }}>
+                        <span style={{ fontSize: 10.5, fontWeight: 650, color: 'var(--ui-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          Hermes Model Picker
+                        </span>
+                        {modelsInfo?.override_ready ? (
+                          <span className="sb-verdict" data-v="supported" style={{ fontSize: 10, padding: '1px 6px' }}>
+                            Any model ready
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <button
+                        type="button"
+                        className="sb-btn sb-btn-ghost"
+                        style={{ width: '100%', justifyContent: 'space-between' }}
+                        data-active={!notebook.model}
+                        onClick={async () => {
+                          await patchNotebook({ provider: '', model: '' })
+                          setModelMenuOpen(false)
+                        }}
+                      >
+                        <span>Auto (Active Hermes)</span>
+                        <span className="sb-mono" style={{ fontSize: 10.5, opacity: 0.72, maxWidth: 148, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {defaultModelName || 'default'}
+                        </span>
                       </button>
-                      {modelsInfo && !modelsInfo.override_ready ? (
-                        <div style={{ fontSize: 10.5, color: 'var(--ui-text-tertiary)', lineHeight: 1.4 }}>
-                          Note: To use explicit overrides, enable <span className="sb-mono">allow_model_override</span> in Hermes config (see Settings).
+
+                      {mergedCatalog.length > 0 ? (
+                        <div style={{ padding: '4px 4px 2px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <input
+                            className="sb-input"
+                            style={{ height: 28, fontSize: 11.5 }}
+                            value={modelSearch}
+                            onChange={e => setModelSearch(e.target.value)}
+                            placeholder={`Search ${mergedCatalog.length} Hermes models...`}
+                          />
+                          <div className="sb-scroll" style={{ maxHeight: 240, display: 'flex', flexDirection: 'column', gap: 6, paddingRight: 2 }}>
+                            {groupedCatalog.map(grp => (
+                              <div key={grp.slug} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <div style={{ fontSize: 10, fontWeight: 650, color: 'var(--ui-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '2px 6px' }}>
+                                  {grp.label} ({grp.items.length})
+                                </div>
+                                {grp.items.slice(0, 24).map(opt => {
+                                  const active = notebook.model === opt.model && (notebook.provider || '') === (opt.provider || '')
+                                  return (
+                                    <button
+                                      key={`${opt.provider}:${opt.model}`}
+                                      type="button"
+                                      className="sb-btn sb-btn-ghost"
+                                      style={{ width: '100%', justifyContent: 'space-between', height: 26 }}
+                                      data-active={active}
+                                      onClick={async () => {
+                                        await patchNotebook({ provider: opt.provider || '', model: opt.model })
+                                        setModelMenuOpen(false)
+                                      }}
+                                    >
+                                      <span className="sb-src-title" style={{ fontSize: 12 }}>{opt.model}</span>
+                                      {active ? <Icon name="Check" size={12} style={{ color: 'var(--ui-accent)' }} /> : null}
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ) : null}
-                    </form>
-                  </div>
-                ) : null}
-              </div>
+
+                      <div style={{ borderTop: '1px solid var(--ui-stroke-tertiary)', marginTop: 4, paddingTop: 4 }}>
+                        <button
+                          type="button"
+                          className="sb-btn sb-btn-ghost"
+                          style={{ width: '100%', justifyContent: 'space-between', fontSize: 11 }}
+                          onClick={() => setShowCustomModel(v => !v)}
+                        >
+                          <span>Custom provider / model ID</span>
+                          <Icon name={showCustomModel ? 'ChevronDown' : 'ChevronRight'} size={11} />
+                        </button>
+                        {showCustomModel ? (
+                          <form
+                            style={{ padding: '6px 4px 4px', display: 'flex', flexDirection: 'column', gap: 6 }}
+                            onSubmit={async e => {
+                              e.preventDefault()
+                              await patchNotebook({ provider: customProvider.trim(), model: customModel.trim() })
+                              setModelMenuOpen(false)
+                            }}
+                          >
+                            <input
+                              className="sb-input"
+                              value={customProvider}
+                              onChange={e => setCustomProvider(e.target.value)}
+                              placeholder="Provider (e.g. openrouter, ollama, anthropic)"
+                            />
+                            <input
+                              className="sb-input"
+                              value={customModel}
+                              onChange={e => setCustomModel(e.target.value)}
+                              placeholder="Model ID (e.g. claude-opus-5-5, qwen3:32b)"
+                            />
+                            <button type="submit" className="sb-btn sb-btn-primary" disabled={!customModel.trim()}>
+                              Apply model
+                            </button>
+                          </form>
+                        ) : null}
+                        {modelsInfo && !modelsInfo.override_ready ? (
+                          <div style={{ padding: '4px 6px', fontSize: 10.5, color: 'var(--ui-text-tertiary)', lineHeight: 1.4 }}>
+                            Enable <span className="sb-mono">allow_model_override</span> in Hermes config to pin overrides (see Settings).
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              )}
 
               <button
                 type="button"
@@ -462,7 +678,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
               >
                 <span>Coverage</span>
                 <span className="sb-cov-track">
-                  <span className="sb-cov-fill" style={{ width: `${covPct}%` }} />
+                  <span className="sb-cov-fill sb-dither-fill" style={{ width: `${covPct}%` }} />
                 </span>
                 <span className="sb-mono" style={{ fontWeight: 600 }}>{covPct}%</span>
               </button>
@@ -504,15 +720,21 @@ export function SourceBookWorkspace({ ctx, externalState }) {
       ) : null}
 
       {!loading && !nbId ? (
-        <div className="sb-empty" style={{ flex: 1, justifyContent: 'center' }}>
-          <BrandMark size={38} style={{ color: 'var(--ui-text-primary)' }} />
-          <div style={{ fontSize: 16, fontWeight: 650, color: 'var(--ui-text-primary)' }}>
+        <div className="sb-empty" style={{ flex: 1, justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+          <DitherCanvas
+            variant="aurora"
+            animated={false}
+            opacity={0.22}
+            style={{ position: 'absolute', inset: '0 0 auto 0', width: '100%', height: 150, pointerEvents: 'none' }}
+          />
+          <BrandMark size={38} style={{ color: 'var(--ui-text-primary)', position: 'relative' }} />
+          <div style={{ fontSize: 16, fontWeight: 650, color: 'var(--ui-text-primary)', position: 'relative' }}>
             Create your first research notebook
           </div>
-          <div style={{ maxWidth: 440, fontSize: 13 }}>
+          <div style={{ maxWidth: 440, fontSize: 13, position: 'relative' }}>
             Collect PDFs, DOCX files, Markdown, CSV tables, YouTube videos, local folders, and web URLs in one workspace. Every answer cites exact passages and runs on any model configured in Hermes.
           </div>
-          <button type="button" className="sb-btn sb-btn-primary" onClick={() => setCreateOpen(true)}>
+          <button type="button" className="sb-btn sb-btn-primary" style={{ position: 'relative' }} onClick={() => setCreateOpen(true)}>
             <Icon name="Plus" size={13} /> New notebook
           </button>
         </div>

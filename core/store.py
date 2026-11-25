@@ -1409,6 +1409,7 @@ def save_artifact(
     source_ids: Optional[list[str]] = None,
     grounding: Optional[dict[str, Any]] = None,
     audio_bytes: Optional[bytes] = None,
+    media_files: Optional[dict[str, bytes]] = None,
 ) -> dict[str, Any]:
     d = nb_dir(nb, must_exist=True)
     aid = _mint_id("a")
@@ -1418,6 +1419,13 @@ def save_artifact(
     if audio_bytes:
         (adir / "overview.mp3").write_bytes(audio_bytes)
         has_audio = True
+    if media_files:
+        mdir = adir / "media"
+        mdir.mkdir(parents=True, exist_ok=True)
+        for fname, raw in media_files.items():
+            safe = Path(str(fname)).name
+            if safe and raw:
+                _confined(adir, mdir / safe).write_bytes(raw)
     title = spec.get("title") or spec.get("deck") or (params or {}).get("focus") or kind.title()
     art = {
         "id": aid,
@@ -1434,6 +1442,66 @@ def save_artifact(
     _write_json_atomic(adir / "artifact.json", art)
     _touch_notebook(nb)
     return art
+
+
+def update_artifact(
+    nb: str,
+    aid: str,
+    *,
+    title: Optional[str] = None,
+    spec: Optional[dict[str, Any]] = None,
+    params: Optional[dict[str, Any]] = None,
+    source_ids: Optional[list[str]] = None,
+    grounding: Optional[dict[str, Any]] = None,
+    media_files: Optional[dict[str, bytes]] = None,
+) -> dict[str, Any]:
+    adir = artifact_dir(nb, aid)
+    art = _read_json(adir / "artifact.json")
+    if not isinstance(art, dict):
+        raise FileNotFoundError(f"artifact {aid!r} not found")
+    if title is not None:
+        clean = str(title).strip()
+        if not clean:
+            raise ValueError("artifact title cannot be empty")
+        art["title"] = clean[:160]
+        if isinstance(art.get("spec"), dict) and "title" in art["spec"]:
+            art["spec"]["title"] = clean[:160]
+    if spec is not None:
+        art["spec"] = spec
+        if title is None and (spec.get("title") or spec.get("deck")):
+            art["title"] = str(spec.get("title") or spec.get("deck"))[:160]
+    if params is not None:
+        art["params"] = params
+    if source_ids is not None:
+        art["source_ids"] = source_ids
+        art["source_hashes"] = source_hashes_map(nb, source_ids) if source_ids else {}
+    if grounding is not None:
+        art["grounding"] = grounding
+    if media_files:
+        mdir = adir / "media"
+        mdir.mkdir(parents=True, exist_ok=True)
+        for fname, raw in media_files.items():
+            safe = Path(str(fname)).name
+            if safe and raw:
+                _confined(adir, mdir / safe).write_bytes(raw)
+    art["updated"] = time.time()
+    _write_json_atomic(adir / "artifact.json", art)
+    _touch_notebook(nb)
+    return get_artifact(nb, aid) or art
+
+
+def get_artifact_media_dir(nb: str, aid: str) -> Path:
+    adir = artifact_dir(nb, aid)
+    return _confined(adir, adir / "media")
+
+
+def get_artifact_media_path(nb: str, aid: str, fname: str) -> Optional[Path]:
+    adir = artifact_dir(nb, aid)
+    safe = Path(str(fname)).name
+    if not safe:
+        return None
+    p = _confined(adir, adir / "media" / safe)
+    return p if p.is_file() else None
 
 
 def get_artifact_audio_path(nb: str, aid: str) -> Optional[Path]:

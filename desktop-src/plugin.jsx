@@ -48,7 +48,7 @@ function CiteDirective({ props, externalState }) {
 export default {
   id: 'sourcebook',
   name: 'SourceBook',
-  description: 'Source-grounded research notebooks, Claim Ledger, Coverage Map, and 7-format interactive Studio.',
+  description: 'Source-grounded research notebooks, Claim Ledger, Coverage Map, and 8-format interactive Studio.',
   register(ctx) {
     bindContext(ctx)
     const externalState = typeof sdk.atom === 'function' ? sdk.atom({ title: '', dueCards: 0, nbId: '', pendingJump: null }) : null

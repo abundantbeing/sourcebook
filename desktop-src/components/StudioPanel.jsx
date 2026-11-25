@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../sdk.js'
 import { api, pollJob } from '../api.js'
+import { HermesSpinner } from './DitherSurface.jsx'
 import { StudyGuideView } from './renderers/StudyGuideView.jsx'
 import { AudioOverviewView } from './renderers/AudioOverviewView.jsx'
 import { FlashcardsView } from './renderers/FlashcardsView.jsx'
@@ -327,8 +328,9 @@ export function StudioPanel({
           </div>
 
           {runningKind ? (
-            <div style={{ padding: '0 12px 8px', fontSize: 11.5, color: 'var(--ui-text-secondary)' }}>
-              {stage}
+            <div style={{ padding: '0 12px 8px', fontSize: 11.5, color: 'var(--ui-text-secondary)', display: 'flex', alignItems: 'center', gap: 7 }}>
+              <HermesSpinner size={12} />
+              <span>{stage}</span>
             </div>
           ) : null}
 

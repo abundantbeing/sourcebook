@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Icon, sdk } from '../sdk.js'
 import { api, copyText, pollJob } from '../api.js'
 import { MarkdownBody } from './MarkdownBody.jsx'
+import { DitherCanvas, HermesSpinner } from './DitherSurface.jsx'
 
 const PERSONAS = [
   { id: 'default', label: 'Default' },
@@ -236,8 +237,16 @@ export function ChatPanel({
         <>
           <div className="sb-chat-stream sb-scroll">
             {sources.length > 0 ? (
-              <section className="sb-briefing" style={{ margin: 0 }}>
-                <div className="sb-briefing-head">
+              <section className="sb-briefing" style={{ margin: 0, position: 'relative', overflow: 'hidden' }}>
+                <DitherCanvas
+                  variant="aurora"
+                  animated={briefingBusy}
+                  opacity={0.18}
+                  cols={136}
+                  rows={22}
+                  style={{ position: 'absolute', inset: '0 0 auto 0', width: '100%', height: 68, pointerEvents: 'none' }}
+                />
+                <div className="sb-briefing-head" style={{ position: 'relative' }}>
                   <span className="sb-briefing-title">
                     <Icon name="BookOpen" size={14} /> Notebook Briefing
                   </span>
@@ -247,7 +256,8 @@ export function ChatPanel({
                     disabled={briefingBusy || enabledSources.length === 0}
                     onClick={generateBriefing}
                   >
-                    <Icon name="RefreshCw" size={12} /> {briefingBusy ? 'Updating...' : guide ? 'Refresh' : 'Generate briefing'}
+                    {briefingBusy ? <HermesSpinner size={11} /> : <Icon name="RefreshCw" size={12} />}{' '}
+                    {briefingBusy ? 'Updating...' : guide ? 'Refresh' : 'Generate briefing'}
                   </button>
                 </div>
                 {guide?.overview ? (

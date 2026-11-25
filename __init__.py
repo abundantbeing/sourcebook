@@ -234,8 +234,8 @@ def make(
     audio_bytes: Optional[bytes] = None
     if kind == "audio" and not params.get("skip_audio") and isinstance(spec.get("turns"), list):
         if progress:
-            progress("Synthesizing 2-host neural podcast audio...", 88)
-        audio_bytes = audio.synthesize_dialogue_mp3(spec["turns"], language=str(params.get("language") or "English"))
+            progress("Synthesizing 2-host podcast audio...", 88)
+        audio_bytes = audio.synthesize_dialogue_mp3(spec["turns"], language=str(params.get("language") or "English"), ctx=ctx)
 
     store.record_chunk_hits(nb, cites, surface="studio")
     artifact = store.save_artifact(

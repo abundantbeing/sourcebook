@@ -1,14 +1,18 @@
-"""2-Host Podcast Audio Overview synthesis via Edge neural TTS (free, zero-key) with graceful transcript-only fallback."""
+"""2-Host Podcast Audio Overview synthesis: Hermes configured TTS tool first (ElevenLabs, OpenAI, Gemini, Piper, etc.), then Edge TTS fallback."""
 
 from __future__ import annotations
 
 import asyncio
 import logging
+import os
+import tempfile
+from pathlib import Path
 from typing import Any, Optional
+
+from . import runtime
 
 logger = logging.getLogger("sourcebook.audio")
 
-# Multilingual neural voice pairs (Host A / Host B)
 VOICE_PAIRS: dict[str, tuple[str, str]] = {
     "english": ("en-US-AndrewMultilingualNeural", "en-US-AvaMultilingualNeural"),
     "spanish": ("es-ES-AlvaroNeural", "es-ES-ElviraNeural"),
@@ -19,7 +23,41 @@ VOICE_PAIRS: dict[str, tuple[str, str]] = {
 }
 
 
-async def _synth_turn(edge_tts_mod: Any, text: str, voice: str) -> bytes:
+def _synth_via_hermes_tts(turns: list[dict[str, Any]], *, ctx: Any = None) -> Optional[bytes]:
+    """Use Hermes's own configured `text_to_speech` tool (ElevenLabs, OpenAI, Gemini, Piper, etc.)."""
+    if not runtime._probe_tool("text_to_speech"):
+        return None
+    out = bytearray()
+    with tempfile.TemporaryDirectory(prefix="sb_tts_") as tmpdir:
+        for idx, turn in enumerate(turns[:16]):
+            text = str(turn.get("text") or "").strip()
+            if not text:
+                continue
+            speaker = str(turn.get("speaker") or "").strip().lower()
+            is_b = speaker in ("maya", "host b", "host_b", "b") or (speaker not in ("alex", "host a", "host_a", "a") and idx % 2 == 1)
+            out_file = Path(tmpdir) / f"turn_{idx:02d}.mp3"
+            args: dict[str, Any] = {
+                "text": text,
+                "output_path": str(out_file),
+                "instructions": (
+                    "Speak warmly and curiously as podcast co-host Maya."
+                    if is_b
+                    else "Speak clearly and analytically as podcast host Alex."
+                ),
+            }
+            try:
+                runtime.dispatch_tool("text_to_speech", args, ctx=ctx)
+                if out_file.is_file() and out_file.stat().st_size > 256:
+                    out.extend(out_file.read_bytes())
+                else:
+                    return None
+            except Exception as exc:
+                logger.debug("Hermes text_to_speech turn %d skipped: %s", idx, exc)
+                return None
+    return bytes(out) if len(out) > 512 else None
+
+
+async def _synth_edge_turn(edge_tts_mod: Any, text: str, voice: str) -> bytes:
     comm = edge_tts_mod.Communicate(text=text, voice=voice)
     buf = bytearray()
     async for chunk in comm.stream():
@@ -28,20 +66,20 @@ async def _synth_turn(edge_tts_mod: Any, text: str, voice: str) -> bytes:
     return bytes(buf)
 
 
-async def _render_dialogue_async(turns: list[dict[str, Any]], language: str = "English") -> bytes:
+async def _render_edge_async(turns: list[dict[str, Any]], language: str = "English") -> bytes:
     import edge_tts  # type: ignore
 
     lang_key = (language or "english").strip().lower()
     voice_a, voice_b = VOICE_PAIRS.get(lang_key, VOICE_PAIRS["english"])
     out = bytearray()
-    for idx, turn in enumerate(turns[:30]):
+    for idx, turn in enumerate(turns[:24]):
         text = str(turn.get("text") or "").strip()
         if not text:
             continue
         speaker = str(turn.get("speaker") or "").strip().lower()
         use_b = speaker in ("maya", "host b", "host_b", "b", "co-host") or (speaker not in ("alex", "host a", "host_a", "a") and idx % 2 == 1)
         voice = voice_b if use_b else voice_a
-        audio_chunk = await _synth_turn(edge_tts, text, voice)
+        audio_chunk = await _synth_edge_turn(edge_tts, text, voice)
         if audio_chunk:
             out.extend(audio_chunk)
     return bytes(out)
@@ -51,10 +89,18 @@ def synthesize_dialogue_mp3(
     turns: list[dict[str, Any]],
     *,
     language: str = "English",
+    ctx: Any = None,
 ) -> Optional[bytes]:
-    """Synthesize a 2-host podcast MP3 from dialogue turns. Returns None cleanly if TTS/network is unavailable."""
+    """Synthesize a 2-host podcast MP3 via Hermes's configured TTS tool or Edge TTS fallback."""
     if not turns:
         return None
+
+    # Tier 1: User's configured Hermes TTS provider (ElevenLabs, OpenAI, Gemini, Piper, etc.)
+    hermes_mp3 = _synth_via_hermes_tts(turns, ctx=ctx)
+    if hermes_mp3:
+        return hermes_mp3
+
+    # Tier 2: Edge neural TTS fallback
     try:
         import edge_tts  # noqa: F401
     except ImportError:
@@ -70,10 +116,10 @@ def synthesize_dialogue_mp3(
             import concurrent.futures
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-                data = pool.submit(asyncio.run, _render_dialogue_async(turns, language)).result(timeout=90)
+                data = pool.submit(asyncio.run, _render_edge_async(turns, language)).result(timeout=90)
         else:
-            data = asyncio.run(_render_dialogue_async(turns, language))
+            data = asyncio.run(_render_edge_async(turns, language))
         return data if data and len(data) > 512 else None
     except Exception as exc:
-        logger.debug("Audio Overview TTS synthesis skipped: %s", exc)
+        logger.debug("Audio Overview Edge TTS synthesis skipped: %s", exc)
         return None

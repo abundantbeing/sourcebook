@@ -76,23 +76,25 @@ def get_config(key: str, default: Any = None) -> Any:
 
 
 def get_llm_trust_policy() -> dict[str, Any]:
-    """Read `plugins.entries.sourcebook.llm` trust flags from Hermes config."""
+    """Read `plugins.entries.sourcebook` capability grants and legacy `llm.*` flags from Hermes config."""
     cfg = _load_hermes_config()
     entry = ((cfg.get("plugins") or {}).get("entries") or {}).get(PLUGIN_ID) or {}
     llm_cfg = entry.get("llm") if isinstance(entry, dict) else None
     if not isinstance(llm_cfg, dict):
         llm_cfg = {}
+    raw_caps = entry.get("granted_capabilities") if isinstance(entry, dict) else None
+    granted = set(raw_caps) if isinstance(raw_caps, list) else set()
     return {
-        "allow_model_override": bool(llm_cfg.get("allow_model_override", False)),
-        "allow_provider_override": bool(llm_cfg.get("allow_provider_override", False)),
-        "allow_task_override": bool(llm_cfg.get("allow_task_override", False)),
+        "allow_model_override": bool(llm_cfg.get("allow_model_override", False) or "llm.model_override" in granted),
+        "allow_provider_override": bool(llm_cfg.get("allow_provider_override", False) or "llm.provider_override" in granted),
+        "allow_task_override": bool(llm_cfg.get("allow_task_override", False) or "llm.task_override" in granted),
         "allowed_models": llm_cfg.get("allowed_models"),
         "allowed_providers": llm_cfg.get("allowed_providers"),
     }
 
 
 def list_available_models() -> dict[str, Any]:
-    """Discover the user's active Hermes model, SourceBook auxiliary routes, and all configured provider models."""
+    """Discover the user's active Hermes model, fallback/custom providers, auxiliary routes, and configured models."""
     cfg = _load_hermes_config()
     model_cfg = cfg.get("model")
     if isinstance(model_cfg, dict):
@@ -150,6 +152,43 @@ def list_available_models() -> dict[str, Any]:
             elif isinstance(models_list, dict):
                 for mid in models_list.keys():
                     add_opt(str(pname), str(mid), source="provider")
+
+    # Gather custom_providers entries (local Ollama/vLLM/custom OpenAI-compatible endpoints)
+    custom_provs = cfg.get("custom_providers") or []
+    if isinstance(custom_provs, list):
+        for cp in custom_provs:
+            if not isinstance(cp, dict):
+                continue
+            cp_slug = str(cp.get("slug") or cp.get("name") or cp.get("id") or "").strip()
+            if cp_slug and cp_slug not in configured_providers:
+                configured_providers.append(cp_slug)
+            if isinstance(cp.get("model"), str) and cp["model"].strip():
+                add_opt(cp_slug or "custom", cp["model"], source="custom")
+            if isinstance(cp.get("models"), list):
+                for item in cp["models"]:
+                    mid = item if isinstance(item, str) else (item.get("id") or item.get("name") if isinstance(item, dict) else "")
+                    if mid:
+                        add_opt(cp_slug or "custom", str(mid), source="custom")
+
+    # Gather fallback_providers list (e.g. openai-codex, xai-oauth, openrouter fallbacks)
+    fb_provs = cfg.get("fallback_providers") or []
+    if isinstance(fb_provs, list):
+        for fp in fb_provs:
+            if not isinstance(fp, dict):
+                continue
+            fp_p = str(fp.get("provider") or "").strip()
+            fp_m = str(fp.get("model") or "").strip()
+            if fp_p and fp_p not in configured_providers:
+                configured_providers.append(fp_p)
+            if fp_m:
+                add_opt(fp_p, fp_m, source="fallback")
+
+    # Gather smart_model_routing cheap_model if configured
+    smr = cfg.get("smart_model_routing") or {}
+    if isinstance(smr, dict) and isinstance(smr.get("cheap_model"), dict):
+        cm = smr["cheap_model"]
+        if cm.get("model"):
+            add_opt(str(cm.get("provider") or ""), str(cm.get("model") or ""), source="routing")
 
     # Gather models referenced in auxiliary task routes so users can reuse any authenticated provider/model
     aux_cfg = cfg.get("auxiliary") or {}

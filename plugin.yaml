@@ -21,6 +21,9 @@ provides_tools:
   - sourcebook_analyze_data
 provides_hooks:
   - pre_llm_call
+capabilities:
+  - llm.model_override
+  - llm.provider_override
 python_dependencies: []
 config_schema:
   chunk_chars:

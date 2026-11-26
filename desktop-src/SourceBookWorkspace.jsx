@@ -39,7 +39,10 @@ export function SourceBookWorkspace({ ctx, externalState }) {
   const [selectedArtifactId, setSelectedArtifactId] = useState(null)
   const [inspectorTarget, setInspectorTarget] = useState(null)
   const [leftCollapsed, setLeftCollapsed] = useState(false)
-  const [studioExpanded, setStudioExpanded] = useState(false)
+  const [rightCollapsed, setRightCollapsed] = useState(false)
+  const [leftDrawerOpen, setLeftDrawerOpen] = useState(false)
+  const [compactPane, setCompactPane] = useState('workspace') // 'sources' | 'workspace' | 'studio'
+  const [layoutTier, setLayoutTier] = useState('standard') // 'compact' | 'split' | 'standard' | 'wide'
   const [nbMenuOpen, setNbMenuOpen] = useState(false)
   const [modelMenuOpen, setModelMenuOpen] = useState(false)
   const [modelSearch, setModelSearch] = useState('')
@@ -54,8 +57,46 @@ export function SourceBookWorkspace({ ctx, externalState }) {
   const [searchHits, setSearchHits] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [studioExpanded, setStudioExpanded] = useState(false)
 
   const reqSeqRef = useRef(0)
+  const rootRef = useRef(null)
+
+  // Track the ACTUAL plugin container width (handles both OS window resizing AND Hermes split-screen panes!)
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el) return undefined
+    const resolveTier = width => {
+      if (width < 740) return 'compact'
+      if (width < 1080) return 'split'
+      if (width >= 1600) return 'wide'
+      return 'standard'
+    }
+    const update = w => {
+      if (!w || w <= 0) return
+      const next = resolveTier(w)
+      setLayoutTier(prev => {
+        if (prev !== next && next !== 'split') {
+          setLeftDrawerOpen(false)
+        }
+        return next
+      })
+    }
+    update(el.clientWidth || (typeof window !== 'undefined' ? window.innerWidth : 1280))
+    if (typeof ResizeObserver === 'function') {
+      const ro = new ResizeObserver(entries => {
+        for (const entry of entries) {
+          update(entry.contentRect?.width || el.clientWidth)
+        }
+      })
+      ro.observe(el)
+      return () => ro.disconnect()
+    }
+    if (ctx?.addEventListener) {
+      return ctx.addEventListener(window, 'resize', () => update(el.clientWidth || window.innerWidth))
+    }
+    return undefined
+  }, [ctx])
 
   const storageKey = `activeNotebook::${connectionId || 'local'}::${profile || 'default'}`
 
@@ -199,6 +240,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
         setCreateOpen(false)
         setNbMenuOpen(false)
         setModelMenuOpen(false)
+        setLeftDrawerOpen(false)
         setInspectorTarget(null)
       }
     })
@@ -412,8 +454,19 @@ export function SourceBookWorkspace({ ctx, externalState }) {
     ? notebook.model
     : (defaultModelName ? `Auto: ${defaultModelName}` : 'Auto (Hermes)')
 
+  const isCompact = layoutTier === 'compact'
+  const isSplit = layoutTier === 'split'
+
+  function handleSelectArtifact(aid) {
+    setSelectedArtifactId(aid)
+    if (aid) {
+      if (isCompact) setCompactPane('studio')
+      else if (rightCollapsed) setRightCollapsed(false)
+    }
+  }
+
   return (
-    <div className="sb-root" style={{ position: 'relative' }}>
+    <div ref={rootRef} className="sb-root" data-layout={layoutTier} style={{ position: 'relative' }}>
       <Styles />
 
       <header className="sb-topbar">
@@ -422,19 +475,31 @@ export function SourceBookWorkspace({ ctx, externalState }) {
             <span className="sb-brand-mark">
               <BrandMark size={15} />
             </span>
-            <span>SourceBook</span>
+            <span className="sb-brand-text">SourceBook</span>
           </div>
 
-          <button
-            type="button"
-            className="sb-btn sb-btn-ghost sb-btn-icon"
-            title={leftCollapsed ? 'Show Sources rail' : 'Hide Sources rail'}
-            onClick={() => setLeftCollapsed(v => !v)}
-          >
-            <Icon name="PanelLeft" size={14} />
-          </button>
+          {!isCompact ? (
+            <button
+              type="button"
+              className="sb-btn sb-btn-ghost"
+              style={isSplit ? { padding: '0 8px' } : { width: 28, padding: 0 }}
+              data-active={isSplit ? leftDrawerOpen : !leftCollapsed}
+              title={
+                isSplit
+                  ? (leftDrawerOpen ? 'Hide Sources drawer' : 'Show Sources drawer')
+                  : (leftCollapsed ? 'Show Sources rail' : 'Hide Sources rail')
+              }
+              onClick={() => {
+                if (isSplit) setLeftDrawerOpen(v => !v)
+                else setLeftCollapsed(v => !v)
+              }}
+            >
+              <Icon name="PanelLeft" size={14} />
+              {isSplit ? <span className="sb-num" style={{ fontSize: 11 }}>{sources.length}</span> : null}
+            </button>
+          ) : null}
 
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', minWidth: 0 }}>
             <button
               type="button"
               className="sb-nb-select"
@@ -448,7 +513,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
               <Icon name="ChevronDown" size={13} />
             </button>
             {nbMenuOpen ? (
-              <div className="sb-model-menu" style={{ left: 0, right: 'auto', width: 280 }}>
+              <div className="sb-model-menu" style={{ left: 0, right: 'auto' }}>
                 {notebooks.map(nb => (
                   <div
                     key={nb.id}
@@ -502,8 +567,8 @@ export function SourceBookWorkspace({ ctx, externalState }) {
             ) : null}
           </div>
 
-          <button type="button" className="sb-btn" onClick={() => setCreateOpen(true)}>
-            <Icon name="Plus" size={13} /> New
+          <button type="button" className="sb-btn sb-top-new-btn" onClick={() => setCreateOpen(true)} title="Create new notebook">
+            <Icon name="Plus" size={13} /> <span className="sb-top-label">New</span>
           </button>
         </div>
 
@@ -518,18 +583,18 @@ export function SourceBookWorkspace({ ctx, externalState }) {
                   <NativeDropdownMenuTrigger asChild>
                     <button
                       type="button"
-                      className="sb-btn"
+                      className="sb-btn sb-model-trigger"
                       data-active={Boolean(notebook.model)}
-                      title="Choose which Hermes model runs this notebook (supports every authenticated provider in your Hermes agent)"
+                      title={`Model: ${activeModelLabel} (click to switch across authenticated Hermes providers)`}
                     >
                       <Icon name="Cpu" size={12} />
-                      <span style={{ maxWidth: 158, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <span className="sb-model-trigger-label">
                         {activeModelLabel}
                       </span>
                       <Icon name="ChevronDown" size={11} />
                     </button>
                   </NativeDropdownMenuTrigger>
-                  <NativeDropdownMenuContent align="end" style={{ width: 320, padding: 0 }}>
+                  <NativeDropdownMenuContent align="end" style={{ width: 'min(320px, calc(100vw - 24px))', padding: 0 }}>
                     {NativeDropdownMenuItem ? (
                       <div style={{ padding: '4px 4px 0' }}>
                         <NativeDropdownMenuItem
@@ -562,7 +627,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
                 <div style={{ position: 'relative' }}>
                   <button
                     type="button"
-                    className="sb-btn"
+                    className="sb-btn sb-model-trigger"
                     data-active={Boolean(notebook.model)}
                     onClick={() => {
                       setNbMenuOpen(false)
@@ -572,16 +637,16 @@ export function SourceBookWorkspace({ ctx, externalState }) {
                       if (!modelMenuOpen) loadGatewayCatalog()
                       setModelMenuOpen(v => !v)
                     }}
-                    title="Choose which Hermes model runs this notebook (supports every authenticated provider in your Hermes agent)"
+                    title={`Model: ${activeModelLabel} (click to switch across authenticated Hermes providers)`}
                   >
                     <Icon name="Cpu" size={12} />
-                    <span style={{ maxWidth: 158, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <span className="sb-model-trigger-label">
                       {activeModelLabel}
                     </span>
                     <Icon name="ChevronDown" size={11} />
                   </button>
                   {modelMenuOpen ? (
-                    <div className="sb-model-menu" style={{ width: 324 }}>
+                    <div className="sb-model-menu">
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px 2px' }}>
                         <span style={{ fontSize: 10.5, fontWeight: 650, color: 'var(--ui-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                           Hermes Model Picker
@@ -618,7 +683,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
                             onChange={e => setModelSearch(e.target.value)}
                             placeholder={`Search ${mergedCatalog.length} Hermes models...`}
                           />
-                          <div className="sb-scroll" style={{ maxHeight: 240, display: 'flex', flexDirection: 'column', gap: 6, paddingRight: 2 }}>
+                          <div className="sb-scroll" style={{ maxHeight: 'min(240px, 42vh)', display: 'flex', flexDirection: 'column', gap: 6, paddingRight: 2 }}>
                             {groupedCatalog.map(grp => (
                               <div key={grp.slug} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                                 <div style={{ fontSize: 10, fontWeight: 650, color: 'var(--ui-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '2px 6px' }}>
@@ -698,11 +763,14 @@ export function SourceBookWorkspace({ ctx, externalState }) {
 
               <button
                 type="button"
-                className="sb-cov-meter"
+                className="sb-cov-meter sb-hide-compact"
                 title="Open Coverage Map"
-                onClick={() => setCenterTab('coverage')}
+                onClick={() => {
+                  setCenterTab('coverage')
+                  if (isCompact) setCompactPane('workspace')
+                }}
               >
-                <span>Coverage</span>
+                <span className="sb-cov-label">Coverage</span>
                 <span className="sb-cov-track">
                   <span className="sb-cov-fill sb-dither-fill" style={{ width: `${covPct}%` }} />
                 </span>
@@ -711,19 +779,19 @@ export function SourceBookWorkspace({ ctx, externalState }) {
 
               <button
                 type="button"
-                className="sb-btn"
+                className="sb-btn sb-top-strict-btn"
                 data-active={Boolean(notebook.strict)}
                 onClick={() => patchNotebook({ strict: !notebook.strict })}
                 title="Strict grounding refuses any claim unsupported by active sources"
               >
-                <Icon name="Lock" size={12} /> {notebook.strict ? 'Strict' : 'Grounded'}
+                <Icon name="Lock" size={12} /> <span className="sb-top-label">{notebook.strict ? 'Strict' : 'Grounded'}</span>
               </button>
             </>
           ) : null}
 
           <button
             type="button"
-            className="sb-btn"
+            className="sb-btn sb-top-search-btn"
             onClick={() => {
               setSearchQuery('')
               setSearchHits([])
@@ -731,10 +799,62 @@ export function SourceBookWorkspace({ ctx, externalState }) {
             }}
             title="Search across all notebooks (Ctrl+K)"
           >
-            <Icon name="Search" size={12} /> Search
+            <Icon name="Search" size={12} /> <span className="sb-top-label">Search</span>
           </button>
+
+          {!isCompact && nbId ? (
+            <button
+              type="button"
+              className="sb-btn sb-btn-ghost sb-btn-icon"
+              data-active={!rightCollapsed}
+              title={rightCollapsed ? 'Show Studio rail' : 'Hide Studio rail'}
+              onClick={() => {
+                if (studioExpanded) setStudioExpanded(false)
+                setRightCollapsed(v => !v)
+              }}
+            >
+              <Icon name="PanelRight" size={14} />
+            </button>
+          ) : null}
         </div>
       </header>
+
+      {nbId && isCompact ? (
+        <nav className="sb-compact-bar" aria-label="Workspace panes">
+          <div className="sb-seg sb-compact-tabs" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={compactPane === 'sources'}
+              className="sb-seg-btn"
+              data-active={compactPane === 'sources'}
+              onClick={() => setCompactPane('sources')}
+            >
+              <Icon name="Library" size={12} /> Sources <span className="sb-num" style={{ opacity: 0.72 }}>{sources.length}</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={compactPane === 'workspace'}
+              className="sb-seg-btn"
+              data-active={compactPane === 'workspace'}
+              onClick={() => setCompactPane('workspace')}
+            >
+              <Icon name="MessageSquare" size={12} /> Workspace
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={compactPane === 'studio'}
+              className="sb-seg-btn"
+              data-active={compactPane === 'studio'}
+              onClick={() => setCompactPane('studio')}
+            >
+              <Icon name="Sparkles" size={12} /> Studio <span className="sb-num" style={{ opacity: 0.72 }}>{artifacts.length}</span>
+            </button>
+          </div>
+        </nav>
+      ) : null}
 
       {error ? (
         <div className="sb-error-bar" role="alert">
@@ -767,9 +887,17 @@ export function SourceBookWorkspace({ ctx, externalState }) {
       ) : (
         <div
           className="sb-workbench"
-          data-left-collapsed={leftCollapsed}
-          data-studio-expanded={studioExpanded}
+          data-tier={layoutTier}
+          data-left-collapsed={!isCompact && !isSplit && leftCollapsed}
+          data-right-collapsed={!isCompact && rightCollapsed}
+          data-left-drawer={isSplit && leftDrawerOpen}
+          data-compact-pane={compactPane}
+          data-studio-expanded={!isCompact && studioExpanded}
         >
+          {isSplit && leftDrawerOpen ? (
+            <div className="sb-drawer-backdrop" onClick={() => setLeftDrawerOpen(false)} aria-hidden="true" />
+          ) : null}
+
           <SidebarSources
             ctx={ctx}
             nbId={nbId}
@@ -777,8 +905,11 @@ export function SourceBookWorkspace({ ctx, externalState }) {
             notes={notes}
             coverage={coverage}
             selectedSourceId={inspectorTarget?.sourceId || null}
-            onSelectSource={setInspectorTarget}
-            onOpenArtifact={aid => setSelectedArtifactId(aid)}
+            onSelectSource={target => {
+              setInspectorTarget(target)
+              if (isSplit) setLeftDrawerOpen(false)
+            }}
+            onOpenArtifact={handleSelectArtifact}
             onSaveMemory={handleSaveMemory}
             onRefresh={() => loadNotebookData(nbId)}
             onError={setError}
@@ -810,9 +941,9 @@ export function SourceBookWorkspace({ ctx, externalState }) {
             capabilities={capabilities}
             artifacts={artifacts}
             selectedArtifactId={selectedArtifactId}
-            expanded={studioExpanded}
-            onToggleExpand={() => setStudioExpanded(v => !v)}
-            onSelectArtifact={setSelectedArtifactId}
+            expanded={!isCompact && studioExpanded}
+            onToggleExpand={isCompact ? undefined : () => setStudioExpanded(v => !v)}
+            onSelectArtifact={handleSelectArtifact}
             onOpenChunk={cid => setInspectorTarget({ sourceId: String(cid).split(':')[0], chunkId: cid })}
             onRefresh={() => loadNotebookData(nbId)}
             onError={setError}
@@ -861,8 +992,8 @@ export function SourceBookWorkspace({ ctx, externalState }) {
       {searchOpen ? (
         <div className="sb-modal-backdrop" onClick={() => setSearchOpen(false)}>
           <div className="sb-modal" style={{ width: 'min(620px, 94vw)' }} onClick={e => e.stopPropagation()}>
-            <div className="sb-modal-head">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="sb-modal-head" style={{ flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>
                 <span>Cross-Notebook Search</span>
                 <div className="sb-seg">
                   <button
@@ -874,7 +1005,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
                       runCrossSearch(searchQuery, 'all')
                     }}
                   >
-                    All Notebooks ({notebooks.length})
+                    All ({notebooks.length})
                   </button>
                   <button
                     type="button"
@@ -886,7 +1017,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
                       runCrossSearch(searchQuery, 'current')
                     }}
                   >
-                    This Notebook
+                    Current
                   </button>
                 </div>
               </div>

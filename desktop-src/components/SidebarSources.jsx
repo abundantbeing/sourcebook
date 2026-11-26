@@ -17,6 +17,16 @@ const KIND_ICONS = {
   note: 'StickyNote'
 }
 
+const SUPPORTED_FOLDER_EXTS = new Set([
+  '.txt', '.md', '.markdown', '.pdf', '.docx', '.csv', '.tsv', '.json',
+  '.html', '.htm', '.png', '.jpg', '.jpeg', '.webp', '.mp3', '.wav', '.m4a',
+  '.py', '.ts', '.tsx', '.js', '.jsx', '.yaml', '.yml'
+])
+
+const SKIP_FOLDER_SEGMENTS = new Set([
+  '.git', 'node_modules', '__pycache__', '.venv', 'venv', 'dist', 'build', '.next', '.cache', '.pytest_cache'
+])
+
 function fmtWords(n) {
   const v = Number(n) || 0
   if (typeof sdk.compactNumber === 'function') return sdk.compactNumber(v)
@@ -55,7 +65,9 @@ export function SidebarSources({
   const [deepStage, setDeepStage] = useState('')
   const [deepPct, setDeepPct] = useState(0)
   const [deepResult, setDeepResult] = useState(null)
+  const [busyLabel, setBusyLabel] = useState('')
   const fileRef = useRef(null)
+  const folderRef = useRef(null)
   const cancelDeepRef = useRef(null)
 
   useEffect(() => {
@@ -102,6 +114,7 @@ export function SidebarSources({
   async function handleFiles(fileList) {
     if (!nbId || !fileList?.length) return
     setBusy(true)
+    setBusyLabel('Indexing file...')
     try {
       for (const file of Array.from(fileList)) {
         await uploadFile(nbId, file)
@@ -111,8 +124,96 @@ export function SidebarSources({
       onError?.(err.message || 'Upload failed.')
     } finally {
       setBusy(false)
+      setBusyLabel('')
       if (fileRef.current) fileRef.current.value = ''
     }
+  }
+
+  async function handleFolderFiles(fileList) {
+    if (!nbId || !fileList?.length) return
+    const all = Array.from(fileList)
+    const filtered = all.filter(f => {
+      const rel = String(f.webkitRelativePath || f.name || '')
+      const segs = rel.split(/[\\/]/).filter(Boolean)
+      if (segs.some(seg => SKIP_FOLDER_SEGMENTS.has(seg))) return false
+      const name = String(f.name || '').toLowerCase()
+      const dot = name.lastIndexOf('.')
+      if (dot < 0) return false
+      return SUPPORTED_FOLDER_EXTS.has(name.slice(dot))
+    }).slice(0, 40)
+
+    if (!filtered.length) {
+      onError?.('No supported documents (PDF, DOCX, Markdown, CSV, JSON, code, images, audio) found in that folder.')
+      if (folderRef.current) folderRef.current.value = ''
+      return
+    }
+
+    const rootName = String(filtered[0].webkitRelativePath || '').split(/[\\/]/)[0] || 'folder'
+    setBusy(true)
+    let ok = 0
+    try {
+      for (let i = 0; i < filtered.length; i += 1) {
+        setBusyLabel(`Indexing ${rootName} (${i + 1}/${filtered.length})...`)
+        try {
+          await uploadFile(nbId, filtered[i])
+          ok += 1
+        } catch {
+          // continue ingesting remaining valid files
+        }
+      }
+      sdk.host?.notify?.({
+        kind: 'success',
+        title: 'SourceBook',
+        message: `Imported ${ok} source${ok === 1 ? '' : 's'} from ${rootName}.`
+      })
+      await onRefresh()
+    } catch (err) {
+      onError?.(err.message || 'Could not import folder.')
+    } finally {
+      setBusy(false)
+      setBusyLabel('')
+      if (folderRef.current) folderRef.current.value = ''
+    }
+  }
+
+  async function handlePickFolder() {
+    if (!nbId || busy) return
+    const activeCtx = ctx || getContext()
+    if (typeof activeCtx?.files?.requestFolder === 'function') {
+      try {
+        const picked = await activeCtx.files.requestFolder()
+        if (picked?.ok) {
+          if (!picked.folder?.path) return
+          setBusy(true)
+          setBusyLabel(`Syncing ${picked.folder.name || 'folder'}...`)
+          try {
+            const res = await api(`/notebooks/${encodeURIComponent(nbId)}/sources/sync-path`, {
+              method: 'POST',
+              body: { path: picked.folder.path, max_files: 40 }
+            })
+            const count = res?.added?.length || 0
+            sdk.host?.notify?.({
+              kind: 'success',
+              title: 'SourceBook',
+              message: count > 0
+                ? `Synced ${count} source${count === 1 ? '' : 's'} from ${picked.folder.name || 'folder'}.`
+                : `No new supported files found in ${picked.folder.name || 'folder'}.`
+            })
+            await onRefresh()
+          } catch (err) {
+            onError?.(err.message || 'Could not sync selected folder.')
+          } finally {
+            setBusy(false)
+            setBusyLabel('')
+          }
+          return
+        }
+        if (picked?.error === 'protected') return
+      } catch {
+        // Fall through cleanly to native OS directory input dialog
+      }
+    }
+    folderRef.current?.click()
   }
 
   async function submitPaste(e) {
@@ -441,6 +542,15 @@ export function SidebarSources({
               style={{ display: 'none' }}
               onChange={e => handleFiles(e.target.files)}
             />
+            <input
+              ref={folderRef}
+              type="file"
+              multiple
+              webkitdirectory=""
+              directory=""
+              style={{ display: 'none' }}
+              onChange={e => handleFolderFiles(e.target.files)}
+            />
             <div className="sb-dropzone-actions" style={{ flexWrap: 'wrap' }}>
               <button
                 type="button"
@@ -466,11 +576,8 @@ export function SidebarSources({
                 type="button"
                 className="sb-btn"
                 disabled={!nbId || busy}
-                onClick={() => {
-                  setFolderPath('')
-                  setModal('folder')
-                }}
-                title="Sync a local folder, Obsidian vault, or Git repository"
+                onClick={handlePickFolder}
+                title="Choose a local folder, Obsidian vault, or Git repository from your computer"
               >
                 <Icon name="FolderOpen" size={12} /> Folder
               </button>
@@ -501,7 +608,7 @@ export function SidebarSources({
               </button>
             </div>
             <div style={{ fontSize: 11, color: 'var(--ui-text-tertiary)', textAlign: 'center' }}>
-              {busy ? 'Indexing source...' : 'Drop PDF, DOCX, Markdown, CSV, audio, or URLs'}
+              {busy ? (busyLabel || 'Indexing source...') : 'Drop PDF, DOCX, Markdown, CSV, audio, or URLs'}
             </div>
           </div>
 

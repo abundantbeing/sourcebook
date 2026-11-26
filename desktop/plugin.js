@@ -1384,7 +1384,42 @@ var CSS = `
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: nowrap;
   gap: 8px;
+  min-width: 0;
+}
+.sb-composer-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.sb-composer-count {
+  font-size: 11.5px;
+  color: var(--ui-text-tertiary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.sb-composer-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.sb-composer-lbl {
+  font-size: 11px;
+  color: var(--ui-text-tertiary);
+  white-space: nowrap;
+}
+.sb-composer-select {
+  min-width: 0;
+  max-width: 100%;
+}
+.sb-composer-ask {
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 /* Claim Ledger & Coverage Map */
@@ -3109,6 +3144,20 @@ var CSS = `
   }
 }
 @container sb-center (max-width: 520px) {
+  .sb-composer-lbl,
+  .sb-composer-active-word {
+    display: none;
+  }
+  .sb-composer-bar {
+    gap: 6px;
+  }
+  .sb-composer-controls {
+    gap: 5px;
+  }
+  .sb-composer-select {
+    padding: 0 6px;
+    font-size: 11px;
+  }
   .sb-kpi-strip-4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -3558,6 +3607,44 @@ var KIND_ICONS = {
   audio: "Headphones",
   note: "StickyNote"
 };
+var SUPPORTED_FOLDER_EXTS = /* @__PURE__ */ new Set([
+  ".txt",
+  ".md",
+  ".markdown",
+  ".pdf",
+  ".docx",
+  ".csv",
+  ".tsv",
+  ".json",
+  ".html",
+  ".htm",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".webp",
+  ".mp3",
+  ".wav",
+  ".m4a",
+  ".py",
+  ".ts",
+  ".tsx",
+  ".js",
+  ".jsx",
+  ".yaml",
+  ".yml"
+]);
+var SKIP_FOLDER_SEGMENTS = /* @__PURE__ */ new Set([
+  ".git",
+  "node_modules",
+  "__pycache__",
+  ".venv",
+  "venv",
+  "dist",
+  "build",
+  ".next",
+  ".cache",
+  ".pytest_cache"
+]);
 function fmtWords(n) {
   const v = Number(n) || 0;
   if (typeof sdk.compactNumber === "function") return sdk.compactNumber(v);
@@ -3595,7 +3682,9 @@ function SidebarSources({
   const [deepStage, setDeepStage] = useState("");
   const [deepPct, setDeepPct] = useState(0);
   const [deepResult, setDeepResult] = useState(null);
+  const [busyLabel, setBusyLabel] = useState("");
   const fileRef = useRef2(null);
+  const folderRef = useRef2(null);
   const cancelDeepRef = useRef2(null);
   useEffect2(() => {
     return () => cancelDeepRef.current?.();
@@ -3636,6 +3725,7 @@ function SidebarSources({
   async function handleFiles(fileList) {
     if (!nbId || !fileList?.length) return;
     setBusy(true);
+    setBusyLabel("Indexing file...");
     try {
       for (const file of Array.from(fileList)) {
         await uploadFile(nbId, file);
@@ -3645,8 +3735,88 @@ function SidebarSources({
       onError?.(err.message || "Upload failed.");
     } finally {
       setBusy(false);
+      setBusyLabel("");
       if (fileRef.current) fileRef.current.value = "";
     }
+  }
+  async function handleFolderFiles(fileList) {
+    if (!nbId || !fileList?.length) return;
+    const all = Array.from(fileList);
+    const filtered = all.filter((f) => {
+      const rel = String(f.webkitRelativePath || f.name || "");
+      const segs = rel.split(/[\\/]/).filter(Boolean);
+      if (segs.some((seg) => SKIP_FOLDER_SEGMENTS.has(seg))) return false;
+      const name = String(f.name || "").toLowerCase();
+      const dot = name.lastIndexOf(".");
+      if (dot < 0) return false;
+      return SUPPORTED_FOLDER_EXTS.has(name.slice(dot));
+    }).slice(0, 40);
+    if (!filtered.length) {
+      onError?.("No supported documents (PDF, DOCX, Markdown, CSV, JSON, code, images, audio) found in that folder.");
+      if (folderRef.current) folderRef.current.value = "";
+      return;
+    }
+    const rootName = String(filtered[0].webkitRelativePath || "").split(/[\\/]/)[0] || "folder";
+    setBusy(true);
+    let ok = 0;
+    try {
+      for (let i = 0; i < filtered.length; i += 1) {
+        setBusyLabel(`Indexing ${rootName} (${i + 1}/${filtered.length})...`);
+        try {
+          await uploadFile(nbId, filtered[i]);
+          ok += 1;
+        } catch {
+        }
+      }
+      sdk.host?.notify?.({
+        kind: "success",
+        title: "SourceBook",
+        message: `Imported ${ok} source${ok === 1 ? "" : "s"} from ${rootName}.`
+      });
+      await onRefresh();
+    } catch (err) {
+      onError?.(err.message || "Could not import folder.");
+    } finally {
+      setBusy(false);
+      setBusyLabel("");
+      if (folderRef.current) folderRef.current.value = "";
+    }
+  }
+  async function handlePickFolder() {
+    if (!nbId || busy) return;
+    const activeCtx2 = ctx || getContext();
+    if (typeof activeCtx2?.files?.requestFolder === "function") {
+      try {
+        const picked = await activeCtx2.files.requestFolder();
+        if (picked?.ok) {
+          if (!picked.folder?.path) return;
+          setBusy(true);
+          setBusyLabel(`Syncing ${picked.folder.name || "folder"}...`);
+          try {
+            const res = await api(`/notebooks/${encodeURIComponent(nbId)}/sources/sync-path`, {
+              method: "POST",
+              body: { path: picked.folder.path, max_files: 40 }
+            });
+            const count = res?.added?.length || 0;
+            sdk.host?.notify?.({
+              kind: "success",
+              title: "SourceBook",
+              message: count > 0 ? `Synced ${count} source${count === 1 ? "" : "s"} from ${picked.folder.name || "folder"}.` : `No new supported files found in ${picked.folder.name || "folder"}.`
+            });
+            await onRefresh();
+          } catch (err) {
+            onError?.(err.message || "Could not sync selected folder.");
+          } finally {
+            setBusy(false);
+            setBusyLabel("");
+          }
+          return;
+        }
+        if (picked?.error === "protected") return;
+      } catch {
+      }
+    }
+    folderRef.current?.click();
   }
   async function submitPaste(e) {
     e.preventDefault();
@@ -3978,6 +4148,18 @@ function SidebarSources({
                 onChange: (e) => handleFiles(e.target.files)
               }
             ),
+            /* @__PURE__ */ jsx4(
+              "input",
+              {
+                ref: folderRef,
+                type: "file",
+                multiple: true,
+                webkitdirectory: "",
+                directory: "",
+                style: { display: "none" },
+                onChange: (e) => handleFolderFiles(e.target.files)
+              }
+            ),
             /* @__PURE__ */ jsxs2("div", { className: "sb-dropzone-actions", style: { flexWrap: "wrap" }, children: [
               /* @__PURE__ */ jsxs2(
                 "button",
@@ -4015,11 +4197,8 @@ function SidebarSources({
                   type: "button",
                   className: "sb-btn",
                   disabled: !nbId || busy,
-                  onClick: () => {
-                    setFolderPath("");
-                    setModal("folder");
-                  },
-                  title: "Sync a local folder, Obsidian vault, or Git repository",
+                  onClick: handlePickFolder,
+                  title: "Choose a local folder, Obsidian vault, or Git repository from your computer",
                   children: [
                     /* @__PURE__ */ jsx4(Icon, { name: "FolderOpen", size: 12 }),
                     " Folder"
@@ -4062,7 +4241,7 @@ function SidebarSources({
                 }
               )
             ] }),
-            /* @__PURE__ */ jsx4("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)", textAlign: "center" }, children: busy ? "Indexing source..." : "Drop PDF, DOCX, Markdown, CSV, audio, or URLs" })
+            /* @__PURE__ */ jsx4("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)", textAlign: "center" }, children: busy ? busyLabel || "Indexing source..." : "Drop PDF, DOCX, Markdown, CSV, audio, or URLs" })
           ]
         }
       ),
@@ -5523,49 +5702,50 @@ function ChatPanel({
             }
           }
         ),
-        /* @__PURE__ */ jsxs5("div", { className: "sb-composer-bar", style: { flexWrap: "wrap", gap: 8 }, children: [
-          /* @__PURE__ */ jsxs5("div", { style: { display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }, children: [
-            /* @__PURE__ */ jsxs5("span", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: [
+        /* @__PURE__ */ jsxs5("div", { className: "sb-composer-bar", children: [
+          /* @__PURE__ */ jsxs5("div", { className: "sb-composer-controls", children: [
+            /* @__PURE__ */ jsxs5("span", { className: "sb-composer-count", title: `${enabledSources.length} of ${sources.length} active sources`, children: [
               /* @__PURE__ */ jsx7("span", { className: "sb-num", children: enabledSources.length }),
               "/",
               sources.length,
-              " active"
+              /* @__PURE__ */ jsx7("span", { className: "sb-composer-active-word", children: " active" })
             ] }),
             notebook ? /* @__PURE__ */ jsxs5(Fragment3, { children: [
-              /* @__PURE__ */ jsx7(
-                "select",
-                {
-                  className: "sb-select",
-                  "aria-label": "Response persona",
-                  value: notebook.persona || "default",
-                  onChange: (e) => onPatchNotebook?.({ persona: e.target.value }),
-                  children: PERSONAS.map((p) => /* @__PURE__ */ jsxs5("option", { value: p.id, children: [
-                    "Persona: ",
-                    p.label
-                  ] }, p.id))
-                }
-              ),
-              /* @__PURE__ */ jsx7(
-                "select",
-                {
-                  className: "sb-select",
-                  "aria-label": "Response length",
-                  value: notebook.length || "standard",
-                  onChange: (e) => onPatchNotebook?.({ length: e.target.value }),
-                  children: LENGTHS.map((l) => /* @__PURE__ */ jsxs5("option", { value: l.id, children: [
-                    "Length: ",
-                    l.label
-                  ] }, l.id))
-                }
-              )
+              /* @__PURE__ */ jsxs5("label", { className: "sb-composer-field", children: [
+                /* @__PURE__ */ jsx7("span", { className: "sb-composer-lbl", children: "Persona" }),
+                /* @__PURE__ */ jsx7(
+                  "select",
+                  {
+                    className: "sb-select sb-composer-select",
+                    "aria-label": "Response persona",
+                    title: "Response persona",
+                    value: notebook.persona || "default",
+                    onChange: (e) => onPatchNotebook?.({ persona: e.target.value }),
+                    children: PERSONAS.map((p) => /* @__PURE__ */ jsx7("option", { value: p.id, children: p.label }, p.id))
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ jsxs5("label", { className: "sb-composer-field", children: [
+                /* @__PURE__ */ jsx7("span", { className: "sb-composer-lbl", children: "Length" }),
+                /* @__PURE__ */ jsx7(
+                  "select",
+                  {
+                    className: "sb-select sb-composer-select",
+                    "aria-label": "Response length",
+                    title: "Response length",
+                    value: notebook.length || "standard",
+                    onChange: (e) => onPatchNotebook?.({ length: e.target.value }),
+                    children: LENGTHS.map((l) => /* @__PURE__ */ jsx7("option", { value: l.id, children: l.label }, l.id))
+                  }
+                )
+              ] })
             ] }) : null
           ] }),
           /* @__PURE__ */ jsxs5(
             "button",
             {
               type: "button",
-              className: "sb-btn sb-btn-primary",
-              style: { marginLeft: "auto" },
+              className: "sb-btn sb-btn-primary sb-composer-ask",
               disabled: asking || !input.trim() || enabledSources.length === 0,
               onClick: () => sendQuestion(),
               children: [

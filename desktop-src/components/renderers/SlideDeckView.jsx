@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Icon, sdk } from '../../sdk.js'
-import { api, copyText, downloadBinaryBase64, downloadTextFile, getContext, loadArtifactMediaDataUrl } from '../../api.js'
+import { api, copyText, downloadBinaryBase64, downloadTextFile, getContext, loadArtifactMediaDataUrl, pollJob } from '../../api.js'
 import { DitherCanvas, HermesSpinner } from '../DitherSurface.jsx'
+
+const EDITABLE_LAYOUTS = ['title', 'stat', 'bento', 'comparison', 'timeline', 'two-col', 'bullets', 'quote', 'image-left', 'image-full', 'section', 'closing']
 
 const SLIDE_THEMES = {
   editorial: {
@@ -80,11 +82,14 @@ function normalizeThemeKey(t) {
 }
 
 export function SlideDeckView({
+  ctx,
   nbId,
   artifact,
+  capabilities,
   autoPresent = false,
   onClearAutoPresent,
   onOpenChunk,
+  onArtifactUpdated,
   onRequestRevise,
   onRequestRename,
   onRequestInspect,
@@ -101,11 +106,30 @@ export function SlideDeckView({
   const [moreOpen, setMoreOpen] = useState(false)
   const [showArtOverlay, setShowArtOverlay] = useState(false)
   const [mediaUrls, setMediaUrls] = useState({})
+  const [editing, setEditing] = useState(false)
+  const [savingSlide, setSavingSlide] = useState(false)
+  const [regenBusy, setRegenBusy] = useState(false)
+  const [regenStage, setRegenStage] = useState('')
+  const [editTitle, setEditTitle] = useState('')
+  const [editLayout, setEditLayout] = useState('two-col')
+  const [editBody, setEditBody] = useState('')
+  const [editBullets, setEditBullets] = useState('')
+  const [editNotes, setEditNotes] = useState('')
+  const [editImgPrompt, setEditImgPrompt] = useState('')
+  const [editImgMode, setEditImgMode] = useState('full_slide')
+  const cancelRegenRef = useRef(null)
+
+  const mediaSignature = slides.map(s => s?.image_file || '').join('|')
+
+  useEffect(() => {
+    return () => cancelRegenRef.current?.()
+  }, [])
 
   useEffect(() => {
     setIdx(0)
     setViewMode('stage')
     setMoreOpen(false)
+    setEditing(false)
     setThemeKey(normalizeThemeKey(artifact?.spec?.theme || artifact?.params?.theme))
     if (autoPresent) {
       setPresenting(true)
@@ -115,7 +139,20 @@ export function SlideDeckView({
     }
   }, [artifact?.id, autoPresent])
 
-  // Load any locally cached Hermes ImageGen media files cleanly through plugin host
+  // Sync inline editor fields whenever active slide changes
+  useEffect(() => {
+    const cur = slides[idx]
+    if (!cur) return
+    setEditTitle(cur.title || '')
+    setEditLayout(cur.layout || 'two-col')
+    setEditBody(cur.body || '')
+    setEditBullets((cur.bullets || []).join('\n'))
+    setEditNotes(cur.notes || '')
+    setEditImgPrompt(cur.image_prompt || '')
+    setEditImgMode(cur.image_mode || (cur.image_file || cur.image_url ? 'full_slide' : 'full_slide'))
+  }, [idx, artifact?.id, artifact?.updated])
+
+  // Load any locally cached Hermes ImageGen media files cleanly through plugin host (tracks revision filenames!)
   useEffect(() => {
     if (!nbId || !artifact?.id || !slides.length) return undefined
     let alive = true
@@ -136,12 +173,12 @@ export function SlideDeckView({
       entries.forEach(([k, v]) => {
         if (v) next[k] = v
       })
-      setMediaUrls(next)
+      setMediaUrls(prev => ({ ...prev, ...next }))
     })
     return () => {
       alive = false
     }
-  }, [nbId, artifact?.id, slides.length])
+  }, [nbId, artifact?.id, mediaSignature])
 
   useEffect(() => {
     if (!presenting) {
@@ -218,6 +255,100 @@ export function SlideDeckView({
       }
     } catch (err) {
       sdk.host?.notify?.({ kind: 'error', title: 'SourceBook', message: err.message || 'Could not export HTML deck.' })
+    }
+  }
+
+  async function saveSlideEdit(extraPatch = {}) {
+    if (!nbId || !artifact?.id || savingSlide) return
+    setSavingSlide(true)
+    try {
+      const payload = {
+        action: 'edit',
+        title: editTitle.trim() || sl.title || 'Untitled slide',
+        layout: editLayout,
+        body: editBody.trim(),
+        bullets: editBullets.split('\n').map(s => s.trim()).filter(Boolean),
+        notes: editNotes.trim(),
+        image_prompt: editImgPrompt.trim(),
+        image_mode: editImgMode,
+        ...extraPatch
+      }
+      const res = await api(
+        `/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(artifact.id)}/slides/${idx}`,
+        { method: 'PATCH', body: payload }
+      )
+      if (res?.artifact) {
+        onArtifactUpdated?.(res.artifact)
+        if (typeof res.active_index === 'number') setIdx(res.active_index)
+      }
+      sdk.host?.notify?.({ kind: 'success', title: 'SourceBook', message: `Saved Slide ${idx + 1}.` })
+    } catch (err) {
+      sdk.host?.notify?.({ kind: 'error', title: 'SourceBook', message: err.message || 'Could not update slide.' })
+    } finally {
+      setSavingSlide(false)
+    }
+  }
+
+  async function mutateSlideStructure(action, extra = {}) {
+    if (!nbId || !artifact?.id || savingSlide) return
+    setSavingSlide(true)
+    try {
+      const res = await api(
+        `/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(artifact.id)}/slides/${idx}`,
+        { method: 'PATCH', body: { action, ...extra } }
+      )
+      if (res?.artifact) {
+        onArtifactUpdated?.(res.artifact)
+        if (typeof res.active_index === 'number') setIdx(res.active_index)
+      }
+    } catch (err) {
+      sdk.host?.notify?.({ kind: 'error', title: 'SourceBook', message: err.message || `Slide ${action} failed.` })
+    } finally {
+      setSavingSlide(false)
+    }
+  }
+
+  async function regenerateCurrentSlideVisual(overrideMode) {
+    if (!nbId || !artifact?.id || regenBusy) return
+    setRegenBusy(true)
+    const providerTxt = [capabilities?.image_gen_provider, capabilities?.image_gen_model].filter(Boolean).join(' · ') || 'Hermes ImageGen'
+    setRegenStage(`Regenerating Slide ${idx + 1} visual via ${providerTxt}...`)
+    try {
+      const targetMode = overrideMode || (editImgMode === 'none' ? 'full_slide' : editImgMode) || 'full_slide'
+      const { job } = await api(
+        `/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(artifact.id)}/slides/${idx}/regenerate-visual`,
+        {
+          method: 'POST',
+          body: {
+            prompt: editImgPrompt.trim() || undefined,
+            image_mode: targetMode
+          }
+        }
+      )
+      const pollCtx = ctx || getContext()
+      cancelRegenRef.current?.()
+      cancelRegenRef.current = pollJob(
+        pollCtx,
+        job,
+        j => setRegenStage(j.stage || `Rendering Slide ${idx + 1}...`),
+        result => {
+          setRegenBusy(false)
+          setRegenStage('')
+          if (result?.artifact) {
+            onArtifactUpdated?.(result.artifact)
+          }
+          sdk.host?.notify?.({ kind: 'success', title: 'SourceBook', message: `Regenerated artwork for Slide ${idx + 1}.` })
+        },
+        err => {
+          setRegenBusy(false)
+          setRegenStage('')
+          sdk.host?.notify?.({ kind: 'error', title: 'SourceBook', message: err.message || 'Could not regenerate slide visual.' })
+        }
+      )
+    } catch (err) {
+      setRegenBusy(false)
+      setRegenStage('')
+      sdk.host?.notify?.({ kind: 'error', title: 'SourceBook', message: err.message || 'Could not start visual regeneration.' })
     }
   }
 
@@ -748,9 +879,31 @@ export function SlideDeckView({
           >
             {exportingFmt === 'pdf' ? <HermesSpinner size={12} /> : <Icon name="FileText" size={12} />} PDF
           </button>
+          <button
+            type="button"
+            className="sb-btn"
+            data-active={editing}
+            onClick={() => setEditing(v => !v)}
+            title="Edit this slide's title, layout, bullets, notes, or visual prompt inline"
+          >
+            <Icon name="Edit3" size={12} /> {editing ? 'Close Edit' : 'Edit Slide'}
+          </button>
+          <button
+            type="button"
+            className="sb-btn"
+            disabled={regenBusy}
+            onClick={() => regenerateCurrentSlideVisual()}
+            title={
+              capabilities?.image_generate
+                ? `Regenerate artwork for Slide ${idx + 1} via ${[capabilities.image_gen_provider, capabilities.image_gen_model].filter(Boolean).join(' · ')}`
+                : 'Regenerate artwork for this slide using Hermes ImageGen'
+            }
+          >
+            {regenBusy ? <HermesSpinner size={12} /> : <Icon name="Wand2" size={12} />} Regen Visual
+          </button>
           {onRequestRevise ? (
-            <button type="button" className="sb-btn" onClick={() => onRequestRevise(artifact)} title="Revise this slide deck with AI instructions">
-              <Icon name="Sparkles" size={12} /> Revise
+            <button type="button" className="sb-btn" onClick={() => onRequestRevise(artifact)} title="Revise this entire slide deck with AI instructions">
+              <Icon name="Sparkles" size={12} /> Revise Deck
             </button>
           ) : null}
           <button
@@ -821,6 +974,18 @@ export function SlideDeckView({
         </div>
       </div>
 
+      {regenBusy ? (
+        <div className="sb-sl-regen-banner">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <HermesSpinner size={13} />
+            <span>{regenStage || `Regenerating Slide ${idx + 1} visual...`}</span>
+          </div>
+          <span className="sb-mono" style={{ fontSize: 10.5, color: 'var(--ui-text-tertiary)' }}>
+            Slide {idx + 1} / {slides.length}
+          </span>
+        </div>
+      ) : null}
+
       {artifact?.grounding?.image_notice ? (
         <div className="sb-quote-box" style={{ fontSize: 11.5 }}>
           {artifact.grounding.image_notice}
@@ -870,6 +1035,135 @@ export function SlideDeckView({
       ) : (
         <>
           {renderSlideCard(sl, idx, false)}
+
+          {editing ? (
+            <div className="sb-sl-editor">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <Icon name="Edit3" size={13} style={{ color: 'var(--ui-accent)' }} />
+                  <strong style={{ fontSize: 12.5 }}>Inline Slide Editor · Slide {idx + 1}</strong>
+                </div>
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="sb-btn"
+                    disabled={savingSlide || idx === 0}
+                    onClick={() => mutateSlideStructure('move', { delta: -1 })}
+                    title="Move slide left"
+                  >
+                    <Icon name="ChevronLeft" size={12} /> Move Left
+                  </button>
+                  <button
+                    type="button"
+                    className="sb-btn"
+                    disabled={savingSlide || idx >= slides.length - 1}
+                    onClick={() => mutateSlideStructure('move', { delta: 1 })}
+                    title="Move slide right"
+                  >
+                    Move Right <Icon name="ChevronRight" size={12} />
+                  </button>
+                  <button
+                    type="button"
+                    className="sb-btn"
+                    disabled={savingSlide}
+                    onClick={() => mutateSlideStructure('add')}
+                    title="Insert new slide after this one"
+                  >
+                    <Icon name="Plus" size={12} /> Add Slide
+                  </button>
+                  <button
+                    type="button"
+                    className="sb-btn sb-btn-danger"
+                    disabled={savingSlide || slides.length <= 1}
+                    onClick={() => mutateSlideStructure('delete')}
+                    title="Delete this slide"
+                  >
+                    <Icon name="Trash2" size={12} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="sb-sl-editor-grid">
+                <label className="sb-field">
+                  <span className="sb-label">Action title</span>
+                  <input className="sb-input" value={editTitle} onChange={e => setEditTitle(e.target.value)} />
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <label className="sb-field">
+                    <span className="sb-label">Layout</span>
+                    <select className="sb-select" value={editLayout} onChange={e => setEditLayout(e.target.value)}>
+                      {EDITABLE_LAYOUTS.map(l => <option key={l} value={l}>{l}</option>)}
+                    </select>
+                  </label>
+                  <label className="sb-field">
+                    <span className="sb-label">Visual mode</span>
+                    <select className="sb-select" value={editImgMode} onChange={e => setEditImgMode(e.target.value)}>
+                      <option value="full_slide">Full-Slide Art</option>
+                      <option value="hybrid">Hybrid (Text + Art)</option>
+                      <option value="none">Native Vector Only</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
+              <div className="sb-sl-editor-grid">
+                <label className="sb-field">
+                  <span className="sb-label">Bullets (one per line)</span>
+                  <textarea className="sb-textarea" rows={3} value={editBullets} onChange={e => setEditBullets(e.target.value)} />
+                </label>
+                <label className="sb-field">
+                  <span className="sb-label">Speaker notes</span>
+                  <textarea className="sb-textarea" rows={3} value={editNotes} onChange={e => setEditNotes(e.target.value)} />
+                </label>
+              </div>
+
+              <label className="sb-field">
+                <span className="sb-label">
+                  Visual art direction prompt (used when clicking Regenerate Visual)
+                  {capabilities?.image_generate ? (
+                    <span className="sb-mono" style={{ marginLeft: 8, fontSize: 10.5, color: 'var(--ui-accent)' }}>
+                      {[capabilities.image_gen_provider, capabilities.image_gen_model].filter(Boolean).join(' · ')}
+                    </span>
+                  ) : null}
+                </span>
+                <input
+                  className="sb-input"
+                  value={editImgPrompt}
+                  onChange={e => setEditImgPrompt(e.target.value)}
+                  placeholder='Example: "Tactile Swiss cutaway technical plate on matte obsidian showing hybrid retrieval prisms..."'
+                />
+              </label>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    type="button"
+                    className="sb-btn"
+                    disabled={regenBusy}
+                    onClick={() => regenerateCurrentSlideVisual(editImgMode === 'none' ? 'full_slide' : editImgMode)}
+                  >
+                    {regenBusy ? <HermesSpinner size={12} /> : <Icon name="Wand2" size={12} />} Regenerate This Slide's Visual
+                  </button>
+                  {(sl.image_file || sl.image_url) ? (
+                    <button
+                      type="button"
+                      className="sb-btn sb-btn-ghost"
+                      disabled={savingSlide}
+                      onClick={() => saveSlideEdit({ clear_image: true, image_mode: 'none' })}
+                    >
+                      Remove visual
+                    </button>
+                  ) : null}
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button type="button" className="sb-btn" onClick={() => setEditing(false)}>Cancel</button>
+                  <button type="button" className="sb-btn sb-btn-primary" disabled={savingSlide} onClick={() => saveSlideEdit()}>
+                    {savingSlide ? 'Saving...' : 'Save Slide'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           {showNotes && sl.notes ? (
             <div className="sb-quote-box">

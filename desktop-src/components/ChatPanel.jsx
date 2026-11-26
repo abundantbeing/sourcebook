@@ -31,6 +31,7 @@ export function ChatPanel({
   onPatchNotebook,
   onOpenChunk,
   onOpenSource,
+  onSaveMemory,
   onRefresh,
   onError
 }) {
@@ -364,6 +365,22 @@ export function ChatPanel({
                       >
                         <Icon name="BookmarkPlus" size={12} /> Save note
                       </button>
+                      {onSaveMemory ? (
+                        <button
+                          type="button"
+                          className="sb-btn sb-btn-ghost"
+                          onClick={() =>
+                            onSaveMemory({
+                              title: (msg.content || '').split('\n')[0].replace(/\[\[c:[^\]]+\]\]/g, '').trim().slice(0, 56),
+                              content: msg.content || '',
+                              citations: msg.citations || []
+                            })
+                          }
+                          title="Save this verified answer into Hermes persistent memory"
+                        >
+                          <Icon name="Brain" size={12} /> Memory
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 </article>
@@ -573,6 +590,16 @@ export function ChatPanel({
                         {cid.split(':')[1] || cid}
                       </button>
                     ))}
+                    {onSaveMemory && cl.verdict === 'supported' ? (
+                      <button
+                        type="button"
+                        className="sb-btn sb-btn-ghost sb-btn-icon"
+                        title="Promote verified claim to Hermes Memory"
+                        onClick={() => onSaveMemory({ title: cl.source_title || '', content: cl.text, citations: cl.citations || [] })}
+                      >
+                        <Icon name="Brain" size={12} />
+                      </button>
+                    ) : null}
                   </div>
                 </div>
                 <div style={{ fontSize: 12.5, color: 'var(--ui-text-primary)' }}>{cl.text}</div>

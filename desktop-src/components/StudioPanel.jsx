@@ -276,11 +276,17 @@ export function StudioPanel({
       case 'slides':
         return (
           <SlideDeckView
+            ctx={ctx}
             nbId={nbId}
             artifact={activeArt}
+            capabilities={capabilities}
             autoPresent={autoPresentId === activeArt.id}
             onClearAutoPresent={() => setAutoPresentId('')}
             onOpenChunk={onOpenChunk}
+            onArtifactUpdated={updated => {
+              setActiveArt(updated)
+              onRefresh?.()
+            }}
             onRequestRevise={art => openCustomizeSlides('revise', art)}
             onRequestRename={art => {
               setRenameTarget(art)

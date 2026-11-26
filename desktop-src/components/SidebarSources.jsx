@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Icon, sdk } from '../sdk.js'
-import { api, uploadFile } from '../api.js'
+import { api, getContext, pollJob, uploadFile } from '../api.js'
+import { HermesSpinner } from './DitherSurface.jsx'
 
 const KIND_ICONS = {
   pdf: 'FileText',
@@ -23,12 +24,15 @@ function fmtWords(n) {
 }
 
 export function SidebarSources({
+  ctx,
   nbId,
   sources,
   notes,
   coverage,
   selectedSourceId,
   onSelectSource,
+  onOpenArtifact,
+  onSaveMemory,
   onRefresh,
   onError
 }) {
@@ -41,10 +45,22 @@ export function SidebarSources({
   const [body, setBody] = useState('')
   const [urlInput, setUrlInput] = useState('')
   const [folderPath, setFolderPath] = useState('')
+  const [discoverMode, setDiscoverMode] = useState('quick') // 'quick' | 'deep'
   const [discoverQuery, setDiscoverQuery] = useState('')
   const [discoverResults, setDiscoverResults] = useState([])
   const [discoverChecked, setDiscoverChecked] = useState({})
+  const [deepDepth, setDeepDepth] = useState('standard')
+  const [deepAutoBrief, setDeepAutoBrief] = useState(true)
+  const [deepRunning, setDeepRunning] = useState(false)
+  const [deepStage, setDeepStage] = useState('')
+  const [deepPct, setDeepPct] = useState(0)
+  const [deepResult, setDeepResult] = useState(null)
   const fileRef = useRef(null)
+  const cancelDeepRef = useRef(null)
+
+  useEffect(() => {
+    return () => cancelDeepRef.current?.()
+  }, [])
 
   const covBySource = {}
   for (const item of coverage?.sources || []) {
@@ -181,6 +197,57 @@ export function SidebarSources({
       onError?.(err.message || 'Web source discovery failed.')
     } finally {
       setBusy(false)
+    }
+  }
+
+  async function runDeepResearch(e) {
+    e.preventDefault()
+    if (!discoverQuery.trim() || deepRunning || !nbId) return
+    setDeepRunning(true)
+    setDeepResult(null)
+    setDeepStage('Planning complementary research queries...')
+    setDeepPct(10)
+    try {
+      const { job } = await api(`/notebooks/${encodeURIComponent(nbId)}/deep-research`, {
+        method: 'POST',
+        body: {
+          topic: discoverQuery.trim(),
+          depth: deepDepth,
+          auto_brief: deepAutoBrief
+        }
+      })
+      const pollCtx = ctx || getContext()
+      cancelDeepRef.current?.()
+      cancelDeepRef.current = pollJob(
+        pollCtx,
+        job,
+        j => {
+          setDeepStage(j.stage || 'Researching...')
+          if (typeof j.pct === 'number') setDeepPct(j.pct)
+        },
+        async result => {
+          setDeepRunning(false)
+          setDeepPct(100)
+          setDeepStage('')
+          setDeepResult(result || null)
+          await onRefresh()
+          const n = result?.ingested?.length || 0
+          sdk.host?.notify?.({
+            kind: 'success',
+            title: 'SourceBook Deep Research',
+            message: `Auto-ingested ${n} source${n === 1 ? '' : 's'}${result?.artifact ? ' and synthesized a Research Briefing' : ''}.`
+          })
+        },
+        err => {
+          setDeepRunning(false)
+          setDeepStage('')
+          onError?.(err.message || 'Deep Research run failed.')
+        }
+      )
+    } catch (err) {
+      setDeepRunning(false)
+      setDeepStage('')
+      onError?.(err.message || 'Could not start Deep Research.')
     }
   }
 
@@ -576,6 +643,16 @@ export function SidebarSources({
                     >
                       <Icon name="ArrowUpRight" size={13} />
                     </button>
+                    {onSaveMemory ? (
+                      <button
+                        type="button"
+                        className="sb-btn sb-btn-ghost sb-btn-icon"
+                        title="Save note insight to Hermes persistent memory"
+                        onClick={() => onSaveMemory({ title: note.title, content: note.markdown, citations: note.citations || [] })}
+                      >
+                        <Icon name="Brain" size={12} />
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       className="sb-btn sb-btn-ghost sb-btn-icon sb-btn-danger"
@@ -724,67 +801,198 @@ export function SidebarSources({
       ) : null}
 
       {modal === 'discover' ? (
-        <div className="sb-modal-backdrop" onClick={() => setModal(null)}>
-          <div className="sb-modal" style={{ width: 'min(560px, 94vw)' }} onClick={e => e.stopPropagation()}>
+        <div className="sb-modal-backdrop" onClick={() => { if (!deepRunning) setModal(null) }}>
+          <div className="sb-modal" style={{ width: 'min(580px, 94vw)' }} onClick={e => e.stopPropagation()}>
             <div className="sb-modal-head">
-              <span>Discover web sources</span>
-              <button type="button" className="sb-btn sb-btn-ghost sb-btn-icon" onClick={() => setModal(null)}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span>Discover &amp; Deep Research</span>
+                <div className="sb-seg">
+                  <button
+                    type="button"
+                    className="sb-seg-btn"
+                    data-active={discoverMode === 'quick'}
+                    disabled={deepRunning}
+                    onClick={() => setDiscoverMode('quick')}
+                  >
+                    Quick Search
+                  </button>
+                  <button
+                    type="button"
+                    className="sb-seg-btn"
+                    data-active={discoverMode === 'deep'}
+                    disabled={deepRunning}
+                    onClick={() => setDiscoverMode('deep')}
+                  >
+                    <Icon name="Compass" size={11} /> Deep Research
+                  </button>
+                </div>
+              </div>
+              <button type="button" className="sb-btn sb-btn-ghost sb-btn-icon" disabled={deepRunning} onClick={() => setModal(null)}>
                 <Icon name="X" size={14} />
               </button>
             </div>
             <div className="sb-modal-body">
-              <form onSubmit={runDiscover} style={{ display: 'flex', gap: 6 }}>
-                <input
-                  className="sb-input"
-                  value={discoverQuery}
-                  onChange={e => setDiscoverQuery(e.target.value)}
-                  placeholder="Describe a topic to search for primary sources..."
-                  autoFocus
-                />
-                <button type="submit" className="sb-btn sb-btn-primary" disabled={busy || !discoverQuery.trim()}>
-                  {busy ? 'Searching...' : 'Search'}
-                </button>
-              </form>
-              {discoverResults.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 300, overflow: 'auto' }}>
-                  {discoverResults.map(item => (
-                    <label
-                      key={item.url}
-                      className="sb-ledger-row"
-                      style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, cursor: 'pointer' }}
-                    >
+              {discoverMode === 'deep' ? (
+                <form onSubmit={runDeepResearch} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <label className="sb-field">
+                    <span className="sb-label">Research question or topic</span>
+                    <input
+                      className="sb-input"
+                      value={discoverQuery}
+                      onChange={e => setDiscoverQuery(e.target.value)}
+                      placeholder="e.g. Local-first hybrid RAG retrieval benchmarks vs managed vector DBs"
+                      disabled={deepRunning}
+                      autoFocus
+                    />
+                  </label>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span className="sb-label">Depth</span>
+                      <div className="sb-seg">
+                        {[
+                          { id: 'quick', label: 'Quick (5)' },
+                          { id: 'standard', label: 'Standard (10)' },
+                          { id: 'deep', label: 'Deep (15)' }
+                        ].map(opt => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            className="sb-seg-btn"
+                            data-active={deepDepth === opt.id}
+                            disabled={deepRunning}
+                            onClick={() => setDeepDepth(opt.id)}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'var(--ui-text-secondary)', cursor: 'pointer' }}>
                       <input
                         type="checkbox"
                         className="sb-checkbox"
-                        style={{ marginTop: 2 }}
-                        checked={Boolean(discoverChecked[item.url])}
-                        onChange={() => setDiscoverChecked(prev => ({ ...prev, [item.url]: !prev[item.url] }))}
+                        checked={deepAutoBrief}
+                        disabled={deepRunning}
+                        onChange={e => setDeepAutoBrief(e.target.checked)}
                       />
-                      <div style={{ minWidth: 0, flex: 1 }}>
-                        <div className="sb-src-title">{item.title}</div>
-                        <div className="sb-mono" style={{ fontSize: 10.5, color: 'var(--ui-accent)' }}>{item.domain}</div>
-                        {item.snippet ? (
-                          <div style={{ fontSize: 11.5, color: 'var(--ui-text-secondary)', marginTop: 2 }}>{item.snippet}</div>
+                      Auto-synthesize cited Briefing
+                    </label>
+                  </div>
+
+                  <div style={{ fontSize: 11.5, color: 'var(--ui-text-tertiary)', lineHeight: 1.45 }}>
+                    Hermes expands your topic into complementary sub-queries, discovers &amp; deduplicates primary web sources, ingests them into this notebook automatically, and builds a cited briefing.
+                  </div>
+
+                  {deepRunning ? (
+                    <div className="sb-dr-progress">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                          <HermesSpinner size={12} /> {deepStage || 'Running Deep Research...'}
+                        </span>
+                        <span className="sb-mono" style={{ fontSize: 11 }}>{deepPct}%</span>
+                      </div>
+                      <div className="sb-dr-bar">
+                        <div className="sb-dr-fill" style={{ width: `${Math.max(8, deepPct)}%` }} />
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {deepResult ? (
+                    <div className="sb-ledger-row" style={{ gap: 8, borderColor: 'var(--sb-accent-border)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                        <strong style={{ fontSize: 12.5 }}>
+                          Ingested {deepResult.ingested?.length || 0} source{(deepResult.ingested?.length || 0) === 1 ? '' : 's'} across {deepResult.queries?.length || 0} queries
+                        </strong>
+                        {deepResult.artifact?.id && onOpenArtifact ? (
+                          <button
+                            type="button"
+                            className="sb-btn sb-btn-primary"
+                            style={{ padding: '3px 9px', fontSize: 11 }}
+                            onClick={() => {
+                              setModal(null)
+                              onOpenArtifact(deepResult.artifact.id)
+                            }}
+                          >
+                            Open Briefing
+                          </button>
                         ) : null}
                       </div>
-                    </label>
-                  ))}
-                </div>
-              ) : null}
+                      {(deepResult.ingested || []).slice(0, 6).map(src => (
+                        <div key={src.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, gap: 8 }}>
+                          <span className="sb-src-title">{src.title}</span>
+                          <span className="sb-mono" style={{ color: 'var(--ui-accent)', flexShrink: 0 }}>{src.domain}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+                    <button type="button" className="sb-btn" disabled={deepRunning} onClick={() => setModal(null)}>Close</button>
+                    <button type="submit" className="sb-btn sb-btn-primary" disabled={deepRunning || !discoverQuery.trim()}>
+                      {deepRunning ? <HermesSpinner size={12} /> : <Icon name="Compass" size={12} />}{' '}
+                      {deepRunning ? 'Researching...' : 'Start Deep Research'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <form onSubmit={runDiscover} style={{ display: 'flex', gap: 6 }}>
+                    <input
+                      className="sb-input"
+                      value={discoverQuery}
+                      onChange={e => setDiscoverQuery(e.target.value)}
+                      placeholder="Describe a topic to search for primary sources..."
+                      autoFocus
+                    />
+                    <button type="submit" className="sb-btn sb-btn-primary" disabled={busy || !discoverQuery.trim()}>
+                      {busy ? 'Searching...' : 'Search'}
+                    </button>
+                  </form>
+                  {discoverResults.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 300, overflow: 'auto' }}>
+                      {discoverResults.map(item => (
+                        <label
+                          key={item.url}
+                          className="sb-ledger-row"
+                          style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, cursor: 'pointer' }}
+                        >
+                          <input
+                            type="checkbox"
+                            className="sb-checkbox"
+                            style={{ marginTop: 2 }}
+                            checked={Boolean(discoverChecked[item.url])}
+                            onChange={() => setDiscoverChecked(prev => ({ ...prev, [item.url]: !prev[item.url] }))}
+                          />
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div className="sb-src-title">{item.title}</div>
+                            <div className="sb-mono" style={{ fontSize: 10.5, color: 'var(--ui-accent)' }}>{item.domain}</div>
+                            {item.snippet ? (
+                              <div style={{ fontSize: 11.5, color: 'var(--ui-text-secondary)', marginTop: 2 }}>{item.snippet}</div>
+                            ) : null}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  ) : null}
+                </>
+              )}
             </div>
-            <div className="sb-modal-foot">
-              <button type="button" className="sb-btn" onClick={() => setModal(null)}>Close</button>
-              {discoverResults.length > 0 ? (
-                <button
-                  type="button"
-                  className="sb-btn sb-btn-primary"
-                  disabled={busy || !discoverResults.some(r => discoverChecked[r.url])}
-                  onClick={importDiscovered}
-                >
-                  {busy ? 'Importing...' : `Import selected (${discoverResults.filter(r => discoverChecked[r.url]).length})`}
-                </button>
-              ) : null}
-            </div>
+            {discoverMode === 'quick' ? (
+              <div className="sb-modal-foot">
+                <button type="button" className="sb-btn" onClick={() => setModal(null)}>Close</button>
+                {discoverResults.length > 0 ? (
+                  <button
+                    type="button"
+                    className="sb-btn sb-btn-primary"
+                    disabled={busy || !discoverResults.some(r => discoverChecked[r.url])}
+                    onClick={importDiscovered}
+                  >
+                    {busy ? 'Importing...' : `Import selected (${discoverResults.filter(r => discoverChecked[r.url]).length})`}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}

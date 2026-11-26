@@ -146,6 +146,40 @@ var LOCAL_GLYPHS = {
     /* @__PURE__ */ jsx("polyline", { points: "8 6 2 12 8 18" })
   ] }),
   Sparkles: /* @__PURE__ */ jsx(Fragment, { children: /* @__PURE__ */ jsx("path", { d: "m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" }) }),
+  Brain: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" }),
+    /* @__PURE__ */ jsx("path", { d: "M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" }),
+    /* @__PURE__ */ jsx("path", { d: "M12 5v13" })
+  ] }),
+  Wand2: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z" }),
+    /* @__PURE__ */ jsx("path", { d: "m14 7 3 3" }),
+    /* @__PURE__ */ jsx("path", { d: "M5 6v4" }),
+    /* @__PURE__ */ jsx("path", { d: "M19 14v4" }),
+    /* @__PURE__ */ jsx("path", { d: "M10 2v2" }),
+    /* @__PURE__ */ jsx("path", { d: "M7 8H3" }),
+    /* @__PURE__ */ jsx("path", { d: "M21 16h-4" })
+  ] }),
+  ZoomIn: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("circle", { cx: "11", cy: "11", r: "8" }),
+    /* @__PURE__ */ jsx("line", { x1: "21", x2: "16.65", y1: "21", y2: "16.65" }),
+    /* @__PURE__ */ jsx("line", { x1: "11", x2: "11", y1: "8", y2: "14" }),
+    /* @__PURE__ */ jsx("line", { x1: "8", x2: "14", y1: "11", y2: "11" })
+  ] }),
+  Mic: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" }),
+    /* @__PURE__ */ jsx("path", { d: "M19 10v2a7 7 0 0 1-14 0v-2" }),
+    /* @__PURE__ */ jsx("line", { x1: "12", x2: "12", y1: "19", y2: "22" })
+  ] }),
+  Volume2: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("polygon", { points: "11 5 6 9 2 9 2 15 6 15 11 19 11 5" }),
+    /* @__PURE__ */ jsx("path", { d: "M15.54 8.46a5 5 0 0 1 0 7.07" }),
+    /* @__PURE__ */ jsx("path", { d: "M19.07 4.93a10 10 0 0 1 0 14.14" })
+  ] }),
+  Compass: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("circle", { cx: "12", cy: "12", r: "10" }),
+    /* @__PURE__ */ jsx("polygon", { points: "16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" })
+  ] }),
   FileJson: /* @__PURE__ */ jsxs(Fragment, { children: [
     /* @__PURE__ */ jsx("path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" }),
     /* @__PURE__ */ jsx("path", { d: "M14 2v4a2 2 0 0 0 2 2h4" }),
@@ -444,7 +478,7 @@ function downloadSvgAsPng(svgEl, filename, scale = 2) {
 }
 
 // desktop-src/SourceBookWorkspace.jsx
-import { useCallback, useEffect as useEffect10, useMemo as useMemo4, useRef as useRef9, useState as useState13 } from "react";
+import { useCallback, useEffect as useEffect11, useMemo as useMemo4, useRef as useRef10, useState as useState13 } from "react";
 
 // desktop-src/styles.js
 import { jsx as jsx2 } from "react/jsx-runtime";
@@ -2627,6 +2661,102 @@ var CSS = `
 .sb-sl-full-art-bar > * {
   pointer-events: auto;
 }
+/* Inline Slide Editor & Single-Slide Regenerate Visual */
+.sb-sl-editor {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--sb-accent-border);
+  background: var(--sb-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sb-sl-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.sb-sl-regen-banner {
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--sb-accent-border);
+  background: var(--sb-accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--ui-text-primary);
+}
+/* Visual PDF Page Preview inside Passage Inspector */
+.sb-pdf-preview-card {
+  border-radius: 10px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-surface);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.sb-pdf-preview-head {
+  padding: 7px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  border-bottom: 1px solid var(--ui-stroke-tertiary);
+  background: var(--sb-sidebar);
+  font-size: 11.5px;
+}
+.sb-pdf-preview-stage {
+  position: relative;
+  background: var(--sb-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  cursor: zoom-in;
+}
+.sb-pdf-preview-img {
+  width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid var(--ui-stroke-tertiary);
+  display: block;
+  background: #fff;
+}
+/* Spoken Host Reply Banner inside Audio Overview */
+.sb-audio-reply-bar {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, #10b981 42%, var(--ui-stroke-secondary));
+  background: color-mix(in srgb, #10b981 10%, var(--sb-surface));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+/* Deep Research Progress Card */
+.sb-dr-progress {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--sb-accent-border);
+  background: var(--sb-accent-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sb-dr-bar {
+  height: 5px;
+  border-radius: 99px;
+  background: var(--ui-stroke-tertiary);
+  overflow: hidden;
+}
+.sb-dr-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--ui-accent);
+  transition: width 260ms var(--sb-ease);
+}
 
 @media (max-width: 1040px) {
   .sb-workbench {
@@ -2646,8 +2776,164 @@ function Styles() {
 }
 
 // desktop-src/components/SidebarSources.jsx
-import { useRef, useState } from "react";
-import { Fragment as Fragment2, jsx as jsx3, jsxs as jsxs2 } from "react/jsx-runtime";
+import { useEffect as useEffect2, useRef as useRef2, useState } from "react";
+
+// desktop-src/components/DitherSurface.jsx
+import { useEffect, useRef } from "react";
+import { jsx as jsx3 } from "react/jsx-runtime";
+var BAYER_4X4 = [
+  0 / 16,
+  8 / 16,
+  2 / 16,
+  10 / 16,
+  12 / 16,
+  4 / 16,
+  14 / 16,
+  6 / 16,
+  3 / 16,
+  11 / 16,
+  1 / 16,
+  9 / 16,
+  15 / 16,
+  7 / 16,
+  13 / 16,
+  5 / 16
+];
+function parseRgb(colorStr) {
+  const m = String(colorStr || "").match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i);
+  if (m) {
+    return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
+  }
+  const r = String(colorStr || "").match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if (r) {
+    return [Number(r[1]), Number(r[2]), Number(r[3])];
+  }
+  return [59, 130, 246];
+}
+function prefersReducedMotion() {
+  try {
+    return typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch {
+    return false;
+  }
+}
+function DitherCanvas({
+  variant = "aurora",
+  animated = false,
+  color = "var(--ui-accent)",
+  secondaryColor = "#10b981",
+  opacity = 0.28,
+  cell = 3,
+  cols = 148,
+  rows = 32,
+  className = "",
+  style
+}) {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return void 0;
+    canvas.width = cols;
+    canvas.height = rows;
+    const c2d = canvas.getContext("2d");
+    if (!c2d) return void 0;
+    const img = c2d.createImageData(cols, rows);
+    const data = img.data;
+    const readPalette = () => {
+      const c1 = parseRgb(resolveCssColor(color, canvas));
+      const c2 = parseRgb(resolveCssColor(secondaryColor, canvas));
+      return [c1, c2];
+    };
+    let [rgbA, rgbB] = readPalette();
+    const paint = (timeMs) => {
+      const t = timeMs * 55e-5;
+      for (let y = 0; y < rows; y += 1) {
+        const ny = y / Math.max(1, rows - 1);
+        const bRow = (y & 3) * 4;
+        for (let x = 0; x < cols; x += 1) {
+          const nx = x / Math.max(1, cols - 1);
+          let field = 0;
+          let blend = nx;
+          if (variant === "wave") {
+            const w1 = Math.sin(nx * 10.5 + t * 2.2) * 0.24 + Math.sin(nx * 23 - t * 1.4) * 0.11;
+            const w2 = Math.cos(nx * 7.5 - t * 1.7) * 0.2;
+            const env = Math.sin(nx * Math.PI);
+            const center = 0.5 + (w1 + w2) * env;
+            const dist = Math.abs(ny - center);
+            field = Math.max(0, 1 - dist * 3.1) * (0.35 + 0.65 * env);
+            blend = 0.5 + 0.5 * Math.sin(nx * 6 + t);
+          } else if (variant === "mesh") {
+            const dx = nx - 0.14;
+            const dy = ny - 0.12;
+            const r = Math.sqrt(dx * dx * 0.65 + dy * dy * 1.8);
+            const ripple = 0.06 * Math.sin(nx * 8 + t);
+            field = Math.max(0, (1 - r * 1.25 + ripple) * (1 - ny * 0.82));
+            blend = nx * 0.75;
+          } else {
+            const c1 = Math.sin(nx * 5.2 + t * 1.1) * 0.5 + 0.5;
+            const c2 = Math.sin(nx * 11.4 - t * 0.8 + 1.3) * 0.5 + 0.5;
+            const verticalFade = Math.pow(Math.max(0, 1 - ny), 1.35);
+            field = (c1 * 0.55 + c2 * 0.45) * verticalFade * 0.92;
+            blend = c1;
+          }
+          const threshold = BAYER_4X4[bRow + (x & 3)];
+          const idx = (y * cols + x) * 4;
+          if (field > threshold) {
+            const useB = blend > 0.58;
+            const rgb = useB ? rgbB : rgbA;
+            data[idx] = rgb[0];
+            data[idx + 1] = rgb[1];
+            data[idx + 2] = rgb[2];
+            data[idx + 3] = Math.round(255 * Math.min(1, 0.55 + field * 0.45));
+          } else {
+            data[idx + 3] = 0;
+          }
+        }
+      }
+      c2d.putImageData(img, 0, 0);
+    };
+    paint(1400);
+    if (!animated || prefersReducedMotion() || typeof sdk.createBudgetedLoop !== "function") {
+      return void 0;
+    }
+    const loop = sdk.createBudgetedLoop(
+      (now) => {
+        paint(now);
+      },
+      {
+        fps: 10,
+        pauseWhenUnfocused: true
+      }
+    );
+    return () => {
+      loop?.dispose?.();
+    };
+  }, [variant, animated, color, secondaryColor, cols, rows]);
+  return /* @__PURE__ */ jsx3(
+    "canvas",
+    {
+      ref: canvasRef,
+      "aria-hidden": "true",
+      className: className ? `sb-dither-canvas ${className}` : "sb-dither-canvas",
+      style: {
+        opacity,
+        imageRendering: "pixelated",
+        ...style
+      },
+      "data-cell": cell
+    }
+  );
+}
+function HermesSpinner({ size = 12, className = "" }) {
+  const GlyphSpinner = sdk.GlyphSpinner;
+  if (typeof GlyphSpinner === "function") {
+    return /* @__PURE__ */ jsx3(GlyphSpinner, { spinner: "breathe", className, style: { fontSize: size, lineHeight: 1 } });
+  }
+  return /* @__PURE__ */ jsx3("span", { className: "sb-dt-dot", style: { background: "var(--ui-accent)", width: 7, height: 7 }, "aria-hidden": "true" });
+}
+
+// desktop-src/components/SidebarSources.jsx
+import { Fragment as Fragment2, jsx as jsx4, jsxs as jsxs2 } from "react/jsx-runtime";
 var KIND_ICONS = {
   pdf: "FileText",
   docx: "FileText",
@@ -2667,12 +2953,15 @@ function fmtWords(n) {
   return v >= 1e3 ? `${(v / 1e3).toFixed(1)}k` : String(v);
 }
 function SidebarSources({
+  ctx,
   nbId,
   sources,
   notes,
   coverage,
   selectedSourceId,
   onSelectSource,
+  onOpenArtifact,
+  onSaveMemory,
   onRefresh,
   onError
 }) {
@@ -2685,10 +2974,21 @@ function SidebarSources({
   const [body, setBody] = useState("");
   const [urlInput, setUrlInput] = useState("");
   const [folderPath, setFolderPath] = useState("");
+  const [discoverMode, setDiscoverMode] = useState("quick");
   const [discoverQuery, setDiscoverQuery] = useState("");
   const [discoverResults, setDiscoverResults] = useState([]);
   const [discoverChecked, setDiscoverChecked] = useState({});
-  const fileRef = useRef(null);
+  const [deepDepth, setDeepDepth] = useState("standard");
+  const [deepAutoBrief, setDeepAutoBrief] = useState(true);
+  const [deepRunning, setDeepRunning] = useState(false);
+  const [deepStage, setDeepStage] = useState("");
+  const [deepPct, setDeepPct] = useState(0);
+  const [deepResult, setDeepResult] = useState(null);
+  const fileRef = useRef2(null);
+  const cancelDeepRef = useRef2(null);
+  useEffect2(() => {
+    return () => cancelDeepRef.current?.();
+  }, []);
   const covBySource = {};
   for (const item of coverage?.sources || []) {
     covBySource[item.source_id] = item;
@@ -2820,6 +3120,56 @@ function SidebarSources({
       setBusy(false);
     }
   }
+  async function runDeepResearch(e) {
+    e.preventDefault();
+    if (!discoverQuery.trim() || deepRunning || !nbId) return;
+    setDeepRunning(true);
+    setDeepResult(null);
+    setDeepStage("Planning complementary research queries...");
+    setDeepPct(10);
+    try {
+      const { job } = await api(`/notebooks/${encodeURIComponent(nbId)}/deep-research`, {
+        method: "POST",
+        body: {
+          topic: discoverQuery.trim(),
+          depth: deepDepth,
+          auto_brief: deepAutoBrief
+        }
+      });
+      const pollCtx = ctx || getContext();
+      cancelDeepRef.current?.();
+      cancelDeepRef.current = pollJob(
+        pollCtx,
+        job,
+        (j) => {
+          setDeepStage(j.stage || "Researching...");
+          if (typeof j.pct === "number") setDeepPct(j.pct);
+        },
+        async (result) => {
+          setDeepRunning(false);
+          setDeepPct(100);
+          setDeepStage("");
+          setDeepResult(result || null);
+          await onRefresh();
+          const n = result?.ingested?.length || 0;
+          sdk.host?.notify?.({
+            kind: "success",
+            title: "SourceBook Deep Research",
+            message: `Auto-ingested ${n} source${n === 1 ? "" : "s"}${result?.artifact ? " and synthesized a Research Briefing" : ""}.`
+          });
+        },
+        (err) => {
+          setDeepRunning(false);
+          setDeepStage("");
+          onError?.(err.message || "Deep Research run failed.");
+        }
+      );
+    } catch (err) {
+      setDeepRunning(false);
+      setDeepStage("");
+      onError?.(err.message || "Could not start Deep Research.");
+    }
+  }
   async function importDiscovered() {
     const selected = discoverResults.filter((r) => discoverChecked[r.url]);
     if (!selected.length) return;
@@ -2947,7 +3297,7 @@ function SidebarSources({
             onClick: () => setTab("sources"),
             children: [
               "Sources ",
-              /* @__PURE__ */ jsx3("span", { className: "sb-num", style: { opacity: 0.7 }, children: sources.length })
+              /* @__PURE__ */ jsx4("span", { className: "sb-num", style: { opacity: 0.7 }, children: sources.length })
             ]
           }
         ),
@@ -2962,12 +3312,12 @@ function SidebarSources({
             onClick: () => setTab("notes"),
             children: [
               "Notes ",
-              /* @__PURE__ */ jsx3("span", { className: "sb-num", style: { opacity: 0.7 }, children: notes.length })
+              /* @__PURE__ */ jsx4("span", { className: "sb-num", style: { opacity: 0.7 }, children: notes.length })
             ]
           }
         )
       ] }),
-      tab === "sources" && sources.length > 0 ? /* @__PURE__ */ jsx3("button", { type: "button", className: "sb-btn sb-btn-ghost", onClick: toggleAll, title: "Toggle all sources", children: /* @__PURE__ */ jsxs2("span", { className: "sb-num", children: [
+      tab === "sources" && sources.length > 0 ? /* @__PURE__ */ jsx4("button", { type: "button", className: "sb-btn sb-btn-ghost", onClick: toggleAll, title: "Toggle all sources", children: /* @__PURE__ */ jsxs2("span", { className: "sb-num", children: [
         enabledCount,
         "/",
         sources.length
@@ -2983,7 +3333,7 @@ function SidebarSources({
             setModal("note");
           },
           children: [
-            /* @__PURE__ */ jsx3(Icon, { name: "Plus", size: 13 }),
+            /* @__PURE__ */ jsx4(Icon, { name: "Plus", size: 13 }),
             " New"
           ]
         }
@@ -3006,7 +3356,7 @@ function SidebarSources({
             handleFiles(e.dataTransfer?.files);
           },
           children: [
-            /* @__PURE__ */ jsx3(
+            /* @__PURE__ */ jsx4(
               "input",
               {
                 ref: fileRef,
@@ -3026,7 +3376,7 @@ function SidebarSources({
                   disabled: !nbId || busy,
                   onClick: () => fileRef.current?.click(),
                   children: [
-                    /* @__PURE__ */ jsx3(Icon, { name: "Upload", size: 12 }),
+                    /* @__PURE__ */ jsx4(Icon, { name: "Upload", size: 12 }),
                     " File"
                   ]
                 }
@@ -3043,7 +3393,7 @@ function SidebarSources({
                     setModal("url");
                   },
                   children: [
-                    /* @__PURE__ */ jsx3(Icon, { name: "Link", size: 12 }),
+                    /* @__PURE__ */ jsx4(Icon, { name: "Link", size: 12 }),
                     " URL/YT"
                   ]
                 }
@@ -3060,7 +3410,7 @@ function SidebarSources({
                   },
                   title: "Sync a local folder, Obsidian vault, or Git repository",
                   children: [
-                    /* @__PURE__ */ jsx3(Icon, { name: "FolderOpen", size: 12 }),
+                    /* @__PURE__ */ jsx4(Icon, { name: "FolderOpen", size: 12 }),
                     " Folder"
                   ]
                 }
@@ -3078,7 +3428,7 @@ function SidebarSources({
                   },
                   title: "Search the web and bulk-import sources",
                   children: [
-                    /* @__PURE__ */ jsx3(Icon, { name: "Globe", size: 12 }),
+                    /* @__PURE__ */ jsx4(Icon, { name: "Globe", size: 12 }),
                     " Discover"
                   ]
                 }
@@ -3095,20 +3445,20 @@ function SidebarSources({
                     setModal("paste");
                   },
                   children: [
-                    /* @__PURE__ */ jsx3(Icon, { name: "FilePlus", size: 12 }),
+                    /* @__PURE__ */ jsx4(Icon, { name: "FilePlus", size: 12 }),
                     " Paste"
                   ]
                 }
               )
             ] }),
-            /* @__PURE__ */ jsx3("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)", textAlign: "center" }, children: busy ? "Indexing source..." : "Drop PDF, DOCX, Markdown, CSV, audio, or URLs" })
+            /* @__PURE__ */ jsx4("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)", textAlign: "center" }, children: busy ? "Indexing source..." : "Drop PDF, DOCX, Markdown, CSV, audio, or URLs" })
           ]
         }
       ),
-      /* @__PURE__ */ jsx3("div", { className: "sb-src-list sb-scroll", children: sources.length === 0 ? /* @__PURE__ */ jsxs2("div", { className: "sb-empty", children: [
-        /* @__PURE__ */ jsx3(Icon, { name: "BookOpen", size: 22 }),
-        /* @__PURE__ */ jsx3("div", { style: { fontWeight: 600, color: "var(--ui-text-secondary)" }, children: "No sources yet" }),
-        /* @__PURE__ */ jsx3("div", { style: { fontSize: 11.5 }, children: "Add documents, YouTube videos, local folders, or discover web sources." })
+      /* @__PURE__ */ jsx4("div", { className: "sb-src-list sb-scroll", children: sources.length === 0 ? /* @__PURE__ */ jsxs2("div", { className: "sb-empty", children: [
+        /* @__PURE__ */ jsx4(Icon, { name: "BookOpen", size: 22 }),
+        /* @__PURE__ */ jsx4("div", { style: { fontWeight: 600, color: "var(--ui-text-secondary)" }, children: "No sources yet" }),
+        /* @__PURE__ */ jsx4("div", { style: { fontSize: 11.5 }, children: "Add documents, YouTube videos, local folders, or discover web sources." })
       ] }) : sources.map((src) => {
         const cov = covBySource[src.id];
         const pct = cov && cov.total_chunks > 0 ? Math.round(cov.touched_chunks / cov.total_chunks * 100) : 0;
@@ -3129,7 +3479,7 @@ function SidebarSources({
               }
             },
             children: [
-              /* @__PURE__ */ jsx3(
+              /* @__PURE__ */ jsx4(
                 "input",
                 {
                   type: "checkbox",
@@ -3141,10 +3491,10 @@ function SidebarSources({
                 }
               ),
               /* @__PURE__ */ jsxs2("div", { style: { minWidth: 0 }, children: [
-                /* @__PURE__ */ jsx3("div", { className: "sb-src-title", title: src.title, children: src.title }),
+                /* @__PURE__ */ jsx4("div", { className: "sb-src-title", title: src.title, children: src.title }),
                 /* @__PURE__ */ jsxs2("div", { className: "sb-src-meta", children: [
-                  /* @__PURE__ */ jsx3(Icon, { name: KIND_ICONS[src.kind] || "FileText", size: 11 }),
-                  /* @__PURE__ */ jsx3("span", { className: "sb-kind-tag", children: src.kind }),
+                  /* @__PURE__ */ jsx4(Icon, { name: KIND_ICONS[src.kind] || "FileText", size: 11 }),
+                  /* @__PURE__ */ jsx4("span", { className: "sb-kind-tag", children: src.kind }),
                   /* @__PURE__ */ jsxs2("span", { className: "sb-num", children: [
                     fmtWords(src.word_count ?? Math.round((src.chars || 0) / 5)),
                     " w"
@@ -3154,10 +3504,10 @@ function SidebarSources({
                     " ch"
                   ] })
                 ] }),
-                /* @__PURE__ */ jsx3("div", { className: "sb-src-bar", title: `Coverage: ${pct}%`, children: /* @__PURE__ */ jsx3("div", { className: "sb-src-bar-fill", style: { width: `${pct}%` } }) })
+                /* @__PURE__ */ jsx4("div", { className: "sb-src-bar", title: `Coverage: ${pct}%`, children: /* @__PURE__ */ jsx4("div", { className: "sb-src-bar-fill", style: { width: `${pct}%` } }) })
               ] }),
               /* @__PURE__ */ jsxs2("div", { style: { display: "flex", gap: 2 }, onClick: (e) => e.stopPropagation(), children: [
-                canRefresh ? /* @__PURE__ */ jsx3(
+                canRefresh ? /* @__PURE__ */ jsx4(
                   "button",
                   {
                     type: "button",
@@ -3165,10 +3515,10 @@ function SidebarSources({
                     title: "Refresh source from disk or URL",
                     disabled: refreshingId === src.id,
                     onClick: (e) => handleRefreshSource(e, src),
-                    children: /* @__PURE__ */ jsx3(Icon, { name: "RefreshCw", size: 12 })
+                    children: /* @__PURE__ */ jsx4(Icon, { name: "RefreshCw", size: 12 })
                   }
                 ) : null,
-                /* @__PURE__ */ jsx3(
+                /* @__PURE__ */ jsx4(
                   "button",
                   {
                     type: "button",
@@ -3176,7 +3526,7 @@ function SidebarSources({
                     title: "Remove source",
                     "aria-label": `Remove ${src.title}`,
                     onClick: (e) => deleteSource(e, src),
-                    children: /* @__PURE__ */ jsx3(Icon, { name: "Trash2", size: 13 })
+                    children: /* @__PURE__ */ jsx4(Icon, { name: "Trash2", size: 13 })
                   }
                 )
               ] })
@@ -3185,10 +3535,10 @@ function SidebarSources({
           src.id
         );
       }) })
-    ] }) : /* @__PURE__ */ jsx3("div", { className: "sb-src-list sb-scroll", children: notes.length === 0 ? /* @__PURE__ */ jsxs2("div", { className: "sb-empty", children: [
-      /* @__PURE__ */ jsx3(Icon, { name: "StickyNote", size: 22 }),
-      /* @__PURE__ */ jsx3("div", { style: { fontWeight: 600, color: "var(--ui-text-secondary)" }, children: "No notes saved" }),
-      /* @__PURE__ */ jsx3("div", { style: { fontSize: 11.5 }, children: "Capture findings or save any cited chat reply as a reusable Living Note." }),
+    ] }) : /* @__PURE__ */ jsx4("div", { className: "sb-src-list sb-scroll", children: notes.length === 0 ? /* @__PURE__ */ jsxs2("div", { className: "sb-empty", children: [
+      /* @__PURE__ */ jsx4(Icon, { name: "StickyNote", size: 22 }),
+      /* @__PURE__ */ jsx4("div", { style: { fontWeight: 600, color: "var(--ui-text-secondary)" }, children: "No notes saved" }),
+      /* @__PURE__ */ jsx4("div", { style: { fontSize: 11.5 }, children: "Capture findings or save any cited chat reply as a reusable Living Note." }),
       /* @__PURE__ */ jsxs2(
         "button",
         {
@@ -3200,7 +3550,7 @@ function SidebarSources({
             setModal("note");
           },
           children: [
-            /* @__PURE__ */ jsx3(Icon, { name: "Plus", size: 13 }),
+            /* @__PURE__ */ jsx4(Icon, { name: "Plus", size: 13 }),
             " Write a note"
           ]
         }
@@ -3217,9 +3567,9 @@ function SidebarSources({
         },
         children: [
           /* @__PURE__ */ jsxs2("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }, children: [
-            /* @__PURE__ */ jsx3("div", { className: "sb-src-title", style: { flex: 1 }, title: note.title, children: note.title }),
+            /* @__PURE__ */ jsx4("div", { className: "sb-src-title", style: { flex: 1 }, title: note.title, children: note.title }),
             /* @__PURE__ */ jsxs2("div", { style: { display: "flex", gap: 2, alignItems: "center" }, onClick: (e) => e.stopPropagation(), children: [
-              note.stale ? /* @__PURE__ */ jsx3(
+              note.stale ? /* @__PURE__ */ jsx4(
                 "button",
                 {
                   type: "button",
@@ -3231,29 +3581,39 @@ function SidebarSources({
                   children: "Stale"
                 }
               ) : null,
-              /* @__PURE__ */ jsx3(
+              /* @__PURE__ */ jsx4(
                 "button",
                 {
                   type: "button",
                   className: "sb-btn sb-btn-ghost sb-btn-icon",
                   title: "Promote note to active source",
                   onClick: () => promoteNote(note),
-                  children: /* @__PURE__ */ jsx3(Icon, { name: "ArrowUpRight", size: 13 })
+                  children: /* @__PURE__ */ jsx4(Icon, { name: "ArrowUpRight", size: 13 })
                 }
               ),
-              /* @__PURE__ */ jsx3(
+              onSaveMemory ? /* @__PURE__ */ jsx4(
+                "button",
+                {
+                  type: "button",
+                  className: "sb-btn sb-btn-ghost sb-btn-icon",
+                  title: "Save note insight to Hermes persistent memory",
+                  onClick: () => onSaveMemory({ title: note.title, content: note.markdown, citations: note.citations || [] }),
+                  children: /* @__PURE__ */ jsx4(Icon, { name: "Brain", size: 12 })
+                }
+              ) : null,
+              /* @__PURE__ */ jsx4(
                 "button",
                 {
                   type: "button",
                   className: "sb-btn sb-btn-ghost sb-btn-icon sb-btn-danger",
                   title: "Delete note",
                   onClick: () => deleteNote(note),
-                  children: /* @__PURE__ */ jsx3(Icon, { name: "Trash2", size: 13 })
+                  children: /* @__PURE__ */ jsx4(Icon, { name: "Trash2", size: 13 })
                 }
               )
             ] })
           ] }),
-          /* @__PURE__ */ jsx3(
+          /* @__PURE__ */ jsx4(
             "div",
             {
               style: {
@@ -3271,15 +3631,15 @@ function SidebarSources({
       },
       note.id
     )) }),
-    modal === "paste" ? /* @__PURE__ */ jsx3("div", { className: "sb-modal-backdrop", onClick: () => setModal(null), children: /* @__PURE__ */ jsxs2("form", { className: "sb-modal", onClick: (e) => e.stopPropagation(), onSubmit: submitPaste, children: [
+    modal === "paste" ? /* @__PURE__ */ jsx4("div", { className: "sb-modal-backdrop", onClick: () => setModal(null), children: /* @__PURE__ */ jsxs2("form", { className: "sb-modal", onClick: (e) => e.stopPropagation(), onSubmit: submitPaste, children: [
       /* @__PURE__ */ jsxs2("div", { className: "sb-modal-head", children: [
-        /* @__PURE__ */ jsx3("span", { children: "Paste text or Markdown" }),
-        /* @__PURE__ */ jsx3("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setModal(null), children: /* @__PURE__ */ jsx3(Icon, { name: "X", size: 14 }) })
+        /* @__PURE__ */ jsx4("span", { children: "Paste text or Markdown" }),
+        /* @__PURE__ */ jsx4("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setModal(null), children: /* @__PURE__ */ jsx4(Icon, { name: "X", size: 14 }) })
       ] }),
       /* @__PURE__ */ jsxs2("div", { className: "sb-modal-body", children: [
         /* @__PURE__ */ jsxs2("label", { className: "sb-field", children: [
-          /* @__PURE__ */ jsx3("span", { className: "sb-label", children: "Title" }),
-          /* @__PURE__ */ jsx3(
+          /* @__PURE__ */ jsx4("span", { className: "sb-label", children: "Title" }),
+          /* @__PURE__ */ jsx4(
             "input",
             {
               className: "sb-input",
@@ -3291,8 +3651,8 @@ function SidebarSources({
           )
         ] }),
         /* @__PURE__ */ jsxs2("label", { className: "sb-field", children: [
-          /* @__PURE__ */ jsx3("span", { className: "sb-label", children: "Content" }),
-          /* @__PURE__ */ jsx3(
+          /* @__PURE__ */ jsx4("span", { className: "sb-label", children: "Content" }),
+          /* @__PURE__ */ jsx4(
             "textarea",
             {
               className: "sb-input",
@@ -3306,19 +3666,19 @@ function SidebarSources({
         ] })
       ] }),
       /* @__PURE__ */ jsxs2("div", { className: "sb-modal-foot", children: [
-        /* @__PURE__ */ jsx3("button", { type: "button", className: "sb-btn", onClick: () => setModal(null), children: "Cancel" }),
-        /* @__PURE__ */ jsx3("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: busy || !body.trim(), children: busy ? "Indexing..." : "Add source" })
+        /* @__PURE__ */ jsx4("button", { type: "button", className: "sb-btn", onClick: () => setModal(null), children: "Cancel" }),
+        /* @__PURE__ */ jsx4("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: busy || !body.trim(), children: busy ? "Indexing..." : "Add source" })
       ] })
     ] }) }) : null,
-    modal === "url" ? /* @__PURE__ */ jsx3("div", { className: "sb-modal-backdrop", onClick: () => setModal(null), children: /* @__PURE__ */ jsxs2("form", { className: "sb-modal", onClick: (e) => e.stopPropagation(), onSubmit: submitUrl, children: [
+    modal === "url" ? /* @__PURE__ */ jsx4("div", { className: "sb-modal-backdrop", onClick: () => setModal(null), children: /* @__PURE__ */ jsxs2("form", { className: "sb-modal", onClick: (e) => e.stopPropagation(), onSubmit: submitUrl, children: [
       /* @__PURE__ */ jsxs2("div", { className: "sb-modal-head", children: [
-        /* @__PURE__ */ jsx3("span", { children: "Add web page or YouTube video" }),
-        /* @__PURE__ */ jsx3("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setModal(null), children: /* @__PURE__ */ jsx3(Icon, { name: "X", size: 14 }) })
+        /* @__PURE__ */ jsx4("span", { children: "Add web page or YouTube video" }),
+        /* @__PURE__ */ jsx4("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setModal(null), children: /* @__PURE__ */ jsx4(Icon, { name: "X", size: 14 }) })
       ] }),
       /* @__PURE__ */ jsxs2("div", { className: "sb-modal-body", children: [
         /* @__PURE__ */ jsxs2("label", { className: "sb-field", children: [
-          /* @__PURE__ */ jsx3("span", { className: "sb-label", children: "Web or YouTube URL" }),
-          /* @__PURE__ */ jsx3(
+          /* @__PURE__ */ jsx4("span", { className: "sb-label", children: "Web or YouTube URL" }),
+          /* @__PURE__ */ jsx4(
             "input",
             {
               className: "sb-input",
@@ -3332,8 +3692,8 @@ function SidebarSources({
           )
         ] }),
         /* @__PURE__ */ jsxs2("label", { className: "sb-field", children: [
-          /* @__PURE__ */ jsx3("span", { className: "sb-label", children: "Optional custom title" }),
-          /* @__PURE__ */ jsx3(
+          /* @__PURE__ */ jsx4("span", { className: "sb-label", children: "Optional custom title" }),
+          /* @__PURE__ */ jsx4(
             "input",
             {
               className: "sb-input",
@@ -3345,19 +3705,19 @@ function SidebarSources({
         ] })
       ] }),
       /* @__PURE__ */ jsxs2("div", { className: "sb-modal-foot", children: [
-        /* @__PURE__ */ jsx3("button", { type: "button", className: "sb-btn", onClick: () => setModal(null), children: "Cancel" }),
-        /* @__PURE__ */ jsx3("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: busy || !urlInput.trim(), children: busy ? "Fetching..." : "Ingest URL" })
+        /* @__PURE__ */ jsx4("button", { type: "button", className: "sb-btn", onClick: () => setModal(null), children: "Cancel" }),
+        /* @__PURE__ */ jsx4("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: busy || !urlInput.trim(), children: busy ? "Fetching..." : "Ingest URL" })
       ] })
     ] }) }) : null,
-    modal === "folder" ? /* @__PURE__ */ jsx3("div", { className: "sb-modal-backdrop", onClick: () => setModal(null), children: /* @__PURE__ */ jsxs2("form", { className: "sb-modal", onClick: (e) => e.stopPropagation(), onSubmit: submitFolder, children: [
+    modal === "folder" ? /* @__PURE__ */ jsx4("div", { className: "sb-modal-backdrop", onClick: () => setModal(null), children: /* @__PURE__ */ jsxs2("form", { className: "sb-modal", onClick: (e) => e.stopPropagation(), onSubmit: submitFolder, children: [
       /* @__PURE__ */ jsxs2("div", { className: "sb-modal-head", children: [
-        /* @__PURE__ */ jsx3("span", { children: "Sync local file, folder, vault, or repo" }),
-        /* @__PURE__ */ jsx3("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setModal(null), children: /* @__PURE__ */ jsx3(Icon, { name: "X", size: 14 }) })
+        /* @__PURE__ */ jsx4("span", { children: "Sync local file, folder, vault, or repo" }),
+        /* @__PURE__ */ jsx4("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setModal(null), children: /* @__PURE__ */ jsx4(Icon, { name: "X", size: 14 }) })
       ] }),
       /* @__PURE__ */ jsxs2("div", { className: "sb-modal-body", children: [
         /* @__PURE__ */ jsxs2("label", { className: "sb-field", children: [
-          /* @__PURE__ */ jsx3("span", { className: "sb-label", children: "Absolute path on disk" }),
-          /* @__PURE__ */ jsx3(
+          /* @__PURE__ */ jsx4("span", { className: "sb-label", children: "Absolute path on disk" }),
+          /* @__PURE__ */ jsx4(
             "input",
             {
               className: "sb-input",
@@ -3369,21 +3729,154 @@ function SidebarSources({
             }
           )
         ] }),
-        /* @__PURE__ */ jsx3("div", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: "Indexes up to 40 Markdown, code, PDF, DOCX, CSV, and JSON files (skipping .git and node_modules). Refresh any linked file later to flag stale notes and artifacts." })
+        /* @__PURE__ */ jsx4("div", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: "Indexes up to 40 Markdown, code, PDF, DOCX, CSV, and JSON files (skipping .git and node_modules). Refresh any linked file later to flag stale notes and artifacts." })
       ] }),
       /* @__PURE__ */ jsxs2("div", { className: "sb-modal-foot", children: [
-        /* @__PURE__ */ jsx3("button", { type: "button", className: "sb-btn", onClick: () => setModal(null), children: "Cancel" }),
-        /* @__PURE__ */ jsx3("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: busy || !folderPath.trim(), children: busy ? "Syncing..." : "Sync path" })
+        /* @__PURE__ */ jsx4("button", { type: "button", className: "sb-btn", onClick: () => setModal(null), children: "Cancel" }),
+        /* @__PURE__ */ jsx4("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: busy || !folderPath.trim(), children: busy ? "Syncing..." : "Sync path" })
       ] })
     ] }) }) : null,
-    modal === "discover" ? /* @__PURE__ */ jsx3("div", { className: "sb-modal-backdrop", onClick: () => setModal(null), children: /* @__PURE__ */ jsxs2("div", { className: "sb-modal", style: { width: "min(560px, 94vw)" }, onClick: (e) => e.stopPropagation(), children: [
+    modal === "discover" ? /* @__PURE__ */ jsx4("div", { className: "sb-modal-backdrop", onClick: () => {
+      if (!deepRunning) setModal(null);
+    }, children: /* @__PURE__ */ jsxs2("div", { className: "sb-modal", style: { width: "min(580px, 94vw)" }, onClick: (e) => e.stopPropagation(), children: [
       /* @__PURE__ */ jsxs2("div", { className: "sb-modal-head", children: [
-        /* @__PURE__ */ jsx3("span", { children: "Discover web sources" }),
-        /* @__PURE__ */ jsx3("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setModal(null), children: /* @__PURE__ */ jsx3(Icon, { name: "X", size: 14 }) })
+        /* @__PURE__ */ jsxs2("div", { style: { display: "flex", alignItems: "center", gap: 10 }, children: [
+          /* @__PURE__ */ jsx4("span", { children: "Discover & Deep Research" }),
+          /* @__PURE__ */ jsxs2("div", { className: "sb-seg", children: [
+            /* @__PURE__ */ jsx4(
+              "button",
+              {
+                type: "button",
+                className: "sb-seg-btn",
+                "data-active": discoverMode === "quick",
+                disabled: deepRunning,
+                onClick: () => setDiscoverMode("quick"),
+                children: "Quick Search"
+              }
+            ),
+            /* @__PURE__ */ jsxs2(
+              "button",
+              {
+                type: "button",
+                className: "sb-seg-btn",
+                "data-active": discoverMode === "deep",
+                disabled: deepRunning,
+                onClick: () => setDiscoverMode("deep"),
+                children: [
+                  /* @__PURE__ */ jsx4(Icon, { name: "Compass", size: 11 }),
+                  " Deep Research"
+                ]
+              }
+            )
+          ] })
+        ] }),
+        /* @__PURE__ */ jsx4("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", disabled: deepRunning, onClick: () => setModal(null), children: /* @__PURE__ */ jsx4(Icon, { name: "X", size: 14 }) })
       ] }),
-      /* @__PURE__ */ jsxs2("div", { className: "sb-modal-body", children: [
+      /* @__PURE__ */ jsx4("div", { className: "sb-modal-body", children: discoverMode === "deep" ? /* @__PURE__ */ jsxs2("form", { onSubmit: runDeepResearch, style: { display: "flex", flexDirection: "column", gap: 10 }, children: [
+        /* @__PURE__ */ jsxs2("label", { className: "sb-field", children: [
+          /* @__PURE__ */ jsx4("span", { className: "sb-label", children: "Research question or topic" }),
+          /* @__PURE__ */ jsx4(
+            "input",
+            {
+              className: "sb-input",
+              value: discoverQuery,
+              onChange: (e) => setDiscoverQuery(e.target.value),
+              placeholder: "e.g. Local-first hybrid RAG retrieval benchmarks vs managed vector DBs",
+              disabled: deepRunning,
+              autoFocus: true
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs2("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }, children: [
+          /* @__PURE__ */ jsxs2("div", { style: { display: "flex", alignItems: "center", gap: 8 }, children: [
+            /* @__PURE__ */ jsx4("span", { className: "sb-label", children: "Depth" }),
+            /* @__PURE__ */ jsx4("div", { className: "sb-seg", children: [
+              { id: "quick", label: "Quick (5)" },
+              { id: "standard", label: "Standard (10)" },
+              { id: "deep", label: "Deep (15)" }
+            ].map((opt) => /* @__PURE__ */ jsx4(
+              "button",
+              {
+                type: "button",
+                className: "sb-seg-btn",
+                "data-active": deepDepth === opt.id,
+                disabled: deepRunning,
+                onClick: () => setDeepDepth(opt.id),
+                children: opt.label
+              },
+              opt.id
+            )) })
+          ] }),
+          /* @__PURE__ */ jsxs2("label", { style: { display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "var(--ui-text-secondary)", cursor: "pointer" }, children: [
+            /* @__PURE__ */ jsx4(
+              "input",
+              {
+                type: "checkbox",
+                className: "sb-checkbox",
+                checked: deepAutoBrief,
+                disabled: deepRunning,
+                onChange: (e) => setDeepAutoBrief(e.target.checked)
+              }
+            ),
+            "Auto-synthesize cited Briefing"
+          ] })
+        ] }),
+        /* @__PURE__ */ jsx4("div", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)", lineHeight: 1.45 }, children: "Hermes expands your topic into complementary sub-queries, discovers & deduplicates primary web sources, ingests them into this notebook automatically, and builds a cited briefing." }),
+        deepRunning ? /* @__PURE__ */ jsxs2("div", { className: "sb-dr-progress", children: [
+          /* @__PURE__ */ jsxs2("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12 }, children: [
+            /* @__PURE__ */ jsxs2("span", { style: { display: "flex", alignItems: "center", gap: 7 }, children: [
+              /* @__PURE__ */ jsx4(HermesSpinner, { size: 12 }),
+              " ",
+              deepStage || "Running Deep Research..."
+            ] }),
+            /* @__PURE__ */ jsxs2("span", { className: "sb-mono", style: { fontSize: 11 }, children: [
+              deepPct,
+              "%"
+            ] })
+          ] }),
+          /* @__PURE__ */ jsx4("div", { className: "sb-dr-bar", children: /* @__PURE__ */ jsx4("div", { className: "sb-dr-fill", style: { width: `${Math.max(8, deepPct)}%` } }) })
+        ] }) : null,
+        deepResult ? /* @__PURE__ */ jsxs2("div", { className: "sb-ledger-row", style: { gap: 8, borderColor: "var(--sb-accent-border)" }, children: [
+          /* @__PURE__ */ jsxs2("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
+            /* @__PURE__ */ jsxs2("strong", { style: { fontSize: 12.5 }, children: [
+              "Ingested ",
+              deepResult.ingested?.length || 0,
+              " source",
+              (deepResult.ingested?.length || 0) === 1 ? "" : "s",
+              " across ",
+              deepResult.queries?.length || 0,
+              " queries"
+            ] }),
+            deepResult.artifact?.id && onOpenArtifact ? /* @__PURE__ */ jsx4(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn sb-btn-primary",
+                style: { padding: "3px 9px", fontSize: 11 },
+                onClick: () => {
+                  setModal(null);
+                  onOpenArtifact(deepResult.artifact.id);
+                },
+                children: "Open Briefing"
+              }
+            ) : null
+          ] }),
+          (deepResult.ingested || []).slice(0, 6).map((src) => /* @__PURE__ */ jsxs2("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 11.5, gap: 8 }, children: [
+            /* @__PURE__ */ jsx4("span", { className: "sb-src-title", children: src.title }),
+            /* @__PURE__ */ jsx4("span", { className: "sb-mono", style: { color: "var(--ui-accent)", flexShrink: 0 }, children: src.domain })
+          ] }, src.id))
+        ] }) : null,
+        /* @__PURE__ */ jsxs2("div", { style: { display: "flex", justifyContent: "flex-end", gap: 6 }, children: [
+          /* @__PURE__ */ jsx4("button", { type: "button", className: "sb-btn", disabled: deepRunning, onClick: () => setModal(null), children: "Close" }),
+          /* @__PURE__ */ jsxs2("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: deepRunning || !discoverQuery.trim(), children: [
+            deepRunning ? /* @__PURE__ */ jsx4(HermesSpinner, { size: 12 }) : /* @__PURE__ */ jsx4(Icon, { name: "Compass", size: 12 }),
+            " ",
+            deepRunning ? "Researching..." : "Start Deep Research"
+          ] })
+        ] })
+      ] }) : /* @__PURE__ */ jsxs2(Fragment2, { children: [
         /* @__PURE__ */ jsxs2("form", { onSubmit: runDiscover, style: { display: "flex", gap: 6 }, children: [
-          /* @__PURE__ */ jsx3(
+          /* @__PURE__ */ jsx4(
             "input",
             {
               className: "sb-input",
@@ -3393,15 +3886,15 @@ function SidebarSources({
               autoFocus: true
             }
           ),
-          /* @__PURE__ */ jsx3("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: busy || !discoverQuery.trim(), children: busy ? "Searching..." : "Search" })
+          /* @__PURE__ */ jsx4("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: busy || !discoverQuery.trim(), children: busy ? "Searching..." : "Search" })
         ] }),
-        discoverResults.length > 0 ? /* @__PURE__ */ jsx3("div", { style: { display: "flex", flexDirection: "column", gap: 6, maxHeight: 300, overflow: "auto" }, children: discoverResults.map((item) => /* @__PURE__ */ jsxs2(
+        discoverResults.length > 0 ? /* @__PURE__ */ jsx4("div", { style: { display: "flex", flexDirection: "column", gap: 6, maxHeight: 300, overflow: "auto" }, children: discoverResults.map((item) => /* @__PURE__ */ jsxs2(
           "label",
           {
             className: "sb-ledger-row",
             style: { flexDirection: "row", alignItems: "flex-start", gap: 8, cursor: "pointer" },
             children: [
-              /* @__PURE__ */ jsx3(
+              /* @__PURE__ */ jsx4(
                 "input",
                 {
                   type: "checkbox",
@@ -3412,18 +3905,18 @@ function SidebarSources({
                 }
               ),
               /* @__PURE__ */ jsxs2("div", { style: { minWidth: 0, flex: 1 }, children: [
-                /* @__PURE__ */ jsx3("div", { className: "sb-src-title", children: item.title }),
-                /* @__PURE__ */ jsx3("div", { className: "sb-mono", style: { fontSize: 10.5, color: "var(--ui-accent)" }, children: item.domain }),
-                item.snippet ? /* @__PURE__ */ jsx3("div", { style: { fontSize: 11.5, color: "var(--ui-text-secondary)", marginTop: 2 }, children: item.snippet }) : null
+                /* @__PURE__ */ jsx4("div", { className: "sb-src-title", children: item.title }),
+                /* @__PURE__ */ jsx4("div", { className: "sb-mono", style: { fontSize: 10.5, color: "var(--ui-accent)" }, children: item.domain }),
+                item.snippet ? /* @__PURE__ */ jsx4("div", { style: { fontSize: 11.5, color: "var(--ui-text-secondary)", marginTop: 2 }, children: item.snippet }) : null
               ] })
             ]
           },
           item.url
         )) }) : null
-      ] }),
-      /* @__PURE__ */ jsxs2("div", { className: "sb-modal-foot", children: [
-        /* @__PURE__ */ jsx3("button", { type: "button", className: "sb-btn", onClick: () => setModal(null), children: "Close" }),
-        discoverResults.length > 0 ? /* @__PURE__ */ jsx3(
+      ] }) }),
+      discoverMode === "quick" ? /* @__PURE__ */ jsxs2("div", { className: "sb-modal-foot", children: [
+        /* @__PURE__ */ jsx4("button", { type: "button", className: "sb-btn", onClick: () => setModal(null), children: "Close" }),
+        discoverResults.length > 0 ? /* @__PURE__ */ jsx4(
           "button",
           {
             type: "button",
@@ -3433,17 +3926,17 @@ function SidebarSources({
             children: busy ? "Importing..." : `Import selected (${discoverResults.filter((r) => discoverChecked[r.url]).length})`
           }
         ) : null
-      ] })
+      ] }) : null
     ] }) }) : null,
-    modal === "note" || modal && typeof modal === "object" ? /* @__PURE__ */ jsx3("div", { className: "sb-modal-backdrop", onClick: () => setModal(null), children: /* @__PURE__ */ jsxs2("form", { className: "sb-modal", onClick: (e) => e.stopPropagation(), onSubmit: submitNote, children: [
+    modal === "note" || modal && typeof modal === "object" ? /* @__PURE__ */ jsx4("div", { className: "sb-modal-backdrop", onClick: () => setModal(null), children: /* @__PURE__ */ jsxs2("form", { className: "sb-modal", onClick: (e) => e.stopPropagation(), onSubmit: submitNote, children: [
       /* @__PURE__ */ jsxs2("div", { className: "sb-modal-head", children: [
-        /* @__PURE__ */ jsx3("span", { children: typeof modal === "object" ? "Edit note" : "New research note" }),
-        /* @__PURE__ */ jsx3("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setModal(null), children: /* @__PURE__ */ jsx3(Icon, { name: "X", size: 14 }) })
+        /* @__PURE__ */ jsx4("span", { children: typeof modal === "object" ? "Edit note" : "New research note" }),
+        /* @__PURE__ */ jsx4("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setModal(null), children: /* @__PURE__ */ jsx4(Icon, { name: "X", size: 14 }) })
       ] }),
       /* @__PURE__ */ jsxs2("div", { className: "sb-modal-body", children: [
         /* @__PURE__ */ jsxs2("label", { className: "sb-field", children: [
-          /* @__PURE__ */ jsx3("span", { className: "sb-label", children: "Title" }),
-          /* @__PURE__ */ jsx3(
+          /* @__PURE__ */ jsx4("span", { className: "sb-label", children: "Title" }),
+          /* @__PURE__ */ jsx4(
             "input",
             {
               className: "sb-input",
@@ -3455,8 +3948,8 @@ function SidebarSources({
           )
         ] }),
         /* @__PURE__ */ jsxs2("label", { className: "sb-field", children: [
-          /* @__PURE__ */ jsx3("span", { className: "sb-label", children: "Markdown" }),
-          /* @__PURE__ */ jsx3(
+          /* @__PURE__ */ jsx4("span", { className: "sb-label", children: "Markdown" }),
+          /* @__PURE__ */ jsx4(
             "textarea",
             {
               className: "sb-input",
@@ -3469,16 +3962,16 @@ function SidebarSources({
         ] })
       ] }),
       /* @__PURE__ */ jsxs2("div", { className: "sb-modal-foot", children: [
-        /* @__PURE__ */ jsx3("button", { type: "button", className: "sb-btn", onClick: () => setModal(null), children: "Cancel" }),
-        /* @__PURE__ */ jsx3("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: busy, children: busy ? "Saving..." : "Save note" })
+        /* @__PURE__ */ jsx4("button", { type: "button", className: "sb-btn", onClick: () => setModal(null), children: "Cancel" }),
+        /* @__PURE__ */ jsx4("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: busy, children: busy ? "Saving..." : "Save note" })
       ] })
     ] }) }) : null
   ] });
 }
 
 // desktop-src/components/SourceInspector.jsx
-import { useEffect, useRef as useRef2, useState as useState2 } from "react";
-import { jsx as jsx4, jsxs as jsxs3 } from "react/jsx-runtime";
+import { useEffect as useEffect3, useRef as useRef3, useState as useState2 } from "react";
+import { jsx as jsx5, jsxs as jsxs3 } from "react/jsx-runtime";
 function fmtTime(sec) {
   const s = Math.max(0, Number(sec) || 0);
   const m = Math.floor(s / 60);
@@ -3491,28 +3984,38 @@ function highlightMatch(text, term) {
   const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const parts = String(text || "").split(new RegExp(`(${escaped})`, "gi"));
   return parts.map(
-    (part, idx) => part.toLowerCase() === q.toLowerCase() ? /* @__PURE__ */ jsx4("mark", { className: "sb-mark", children: part }, idx) : part
+    (part, idx) => part.toLowerCase() === q.toLowerCase() ? /* @__PURE__ */ jsx5("mark", { className: "sb-mark", children: part }, idx) : part
   );
 }
-function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
+function SourceInspector({ nbId, target, onClose, onPromoteQuote, onSaveMemory }) {
   const [data, setData] = useState2(null);
   const [loading, setLoading] = useState2(false);
   const [filter, setFilter] = useState2("");
   const [error, setError] = useState2("");
   const [analysis, setAnalysis] = useState2(null);
   const [analyzing, setAnalyzing] = useState2(false);
-  const hitRef = useRef2(null);
+  const [pdfPage, setPdfPage] = useState2(1);
+  const [pdfPreview, setPdfPreview] = useState2(null);
+  const [loadingPreview, setLoadingPreview] = useState2(false);
+  const [zoomOpen, setZoomOpen] = useState2(false);
+  const hitRef = useRef3(null);
   const sourceId = target?.sourceId || (target?.chunkId ? String(target.chunkId).split(":")[0] : null);
   const focusChunkId = target?.chunkId || null;
   const highlightText = target?.highlight || "";
-  useEffect(() => {
+  useEffect3(() => {
     if (!nbId || !sourceId) return;
     let alive = true;
     setLoading(true);
     setError("");
     setAnalysis(null);
+    setPdfPreview(null);
+    setZoomOpen(false);
     api(`/notebooks/${encodeURIComponent(nbId)}/sources/${encodeURIComponent(sourceId)}/text`).then((res) => {
-      if (alive) setData(res);
+      if (!alive) return;
+      setData(res);
+      const chunks2 = res?.chunks || [];
+      const hit = focusChunkId ? chunks2.find((c) => c.id === focusChunkId) : chunks2[0];
+      setPdfPage(Math.max(1, Number(hit?.page_start) || 1));
     }).catch((err) => {
       if (alive) setError(err.message || "Could not load source text.");
     }).finally(() => {
@@ -3521,14 +4024,40 @@ function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
     return () => {
       alive = false;
     };
-  }, [nbId, sourceId]);
-  useEffect(() => {
+  }, [nbId, sourceId, focusChunkId]);
+  const srcMeta = data?.source || {};
+  const chunks = data?.chunks || [];
+  const focusedChunk = focusChunkId ? chunks.find((c) => c.id === focusChunkId) : chunks[0];
+  useEffect3(() => {
+    if (!nbId || !sourceId || !srcMeta.has_pdf_preview) {
+      setPdfPreview(null);
+      return void 0;
+    }
+    let alive = true;
+    setLoadingPreview(true);
+    const querySeed = highlightText || (focusedChunk && Number(focusedChunk.page_start || 1) === pdfPage ? String(focusedChunk.text || "").replace(/<!--\s*[pt]:\d+\s*-->\n?/g, "").slice(0, 260) : "");
+    const qs = new URLSearchParams({ page: String(pdfPage), ...querySeed ? { q: querySeed } : {} });
+    api(`/notebooks/${encodeURIComponent(nbId)}/sources/${encodeURIComponent(sourceId)}/page-preview?${qs.toString()}`).then((res) => {
+      if (alive && res?.available && res?.b64) {
+        setPdfPreview(res);
+      } else if (alive) {
+        setPdfPreview(null);
+      }
+    }).catch(() => {
+      if (alive) setPdfPreview(null);
+    }).finally(() => {
+      if (alive) setLoadingPreview(false);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [nbId, sourceId, srcMeta.has_pdf_preview, pdfPage, focusChunkId, highlightText]);
+  useEffect3(() => {
     if (hitRef.current) {
       hitRef.current.scrollIntoView({ block: "center", behavior: "smooth" });
     }
   }, [data, focusChunkId]);
   if (!target || !sourceId) return null;
-  const srcMeta = data?.source || {};
   const isTabular = srcMeta.kind === "csv" || srcMeta.kind === "json" || (data?.text || "").includes("\n| ---");
   const ytId = srcMeta.youtube_id || "";
   async function runAnalyze(metricCol) {
@@ -3547,14 +4076,15 @@ function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
       setAnalyzing(false);
     }
   }
-  const chunks = data?.chunks || [];
   const q = filter.trim().toLowerCase();
   const visible = q ? chunks.filter((c) => (c.text || "").toLowerCase().includes(q) || (c.heading || "").toLowerCase().includes(q)) : chunks;
+  const previewSrc = pdfPreview?.b64 ? `data:${pdfPreview.mime || "image/png"};base64,${pdfPreview.b64}` : "";
+  const totalPages = pdfPreview?.total_pages || srcMeta.pages || 1;
   return /* @__PURE__ */ jsxs3("section", { className: "sb-inspector", "aria-label": "Passage Inspector", children: [
     /* @__PURE__ */ jsxs3("div", { className: "sb-pane-head", children: [
       /* @__PURE__ */ jsxs3("div", { style: { minWidth: 0 }, children: [
-        /* @__PURE__ */ jsx4("div", { className: "sb-pane-title", children: "Passage Inspector" }),
-        /* @__PURE__ */ jsx4("div", { className: "sb-src-title", style: { marginTop: 2 }, title: srcMeta.title || sourceId, children: srcMeta.title || sourceId })
+        /* @__PURE__ */ jsx5("div", { className: "sb-pane-title", children: "Passage Inspector" }),
+        /* @__PURE__ */ jsx5("div", { className: "sb-src-title", style: { marginTop: 2 }, title: srcMeta.title || sourceId, children: srcMeta.title || sourceId })
       ] }),
       /* @__PURE__ */ jsxs3("div", { style: { display: "flex", gap: 4 }, children: [
         isTabular ? /* @__PURE__ */ jsxs3(
@@ -3567,16 +4097,16 @@ function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
             onClick: () => analysis ? setAnalysis(null) : runAnalyze(),
             title: "Run exact statistical profiling and bar chart on this tabular source",
             children: [
-              /* @__PURE__ */ jsx4(Icon, { name: "BarChart3", size: 12 }),
+              /* @__PURE__ */ jsx5(Icon, { name: "BarChart3", size: 12 }),
               " ",
               analyzing ? "Profiling..." : analysis ? "Hide stats" : "Analyze data"
             ]
           }
         ) : null,
-        /* @__PURE__ */ jsx4("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: onClose, "aria-label": "Close inspector", children: /* @__PURE__ */ jsx4(Icon, { name: "X", size: 15 }) })
+        /* @__PURE__ */ jsx5("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: onClose, "aria-label": "Close inspector", children: /* @__PURE__ */ jsx5(Icon, { name: "X", size: 15 }) })
       ] })
     ] }),
-    /* @__PURE__ */ jsx4("div", { style: { padding: "8px 12px", borderBottom: "1px solid var(--ui-stroke-tertiary)", display: "flex", gap: 6 }, children: /* @__PURE__ */ jsx4(
+    /* @__PURE__ */ jsx5("div", { style: { padding: "8px 12px", borderBottom: "1px solid var(--ui-stroke-tertiary)", display: "flex", gap: 6 }, children: /* @__PURE__ */ jsx5(
       "input",
       {
         className: "sb-input",
@@ -3587,8 +4117,71 @@ function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
       }
     ) }),
     /* @__PURE__ */ jsxs3("div", { className: "sb-scroll", style: { flex: 1, padding: "10px 12px 24px", display: "flex", flexDirection: "column", gap: 10 }, children: [
-      loading ? /* @__PURE__ */ jsx4("div", { className: "sb-empty", children: "Loading passages..." }) : null,
-      error ? /* @__PURE__ */ jsx4("div", { className: "sb-error-bar", style: { margin: 0 }, children: error }) : null,
+      loading ? /* @__PURE__ */ jsx5("div", { className: "sb-empty", children: "Loading passages..." }) : null,
+      error ? /* @__PURE__ */ jsx5("div", { className: "sb-error-bar", style: { margin: 0 }, children: error }) : null,
+      srcMeta.has_pdf_preview ? /* @__PURE__ */ jsxs3("div", { className: "sb-pdf-preview-card", children: [
+        /* @__PURE__ */ jsxs3("div", { className: "sb-pdf-preview-head", children: [
+          /* @__PURE__ */ jsxs3("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
+            /* @__PURE__ */ jsx5(Icon, { name: "FileText", size: 12, style: { color: "var(--ui-accent)" } }),
+            /* @__PURE__ */ jsx5("strong", { style: { color: "var(--ui-text-primary)" }, children: "PDF Page Preview" }),
+            pdfPreview?.highlighted ? /* @__PURE__ */ jsx5("span", { className: "sb-verdict", "data-v": "supported", style: { fontSize: 10, padding: "1px 5px" }, children: "Highlighted" }) : null
+          ] }),
+          /* @__PURE__ */ jsxs3("div", { style: { display: "flex", alignItems: "center", gap: 3 }, children: [
+            /* @__PURE__ */ jsx5(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn sb-btn-ghost sb-btn-icon",
+                disabled: pdfPage <= 1 || loadingPreview,
+                onClick: () => setPdfPage((p) => Math.max(1, p - 1)),
+                title: "Previous page",
+                children: /* @__PURE__ */ jsx5(Icon, { name: "ChevronLeft", size: 12 })
+              }
+            ),
+            /* @__PURE__ */ jsxs3("span", { className: "sb-mono", style: { fontSize: 11, color: "var(--ui-text-secondary)", padding: "0 3px" }, children: [
+              pdfPage,
+              " / ",
+              totalPages
+            ] }),
+            /* @__PURE__ */ jsx5(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn sb-btn-ghost sb-btn-icon",
+                disabled: pdfPage >= totalPages || loadingPreview,
+                onClick: () => setPdfPage((p) => Math.min(totalPages, p + 1)),
+                title: "Next page",
+                children: /* @__PURE__ */ jsx5(Icon, { name: "ChevronRight", size: 12 })
+              }
+            ),
+            previewSrc ? /* @__PURE__ */ jsx5(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn sb-btn-ghost sb-btn-icon",
+                onClick: () => setZoomOpen(true),
+                title: "Expand full page preview",
+                children: /* @__PURE__ */ jsx5(Icon, { name: "ZoomIn", size: 12 })
+              }
+            ) : null
+          ] })
+        ] }),
+        /* @__PURE__ */ jsx5(
+          "div",
+          {
+            className: "sb-pdf-preview-stage",
+            onClick: () => {
+              if (previewSrc) setZoomOpen(true);
+            },
+            children: loadingPreview && !previewSrc ? /* @__PURE__ */ jsxs3("div", { style: { padding: 24, display: "flex", alignItems: "center", gap: 8, fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: [
+              /* @__PURE__ */ jsx5(HermesSpinner, { size: 12 }),
+              " Rendering page ",
+              pdfPage,
+              "..."
+            ] }) : previewSrc ? /* @__PURE__ */ jsx5("img", { src: previewSrc, alt: `${srcMeta.title} page ${pdfPage}`, className: "sb-pdf-preview-img" }) : /* @__PURE__ */ jsx5("div", { style: { padding: 14, fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: "Page preview unavailable." })
+          }
+        )
+      ] }) : null,
       analysis ? /* @__PURE__ */ jsxs3("div", { className: "sb-ledger-row", style: { gap: 10, borderColor: "var(--sb-accent-border)" }, children: [
         /* @__PURE__ */ jsxs3("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
           /* @__PURE__ */ jsxs3("strong", { style: { fontSize: 12.5 }, children: [
@@ -3598,30 +4191,30 @@ function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
             analysis.column_count,
             " cols)"
           ] }),
-          (analysis.numeric_columns || []).length > 1 ? /* @__PURE__ */ jsx4(
+          (analysis.numeric_columns || []).length > 1 ? /* @__PURE__ */ jsx5(
             "select",
             {
               className: "sb-select",
               value: analysis.chart?.metric || "",
               onChange: (e) => runAnalyze(e.target.value),
               "aria-label": "Chart metric column",
-              children: analysis.numeric_columns.map((c) => /* @__PURE__ */ jsx4("option", { value: c, children: c }, c))
+              children: analysis.numeric_columns.map((c) => /* @__PURE__ */ jsx5("option", { value: c, children: c }, c))
             }
           ) : null
         ] }),
         analysis.chart?.series?.length ? /* @__PURE__ */ jsxs3("div", { style: { display: "flex", flexDirection: "column", gap: 5 }, children: [
-          /* @__PURE__ */ jsx4("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: analysis.chart.title }),
+          /* @__PURE__ */ jsx5("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: analysis.chart.title }),
           analysis.chart.series.slice(0, 10).map((pt, idx) => {
             const pct = Math.max(4, Math.round(Math.abs(pt.value) / (analysis.chart.max_value || 1) * 100));
             return /* @__PURE__ */ jsxs3("div", { style: { display: "grid", gridTemplateColumns: "110px 1fr 56px", alignItems: "center", gap: 8, fontSize: 11.5 }, children: [
-              /* @__PURE__ */ jsx4("span", { className: "sb-src-title", title: pt.label, children: pt.label }),
-              /* @__PURE__ */ jsx4("div", { className: "sb-src-bar", style: { height: 8, marginTop: 0 }, children: /* @__PURE__ */ jsx4("div", { className: "sb-src-bar-fill", style: { width: `${pct}%` } }) }),
-              /* @__PURE__ */ jsx4("span", { className: "sb-mono", style: { textAlign: "right", color: "var(--ui-text-secondary)" }, children: pt.value })
+              /* @__PURE__ */ jsx5("span", { className: "sb-src-title", title: pt.label, children: pt.label }),
+              /* @__PURE__ */ jsx5("div", { className: "sb-src-bar", style: { height: 8, marginTop: 0 }, children: /* @__PURE__ */ jsx5("div", { className: "sb-src-bar-fill", style: { width: `${pct}%` } }) }),
+              /* @__PURE__ */ jsx5("span", { className: "sb-mono", style: { textAlign: "right", color: "var(--ui-text-secondary)" }, children: pt.value })
             ] }, idx);
           })
         ] }) : null,
-        /* @__PURE__ */ jsx4("div", { style: { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 6 }, children: (analysis.profiles || []).filter((p) => p.type === "number").slice(0, 4).map((p) => /* @__PURE__ */ jsxs3("div", { className: "sb-kpi", style: { padding: "7px 9px" }, children: [
-          /* @__PURE__ */ jsx4("div", { className: "sb-kpi-label", children: p.column }),
+        /* @__PURE__ */ jsx5("div", { style: { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 6 }, children: (analysis.profiles || []).filter((p) => p.type === "number").slice(0, 4).map((p) => /* @__PURE__ */ jsxs3("div", { className: "sb-kpi", style: { padding: "7px 9px" }, children: [
+          /* @__PURE__ */ jsx5("div", { className: "sb-kpi-label", children: p.column }),
           /* @__PURE__ */ jsxs3("div", { className: "sb-mono", style: { fontSize: 11.5, color: "var(--ui-text-primary)", marginTop: 3 }, children: [
             "mean ",
             p.mean,
@@ -3636,7 +4229,7 @@ function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
           ] })
         ] }, p.column)) })
       ] }) : null,
-      !loading && !error && visible.length === 0 ? /* @__PURE__ */ jsx4("div", { className: "sb-empty", children: "No matching passages." }) : null,
+      !loading && !error && visible.length === 0 ? /* @__PURE__ */ jsx5("div", { className: "sb-empty", children: "No matching passages." }) : null,
       visible.map((ch) => {
         const isHit = focusChunkId && ch.id === focusChunkId;
         const cleanText = String(ch.text || "").replace(/<!--\s*[pt]:\d+\s*-->\n?/g, "");
@@ -3650,52 +4243,99 @@ function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
             children: [
               /* @__PURE__ */ jsxs3("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
                 /* @__PURE__ */ jsxs3("div", { style: { display: "flex", alignItems: "center", gap: 6, minWidth: 0 }, children: [
-                  /* @__PURE__ */ jsx4("span", { className: "sb-mono", style: { fontSize: 10.5, color: "var(--ui-accent)", fontWeight: 600 }, children: ch.id }),
-                  ch.page_start > 1 || srcMeta.pages > 1 ? /* @__PURE__ */ jsxs3("span", { className: "sb-kind-tag", children: [
-                    "p.",
-                    ch.page_start
-                  ] }) : null,
-                  ytHref ? /* @__PURE__ */ jsx4("a", { href: ytHref, target: "_blank", rel: "noopener noreferrer", className: "sb-kind-tag sb-link", title: "Open video at timestamp", children: fmtTime(ch.timestamp_sec) }) : null,
-                  ch.heading ? /* @__PURE__ */ jsx4("span", { className: "sb-src-title", style: { fontSize: 11.5, color: "var(--ui-text-secondary)" }, children: ch.heading }) : null
+                  /* @__PURE__ */ jsx5("span", { className: "sb-mono", style: { fontSize: 10.5, color: "var(--ui-accent)", fontWeight: 600 }, children: ch.id }),
+                  ch.page_start > 1 || srcMeta.pages > 1 ? /* @__PURE__ */ jsxs3(
+                    "button",
+                    {
+                      type: "button",
+                      className: "sb-kind-tag",
+                      style: { cursor: srcMeta.has_pdf_preview ? "pointer" : "default", border: "1px solid var(--ui-stroke-tertiary)" },
+                      onClick: () => {
+                        if (srcMeta.has_pdf_preview) setPdfPage(Math.max(1, Number(ch.page_start) || 1));
+                      },
+                      title: srcMeta.has_pdf_preview ? `Jump PDF preview to page ${ch.page_start}` : void 0,
+                      children: [
+                        "p.",
+                        ch.page_start
+                      ]
+                    }
+                  ) : null,
+                  ytHref ? /* @__PURE__ */ jsx5("a", { href: ytHref, target: "_blank", rel: "noopener noreferrer", className: "sb-kind-tag sb-link", title: "Open video at timestamp", children: fmtTime(ch.timestamp_sec) }) : null,
+                  ch.heading ? /* @__PURE__ */ jsx5("span", { className: "sb-src-title", style: { fontSize: 11.5, color: "var(--ui-text-secondary)" }, children: ch.heading }) : null
                 ] }),
                 /* @__PURE__ */ jsxs3("div", { style: { display: "flex", gap: 3 }, children: [
-                  /* @__PURE__ */ jsx4(
+                  /* @__PURE__ */ jsx5(
                     "button",
                     {
                       type: "button",
                       className: "sb-btn sb-btn-ghost sb-btn-icon",
                       title: "Copy passage",
                       onClick: () => copyText(cleanText),
-                      children: /* @__PURE__ */ jsx4(Icon, { name: "Copy", size: 12 })
+                      children: /* @__PURE__ */ jsx5(Icon, { name: "Copy", size: 12 })
                     }
                   ),
-                  onPromoteQuote ? /* @__PURE__ */ jsx4(
+                  onPromoteQuote ? /* @__PURE__ */ jsx5(
                     "button",
                     {
                       type: "button",
                       className: "sb-btn sb-btn-ghost sb-btn-icon",
                       title: "Save passage as note",
                       onClick: () => onPromoteQuote(ch, srcMeta.title || sourceId),
-                      children: /* @__PURE__ */ jsx4(Icon, { name: "BookmarkPlus", size: 12 })
+                      children: /* @__PURE__ */ jsx5(Icon, { name: "BookmarkPlus", size: 12 })
+                    }
+                  ) : null,
+                  onSaveMemory ? /* @__PURE__ */ jsx5(
+                    "button",
+                    {
+                      type: "button",
+                      className: "sb-btn sb-btn-ghost sb-btn-icon",
+                      title: "Save verified excerpt to Hermes persistent memory",
+                      onClick: () => onSaveMemory({ title: ch.heading || srcMeta.title || sourceId, content: cleanText.slice(0, 320), citations: [ch.id] }),
+                      children: /* @__PURE__ */ jsx5(Icon, { name: "Brain", size: 12 })
                     }
                   ) : null
                 ] })
               ] }),
-              /* @__PURE__ */ jsx4("div", { style: { fontSize: 12.5, lineHeight: 1.55, whiteSpace: "pre-wrap", color: "var(--ui-text-primary)" }, children: highlightMatch(cleanText, filter.trim() || (isHit ? highlightText : "")) })
+              /* @__PURE__ */ jsx5("div", { style: { fontSize: 12.5, lineHeight: 1.55, whiteSpace: "pre-wrap", color: "var(--ui-text-primary)" }, children: highlightMatch(cleanText, filter.trim() || (isHit ? highlightText : "")) })
             ]
           },
           ch.id
         );
       })
-    ] })
+    ] }),
+    zoomOpen && previewSrc ? /* @__PURE__ */ jsx5("div", { className: "sb-modal-backdrop", style: { zIndex: 90, padding: 20 }, onClick: () => setZoomOpen(false), children: /* @__PURE__ */ jsxs3(
+      "div",
+      {
+        className: "sb-modal",
+        style: { width: "min(920px, 95vw)", maxHeight: "92vh" },
+        onClick: (e) => e.stopPropagation(),
+        children: [
+          /* @__PURE__ */ jsxs3("div", { className: "sb-modal-head", children: [
+            /* @__PURE__ */ jsxs3("span", { children: [
+              srcMeta.title,
+              " \xB7 Page ",
+              pdfPage,
+              " / ",
+              totalPages
+            ] }),
+            /* @__PURE__ */ jsxs3("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
+              /* @__PURE__ */ jsx5("button", { type: "button", className: "sb-btn", disabled: pdfPage <= 1, onClick: () => setPdfPage((p) => Math.max(1, p - 1)), children: "Prev" }),
+              /* @__PURE__ */ jsx5("button", { type: "button", className: "sb-btn", disabled: pdfPage >= totalPages, onClick: () => setPdfPage((p) => Math.min(totalPages, p + 1)), children: "Next" }),
+              /* @__PURE__ */ jsx5("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setZoomOpen(false), children: /* @__PURE__ */ jsx5(Icon, { name: "X", size: 14 }) })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsx5("div", { className: "sb-modal-body sb-scroll", style: { maxHeight: "80vh", alignItems: "center" }, children: /* @__PURE__ */ jsx5("img", { src: previewSrc, alt: `${srcMeta.title} page ${pdfPage}`, style: { maxWidth: "100%", borderRadius: 8, background: "#fff" } }) })
+        ]
+      }
+    ) }) : null
   ] });
 }
 
 // desktop-src/components/ChatPanel.jsx
-import { useEffect as useEffect3, useRef as useRef4, useState as useState3 } from "react";
+import { useEffect as useEffect4, useRef as useRef4, useState as useState3 } from "react";
 
 // desktop-src/components/MarkdownBody.jsx
-import { jsx as jsx5, jsxs as jsxs4 } from "react/jsx-runtime";
+import { jsx as jsx6, jsxs as jsxs4 } from "react/jsx-runtime";
 var CITE_SPLIT_RE = /(\[\[c:[a-zA-Z0-9_-]+:\d+\]\])/g;
 var CITE_EXTRACT_RE = /^\[\[c:([a-zA-Z0-9_-]+:\d+)\]\]$/;
 var INLINE_TOKEN_RE = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*\n]+\*|\[[^\]]+\]\(https?:\/\/[^)\s]+\))/g;
@@ -3704,17 +4344,17 @@ function renderInlineFormatted(str, keyPrefix) {
   return parts.map((part, idx) => {
     if (!part) return null;
     if (part.startsWith("`") && part.endsWith("`") && part.length > 2) {
-      return /* @__PURE__ */ jsx5("code", { className: "sb-inline-code", children: part.slice(1, -1) }, `${keyPrefix}-c-${idx}`);
+      return /* @__PURE__ */ jsx6("code", { className: "sb-inline-code", children: part.slice(1, -1) }, `${keyPrefix}-c-${idx}`);
     }
     if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
-      return /* @__PURE__ */ jsx5("strong", { children: part.slice(2, -2) }, `${keyPrefix}-b-${idx}`);
+      return /* @__PURE__ */ jsx6("strong", { children: part.slice(2, -2) }, `${keyPrefix}-b-${idx}`);
     }
     if (part.startsWith("*") && part.endsWith("*") && part.length > 2 && !part.startsWith("**")) {
-      return /* @__PURE__ */ jsx5("em", { children: part.slice(1, -1) }, `${keyPrefix}-i-${idx}`);
+      return /* @__PURE__ */ jsx6("em", { children: part.slice(1, -1) }, `${keyPrefix}-i-${idx}`);
     }
     const linkMatch = /^\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)$/.exec(part);
     if (linkMatch) {
-      return /* @__PURE__ */ jsx5(
+      return /* @__PURE__ */ jsx6(
         "a",
         {
           href: linkMatch[2],
@@ -3736,7 +4376,7 @@ function renderInlineCited(text, citeIndexMap, onOpenChunk) {
     if (m) {
       const cid = m[1];
       const num = citeIndexMap?.get?.(cid) ?? "?";
-      return /* @__PURE__ */ jsx5(
+      return /* @__PURE__ */ jsx6(
         "button",
         {
           type: "button",
@@ -3786,7 +4426,7 @@ function MarkdownBody({ text, citeIndexMap, onOpenChunk }) {
       blocks.push(
         /* @__PURE__ */ jsxs4("div", { className: "sb-code-block", children: [
           /* @__PURE__ */ jsxs4("div", { className: "sb-code-head", children: [
-            /* @__PURE__ */ jsx5("span", { className: "sb-mono", children: lang || "code" }),
+            /* @__PURE__ */ jsx6("span", { className: "sb-mono", children: lang || "code" }),
             /* @__PURE__ */ jsxs4(
               "button",
               {
@@ -3798,13 +4438,13 @@ function MarkdownBody({ text, citeIndexMap, onOpenChunk }) {
                   sdk.host?.notify?.({ kind: "success", title: "SourceBook", message: "Copied code snippet." });
                 },
                 children: [
-                  /* @__PURE__ */ jsx5(Icon, { name: "Copy", size: 11 }),
+                  /* @__PURE__ */ jsx6(Icon, { name: "Copy", size: 11 }),
                   " Copy"
                 ]
               }
             )
           ] }),
-          /* @__PURE__ */ jsx5("pre", { className: "sb-mono sb-code-pre", children: codeText })
+          /* @__PURE__ */ jsx6("pre", { className: "sb-mono sb-code-pre", children: codeText })
         ] }, `code-${i}`)
       );
       continue;
@@ -3818,9 +4458,9 @@ function MarkdownBody({ text, citeIndexMap, onOpenChunk }) {
         i += 1;
       }
       blocks.push(
-        /* @__PURE__ */ jsx5("div", { className: "sb-table-wrap sb-scroll", style: { margin: "6px 0" }, children: /* @__PURE__ */ jsxs4("table", { className: "sb-table", children: [
-          /* @__PURE__ */ jsx5("thead", { children: /* @__PURE__ */ jsx5("tr", { children: headers.map((h, hIdx) => /* @__PURE__ */ jsx5("th", { style: { cursor: "default" }, children: renderInlineCited(h, citeIndexMap, onOpenChunk) }, hIdx)) }) }),
-          /* @__PURE__ */ jsx5("tbody", { children: rows.map((r, rIdx) => /* @__PURE__ */ jsx5("tr", { children: headers.map((_, cIdx) => /* @__PURE__ */ jsx5("td", { children: renderInlineCited(r[cIdx] || "", citeIndexMap, onOpenChunk) }, cIdx)) }, rIdx)) })
+        /* @__PURE__ */ jsx6("div", { className: "sb-table-wrap sb-scroll", style: { margin: "6px 0" }, children: /* @__PURE__ */ jsxs4("table", { className: "sb-table", children: [
+          /* @__PURE__ */ jsx6("thead", { children: /* @__PURE__ */ jsx6("tr", { children: headers.map((h, hIdx) => /* @__PURE__ */ jsx6("th", { style: { cursor: "default" }, children: renderInlineCited(h, citeIndexMap, onOpenChunk) }, hIdx)) }) }),
+          /* @__PURE__ */ jsx6("tbody", { children: rows.map((r, rIdx) => /* @__PURE__ */ jsx6("tr", { children: headers.map((_, cIdx) => /* @__PURE__ */ jsx6("td", { children: renderInlineCited(r[cIdx] || "", citeIndexMap, onOpenChunk) }, cIdx)) }, rIdx)) })
         ] }) }, `tbl-${i}`)
       );
       continue;
@@ -3832,7 +4472,7 @@ function MarkdownBody({ text, citeIndexMap, onOpenChunk }) {
         i += 1;
       }
       blocks.push(
-        /* @__PURE__ */ jsx5("blockquote", { className: "sb-quote-box", style: { margin: "6px 0" }, children: renderInlineCited(qLines.join(" "), citeIndexMap, onOpenChunk) }, `bq-${i}`)
+        /* @__PURE__ */ jsx6("blockquote", { className: "sb-quote-box", style: { margin: "6px 0" }, children: renderInlineCited(qLines.join(" "), citeIndexMap, onOpenChunk) }, `bq-${i}`)
       );
       continue;
     }
@@ -3843,7 +4483,7 @@ function MarkdownBody({ text, citeIndexMap, onOpenChunk }) {
         i += 1;
       }
       blocks.push(
-        /* @__PURE__ */ jsx5("ul", { children: items.map((item, idx) => /* @__PURE__ */ jsx5("li", { children: renderInlineCited(item, citeIndexMap, onOpenChunk) }, idx)) }, `ul-${i}`)
+        /* @__PURE__ */ jsx6("ul", { children: items.map((item, idx) => /* @__PURE__ */ jsx6("li", { children: renderInlineCited(item, citeIndexMap, onOpenChunk) }, idx)) }, `ul-${i}`)
       );
       continue;
     }
@@ -3854,22 +4494,22 @@ function MarkdownBody({ text, citeIndexMap, onOpenChunk }) {
         i += 1;
       }
       blocks.push(
-        /* @__PURE__ */ jsx5("ol", { style: { margin: "4px 0", paddingLeft: 20 }, children: items.map((item, idx) => /* @__PURE__ */ jsx5("li", { children: renderInlineCited(item, citeIndexMap, onOpenChunk) }, idx)) }, `ol-${i}`)
+        /* @__PURE__ */ jsx6("ol", { style: { margin: "4px 0", paddingLeft: 20 }, children: items.map((item, idx) => /* @__PURE__ */ jsx6("li", { children: renderInlineCited(item, citeIndexMap, onOpenChunk) }, idx)) }, `ol-${i}`)
       );
       continue;
     }
     if (trimmed.startsWith("### ")) {
-      blocks.push(/* @__PURE__ */ jsx5("h3", { children: renderInlineCited(trimmed.slice(4), citeIndexMap, onOpenChunk) }, `h3-${i}`));
+      blocks.push(/* @__PURE__ */ jsx6("h3", { children: renderInlineCited(trimmed.slice(4), citeIndexMap, onOpenChunk) }, `h3-${i}`));
       i += 1;
       continue;
     }
     if (trimmed.startsWith("## ")) {
-      blocks.push(/* @__PURE__ */ jsx5("h2", { children: renderInlineCited(trimmed.slice(3), citeIndexMap, onOpenChunk) }, `h2-${i}`));
+      blocks.push(/* @__PURE__ */ jsx6("h2", { children: renderInlineCited(trimmed.slice(3), citeIndexMap, onOpenChunk) }, `h2-${i}`));
       i += 1;
       continue;
     }
     if (trimmed.startsWith("# ")) {
-      blocks.push(/* @__PURE__ */ jsx5("h2", { style: { fontSize: 16 }, children: renderInlineCited(trimmed.slice(2), citeIndexMap, onOpenChunk) }, `h1-${i}`));
+      blocks.push(/* @__PURE__ */ jsx6("h2", { style: { fontSize: 16 }, children: renderInlineCited(trimmed.slice(2), citeIndexMap, onOpenChunk) }, `h1-${i}`));
       i += 1;
       continue;
     }
@@ -3878,163 +4518,9 @@ function MarkdownBody({ text, citeIndexMap, onOpenChunk }) {
       para.push(lines[i].trim());
       i += 1;
     }
-    blocks.push(/* @__PURE__ */ jsx5("p", { children: renderInlineCited(para.join(" "), citeIndexMap, onOpenChunk) }, `p-${i}`));
+    blocks.push(/* @__PURE__ */ jsx6("p", { children: renderInlineCited(para.join(" "), citeIndexMap, onOpenChunk) }, `p-${i}`));
   }
-  return /* @__PURE__ */ jsx5("div", { className: "sb-msg-body", children: blocks });
-}
-
-// desktop-src/components/DitherSurface.jsx
-import { useEffect as useEffect2, useRef as useRef3 } from "react";
-import { jsx as jsx6 } from "react/jsx-runtime";
-var BAYER_4X4 = [
-  0 / 16,
-  8 / 16,
-  2 / 16,
-  10 / 16,
-  12 / 16,
-  4 / 16,
-  14 / 16,
-  6 / 16,
-  3 / 16,
-  11 / 16,
-  1 / 16,
-  9 / 16,
-  15 / 16,
-  7 / 16,
-  13 / 16,
-  5 / 16
-];
-function parseRgb(colorStr) {
-  const m = String(colorStr || "").match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i);
-  if (m) {
-    return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
-  }
-  const r = String(colorStr || "").match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
-  if (r) {
-    return [Number(r[1]), Number(r[2]), Number(r[3])];
-  }
-  return [59, 130, 246];
-}
-function prefersReducedMotion() {
-  try {
-    return typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  } catch {
-    return false;
-  }
-}
-function DitherCanvas({
-  variant = "aurora",
-  animated = false,
-  color = "var(--ui-accent)",
-  secondaryColor = "#10b981",
-  opacity = 0.28,
-  cell = 3,
-  cols = 148,
-  rows = 32,
-  className = "",
-  style
-}) {
-  const canvasRef = useRef3(null);
-  useEffect2(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return void 0;
-    canvas.width = cols;
-    canvas.height = rows;
-    const c2d = canvas.getContext("2d");
-    if (!c2d) return void 0;
-    const img = c2d.createImageData(cols, rows);
-    const data = img.data;
-    const readPalette = () => {
-      const c1 = parseRgb(resolveCssColor(color, canvas));
-      const c2 = parseRgb(resolveCssColor(secondaryColor, canvas));
-      return [c1, c2];
-    };
-    let [rgbA, rgbB] = readPalette();
-    const paint = (timeMs) => {
-      const t = timeMs * 55e-5;
-      for (let y = 0; y < rows; y += 1) {
-        const ny = y / Math.max(1, rows - 1);
-        const bRow = (y & 3) * 4;
-        for (let x = 0; x < cols; x += 1) {
-          const nx = x / Math.max(1, cols - 1);
-          let field = 0;
-          let blend = nx;
-          if (variant === "wave") {
-            const w1 = Math.sin(nx * 10.5 + t * 2.2) * 0.24 + Math.sin(nx * 23 - t * 1.4) * 0.11;
-            const w2 = Math.cos(nx * 7.5 - t * 1.7) * 0.2;
-            const env = Math.sin(nx * Math.PI);
-            const center = 0.5 + (w1 + w2) * env;
-            const dist = Math.abs(ny - center);
-            field = Math.max(0, 1 - dist * 3.1) * (0.35 + 0.65 * env);
-            blend = 0.5 + 0.5 * Math.sin(nx * 6 + t);
-          } else if (variant === "mesh") {
-            const dx = nx - 0.14;
-            const dy = ny - 0.12;
-            const r = Math.sqrt(dx * dx * 0.65 + dy * dy * 1.8);
-            const ripple = 0.06 * Math.sin(nx * 8 + t);
-            field = Math.max(0, (1 - r * 1.25 + ripple) * (1 - ny * 0.82));
-            blend = nx * 0.75;
-          } else {
-            const c1 = Math.sin(nx * 5.2 + t * 1.1) * 0.5 + 0.5;
-            const c2 = Math.sin(nx * 11.4 - t * 0.8 + 1.3) * 0.5 + 0.5;
-            const verticalFade = Math.pow(Math.max(0, 1 - ny), 1.35);
-            field = (c1 * 0.55 + c2 * 0.45) * verticalFade * 0.92;
-            blend = c1;
-          }
-          const threshold = BAYER_4X4[bRow + (x & 3)];
-          const idx = (y * cols + x) * 4;
-          if (field > threshold) {
-            const useB = blend > 0.58;
-            const rgb = useB ? rgbB : rgbA;
-            data[idx] = rgb[0];
-            data[idx + 1] = rgb[1];
-            data[idx + 2] = rgb[2];
-            data[idx + 3] = Math.round(255 * Math.min(1, 0.55 + field * 0.45));
-          } else {
-            data[idx + 3] = 0;
-          }
-        }
-      }
-      c2d.putImageData(img, 0, 0);
-    };
-    paint(1400);
-    if (!animated || prefersReducedMotion() || typeof sdk.createBudgetedLoop !== "function") {
-      return void 0;
-    }
-    const loop = sdk.createBudgetedLoop(
-      (now) => {
-        paint(now);
-      },
-      {
-        fps: 10,
-        pauseWhenUnfocused: true
-      }
-    );
-    return () => {
-      loop?.dispose?.();
-    };
-  }, [variant, animated, color, secondaryColor, cols, rows]);
-  return /* @__PURE__ */ jsx6(
-    "canvas",
-    {
-      ref: canvasRef,
-      "aria-hidden": "true",
-      className: className ? `sb-dither-canvas ${className}` : "sb-dither-canvas",
-      style: {
-        opacity,
-        imageRendering: "pixelated",
-        ...style
-      },
-      "data-cell": cell
-    }
-  );
-}
-function HermesSpinner({ size = 12, className = "" }) {
-  const GlyphSpinner = sdk.GlyphSpinner;
-  if (typeof GlyphSpinner === "function") {
-    return /* @__PURE__ */ jsx6(GlyphSpinner, { spinner: "breathe", className, style: { fontSize: size, lineHeight: 1 } });
-  }
-  return /* @__PURE__ */ jsx6("span", { className: "sb-dt-dot", style: { background: "var(--ui-accent)", width: 7, height: 7 }, "aria-hidden": "true" });
+  return /* @__PURE__ */ jsx6("div", { className: "sb-msg-body", children: blocks });
 }
 
 // desktop-src/components/ChatPanel.jsx
@@ -4064,6 +4550,7 @@ function ChatPanel({
   onPatchNotebook,
   onOpenChunk,
   onOpenSource,
+  onSaveMemory,
   onRefresh,
   onError
 }) {
@@ -4077,10 +4564,10 @@ function ChatPanel({
   const cancelPollRef = useRef4(null);
   const activeJobRef = useRef4("");
   const enabledSources = sources.filter((s) => s.enabled);
-  useEffect3(() => {
+  useEffect4(() => {
     return () => cancelPollRef.current?.();
   }, []);
-  useEffect3(() => {
+  useEffect4(() => {
     if (!ctx?.onEvent) return void 0;
     return ctx.onEvent("plugin.sourcebook.job.progress", (ev) => {
       const payload = ev?.payload || ev || {};
@@ -4091,7 +4578,7 @@ function ChatPanel({
       }
     });
   }, [ctx]);
-  useEffect3(() => {
+  useEffect4(() => {
     if (centerTab === "chat" && endRef.current) {
       endRef.current.scrollIntoView({ block: "end" });
     }
@@ -4374,7 +4861,24 @@ function ChatPanel({
                       " Save note"
                     ]
                   }
-                )
+                ),
+                onSaveMemory ? /* @__PURE__ */ jsxs5(
+                  "button",
+                  {
+                    type: "button",
+                    className: "sb-btn sb-btn-ghost",
+                    onClick: () => onSaveMemory({
+                      title: (msg.content || "").split("\n")[0].replace(/\[\[c:[^\]]+\]\]/g, "").trim().slice(0, 56),
+                      content: msg.content || "",
+                      citations: msg.citations || []
+                    }),
+                    title: "Save this verified answer into Hermes persistent memory",
+                    children: [
+                      /* @__PURE__ */ jsx7(Icon, { name: "Brain", size: 12 }),
+                      " Memory"
+                    ]
+                  }
+                ) : null
               ] })
             ] })
           ] }, msg.id);
@@ -4569,7 +5073,17 @@ function ChatPanel({
                 children: cid.split(":")[1] || cid
               },
               cid
-            ))
+            )),
+            onSaveMemory && cl.verdict === "supported" ? /* @__PURE__ */ jsx7(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn sb-btn-ghost sb-btn-icon",
+                title: "Promote verified claim to Hermes Memory",
+                onClick: () => onSaveMemory({ title: cl.source_title || "", content: cl.text, citations: cl.citations || [] }),
+                children: /* @__PURE__ */ jsx7(Icon, { name: "Brain", size: 12 })
+              }
+            ) : null
           ] })
         ] }),
         /* @__PURE__ */ jsx7("div", { style: { fontSize: 12.5, color: "var(--ui-text-primary)" }, children: cl.text }),
@@ -4644,10 +5158,10 @@ function ChatPanel({
 }
 
 // desktop-src/components/StudioPanel.jsx
-import { useEffect as useEffect9, useRef as useRef8, useState as useState12 } from "react";
+import { useEffect as useEffect10, useRef as useRef9, useState as useState12 } from "react";
 
 // desktop-src/components/SlideDeckModal.jsx
-import { useEffect as useEffect4, useState as useState4 } from "react";
+import { useEffect as useEffect5, useState as useState4 } from "react";
 import { Fragment as Fragment4, jsx as jsx8, jsxs as jsxs6 } from "react/jsx-runtime";
 var DECK_PURPOSES = [
   { id: "auto", label: "Auto" },
@@ -4699,7 +5213,7 @@ function SlideDeckModal({
   const [outlineSlides, setOutlineSlides] = useState4([]);
   const [outlineTitle, setOutlineTitle] = useState4("");
   const [outlineError, setOutlineError] = useState4("");
-  useEffect4(() => {
+  useEffect5(() => {
     if (!open) return;
     setStep("config");
     setOutlineError("");
@@ -5163,7 +5677,7 @@ function StudyGuideView({ artifact, onOpenChunk }) {
 }
 
 // desktop-src/components/renderers/AudioOverviewView.jsx
-import { useEffect as useEffect5, useRef as useRef5, useState as useState5 } from "react";
+import { useEffect as useEffect6, useRef as useRef5, useState as useState5 } from "react";
 import { jsx as jsx10, jsxs as jsxs8 } from "react/jsx-runtime";
 function b64ToBlobUrl(b64, mime = "audio/mpeg") {
   const bin = atob(b64);
@@ -5172,6 +5686,11 @@ function b64ToBlobUrl(b64, mime = "audio/mpeg") {
   const blob = new Blob([arr], { type: mime });
   return { url: URL.createObjectURL(blob), blob };
 }
+var ENGINE_LABELS = {
+  hermes_tts: "Hermes TTS",
+  edge_tts: "Edge Neural TTS",
+  browser: "Desktop Voices"
+};
 function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
   const spec = artifact?.spec || {};
   const turns = spec.turns || [];
@@ -5183,17 +5702,32 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
   const [speakingIdx, setSpeakingIdx] = useState5(-1);
   const [question, setQuestion] = useState5("");
   const [asking, setAsking] = useState5(false);
+  const [replyUrl, setReplyUrl] = useState5("");
+  const [replyPlaying, setReplyPlaying] = useState5(false);
+  const [replyEngine, setReplyEngine] = useState5("");
+  const [canResumeEpisode, setCanResumeEpisode] = useState5(false);
   const audioRef = useRef5(null);
+  const replyAudioRef = useRef5(null);
+  const resumeTimeRef = useRef5(0);
+  const resumeTurnRef = useRef5(-1);
   const stopSpeakRef = useRef5(false);
+  const replyUrlRef = useRef5("");
   const canBrowserSpeak = typeof window !== "undefined" && typeof window.speechSynthesis !== "undefined";
-  const isActivelyPlaying = audioPlaying || speakingIdx >= 0;
-  useEffect5(() => {
+  const isActivelyPlaying = audioPlaying || replyPlaying || speakingIdx >= 0;
+  useEffect6(() => {
     stopSpeech();
     let alive = true;
     let createdUrl = "";
     setAudioUrl("");
     setAudioBlob(null);
     setAudioPlaying(false);
+    setCanResumeEpisode(false);
+    if (replyUrlRef.current) {
+      URL.revokeObjectURL(replyUrlRef.current);
+      replyUrlRef.current = "";
+    }
+    setReplyUrl("");
+    setReplyPlaying(false);
     if (!nbId || !artifact?.id || !artifact?.has_audio) return void 0;
     setLoadingAudio(true);
     api(`/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(artifact.id)}/audio-data`).then((res) => {
@@ -5210,13 +5744,16 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
       alive = false;
       stopSpeech();
       if (createdUrl) URL.revokeObjectURL(createdUrl);
+      if (replyUrlRef.current) {
+        URL.revokeObjectURL(replyUrlRef.current);
+        replyUrlRef.current = "";
+      }
     };
   }, [nbId, artifact?.id, artifact?.has_audio]);
-  useEffect5(() => {
-    if (audioRef.current) {
-      audioRef.current.playbackRate = rate;
-    }
-  }, [rate, audioUrl]);
+  useEffect6(() => {
+    if (audioRef.current) audioRef.current.playbackRate = rate;
+    if (replyAudioRef.current) replyAudioRef.current.playbackRate = rate;
+  }, [rate, audioUrl, replyUrl]);
   function stopSpeech() {
     stopSpeakRef.current = true;
     setSpeakingIdx(-1);
@@ -5227,23 +5764,28 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
       }
     }
   }
-  function playBrowserSpeech(startAt = 0) {
-    if (!canBrowserSpeak || !turns.length) return;
+  function playBrowserSpeech(startAt = 0, turnList = turns, endExclusive = null) {
+    if (!canBrowserSpeak || !turnList.length) return;
     stopSpeech();
     stopSpeakRef.current = false;
     const voices = window.speechSynthesis.getVoices() || [];
     const enVoices = voices.filter((v) => /^en/i.test(v.lang || ""));
     const voiceA = enVoices[0] || voices[0] || null;
     const voiceB = enVoices[1] || enVoices[0] || voices[1] || voiceA;
+    const limit = endExclusive != null ? Math.min(turnList.length, endExclusive) : turnList.length;
     const speakTurn = (i) => {
-      if (stopSpeakRef.current || i >= turns.length) {
+      if (stopSpeakRef.current || i >= limit) {
         setSpeakingIdx(-1);
         return;
       }
+      const t = turnList[i];
+      if (String(t?.speaker || "").toLowerCase() === "listener") {
+        speakTurn(i + 1);
+        return;
+      }
       setSpeakingIdx(i);
-      const t = turns[i];
-      const utt = new SpeechSynthesisUtterance(String(t.text || ""));
-      const sp = String(t.speaker || "").toLowerCase();
+      const utt = new SpeechSynthesisUtterance(String(t?.text || ""));
+      const sp = String(t?.speaker || "").toLowerCase();
       const isB = sp === "maya" || sp === "host b" || sp !== "alex" && i % 2 === 1;
       if (isB && voiceB) utt.voice = voiceB;
       else if (voiceA) utt.voice = voiceA;
@@ -5254,6 +5796,77 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
       window.speechSynthesis.speak(utt);
     };
     speakTurn(startAt);
+  }
+  function pauseMainForInterrupt() {
+    let wasPlaying = false;
+    if (audioRef.current && !audioRef.current.paused) {
+      resumeTimeRef.current = audioRef.current.currentTime || 0;
+      audioRef.current.pause();
+      setAudioPlaying(false);
+      wasPlaying = true;
+    }
+    if (speakingIdx >= 0) {
+      resumeTurnRef.current = speakingIdx;
+      stopSpeech();
+      wasPlaying = true;
+    }
+    if (wasPlaying) setCanResumeEpisode(true);
+  }
+  function resumeEpisode() {
+    if (replyAudioRef.current && !replyAudioRef.current.paused) {
+      replyAudioRef.current.pause();
+    }
+    setReplyPlaying(false);
+    stopSpeech();
+    setCanResumeEpisode(false);
+    if (audioRef.current && audioUrl) {
+      if (resumeTimeRef.current > 0) {
+        audioRef.current.currentTime = resumeTimeRef.current;
+      }
+      audioRef.current.play().catch(() => {
+      });
+      return;
+    }
+    if (canBrowserSpeak && resumeTurnRef.current >= 0) {
+      playBrowserSpeech(resumeTurnRef.current);
+    }
+  }
+  function playReplyAudioB64(b64, mime = "audio/mpeg") {
+    if (replyUrlRef.current) URL.revokeObjectURL(replyUrlRef.current);
+    const { url } = b64ToBlobUrl(b64, mime);
+    replyUrlRef.current = url;
+    setReplyUrl(url);
+    const startReply = () => {
+      if (replyAudioRef.current) {
+        replyAudioRef.current.playbackRate = rate;
+        replyAudioRef.current.play().catch(() => {
+        });
+      }
+    };
+    const ctx = getContext();
+    if (ctx && typeof ctx.setTimeout === "function") {
+      ctx.setTimeout(startReply, 60);
+    } else {
+      startReply();
+    }
+  }
+  async function replaySavedReply(audioFile, turnIdx) {
+    pauseMainForInterrupt();
+    if (audioFile && nbId && artifact?.id) {
+      try {
+        const res = await api(
+          `/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(artifact.id)}/media-data/${encodeURIComponent(audioFile)}`
+        );
+        if (res?.available && res.b64) {
+          playReplyAudioB64(res.b64, res.mime || "audio/mpeg");
+          return;
+        }
+      } catch {
+      }
+    }
+    if (canBrowserSpeak) {
+      playBrowserSpeech(turnIdx, turns, turnIdx + 2);
+    }
   }
   function toMarkdown() {
     const lines = [`# ${spec.title || "Audio Overview"}`, ""];
@@ -5277,17 +5890,33 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
     e.preventDefault();
     const q = question.trim();
     if (!q || asking || !nbId || !artifact?.id) return;
+    pauseMainForInterrupt();
     setAsking(true);
+    const estTurn = speakingIdx >= 0 ? speakingIdx : audioRef.current && audioRef.current.duration > 0 ? Math.min(turns.length - 1, Math.floor(audioRef.current.currentTime / audioRef.current.duration * turns.length)) : null;
     try {
       const res = await api(`/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(artifact.id)}/followup`, {
         method: "POST",
-        body: { question: q }
+        body: { question: q, current_turn_idx: estTurn }
       });
       setQuestion("");
-      if (res?.artifact) {
-        onArtifactUpdated?.(res.artifact);
+      const updatedArt = res?.artifact;
+      if (updatedArt) {
+        onArtifactUpdated?.(updatedArt);
       }
-      sdk.host?.notify?.({ kind: "success", title: "SourceBook", message: "Hosts answered your follow-up." });
+      const engine = res?.tts_engine || "browser";
+      setReplyEngine(engine);
+      if (res?.audio_b64) {
+        playReplyAudioB64(res.audio_b64, res.audio_mime || "audio/mpeg");
+      } else if (canBrowserSpeak && updatedArt?.spec?.turns?.length) {
+        const allTurns = updatedArt.spec.turns;
+        const startIdx = Math.max(0, allTurns.length - (res?.added_turns?.length || 2));
+        playBrowserSpeech(startIdx, allTurns, allTurns.length);
+      }
+      sdk.host?.notify?.({
+        kind: "success",
+        title: "SourceBook",
+        message: `Alex & Maya answered aloud (${ENGINE_LABELS[engine] || "Spoken Reply"}).`
+      });
     } catch (err) {
       sdk.host?.notify?.({ kind: "error", title: "SourceBook", message: err.message || "Could not ask hosts." });
     } finally {
@@ -5334,9 +5963,9 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
         {
           variant: "wave",
           animated: isActivelyPlaying,
-          color: "var(--ui-accent)",
+          color: replyPlaying ? "#10b981" : "var(--ui-accent)",
           secondaryColor: "#f59e0b",
-          opacity: isActivelyPlaying ? 0.55 : 0.28,
+          opacity: isActivelyPlaying ? 0.58 : 0.28,
           cols: 168,
           rows: 32,
           style: { width: "100%", height: 64, display: "block", borderRadius: 7 }
@@ -5356,7 +5985,7 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
       ) : /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }, children: [
         /* @__PURE__ */ jsxs8("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", display: "flex", alignItems: "center", gap: 8 }, children: [
           /* @__PURE__ */ jsx10(Icon, { name: "Headphones", size: 14, style: { color: "var(--ui-accent)" } }),
-          /* @__PURE__ */ jsx10("span", { children: loadingAudio ? "Loading podcast audio..." : "Listen instantly with dual desktop voices or configure Hermes TTS (ElevenLabs, OpenAI, Gemini, Piper) for MP3 downloads." })
+          /* @__PURE__ */ jsx10("span", { children: loadingAudio ? "Loading podcast audio..." : "Listen instantly with dual desktop voices, or install free edge-tts / configure Hermes TTS for MP3 episodes & spoken Q&A." })
         ] }),
         canBrowserSpeak && turns.length > 0 ? speakingIdx >= 0 ? /* @__PURE__ */ jsxs8("button", { type: "button", className: "sb-btn", onClick: stopSpeech, children: [
           /* @__PURE__ */ jsx10(Icon, { name: "X", size: 12 }),
@@ -5366,6 +5995,31 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
           " Listen aloud"
         ] }) : null
       ] }),
+      replyUrl || canResumeEpisode ? /* @__PURE__ */ jsxs8("div", { className: "sb-audio-reply-bar", children: [
+        /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }, children: [
+          /* @__PURE__ */ jsxs8("div", { style: { display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, fontWeight: 600, color: "#10b981" }, children: [
+            /* @__PURE__ */ jsx10(Icon, { name: "Volume2", size: 13 }),
+            /* @__PURE__ */ jsx10("span", { children: "Alex & Maya Live Reply" }),
+            replyEngine ? /* @__PURE__ */ jsx10("span", { className: "sb-kind-tag", children: ENGINE_LABELS[replyEngine] || replyEngine }) : null
+          ] }),
+          canResumeEpisode ? /* @__PURE__ */ jsxs8("button", { type: "button", className: "sb-btn sb-btn-primary", style: { padding: "3px 9px", fontSize: 11 }, onClick: resumeEpisode, children: [
+            /* @__PURE__ */ jsx10(Icon, { name: "Play", size: 11 }),
+            " Resume Episode"
+          ] }) : null
+        ] }),
+        replyUrl ? /* @__PURE__ */ jsx10(
+          "audio",
+          {
+            ref: replyAudioRef,
+            controls: true,
+            src: replyUrl,
+            onPlay: () => setReplyPlaying(true),
+            onPause: () => setReplyPlaying(false),
+            onEnded: () => setReplyPlaying(false),
+            style: { width: "100%", height: 32 }
+          }
+        ) : null
+      ] }) : null,
       /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6, paddingTop: 4, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
         /* @__PURE__ */ jsx10("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Playback speed" }),
         /* @__PURE__ */ jsx10("div", { className: "sb-seg", children: [0.75, 1, 1.25, 1.5, 2].map((v) => /* @__PURE__ */ jsxs8(
@@ -5382,6 +6036,23 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
           },
           v
         )) })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxs8("form", { onSubmit: askHosts, style: { display: "flex", gap: 6 }, children: [
+      /* @__PURE__ */ jsx10(
+        "input",
+        {
+          className: "sb-input",
+          value: question,
+          onChange: (e) => setQuestion(e.target.value),
+          placeholder: "Join the podcast \u2014 interrupt Alex & Maya with a question...",
+          disabled: asking
+        }
+      ),
+      /* @__PURE__ */ jsxs8("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: asking || !question.trim(), children: [
+        asking ? /* @__PURE__ */ jsx10(HermesSpinner, { size: 12 }) : /* @__PURE__ */ jsx10(Icon, { name: "Mic", size: 12 }),
+        " ",
+        asking ? "Hosts replying..." : "Interrupt & Ask"
       ] })
     ] }),
     /* @__PURE__ */ jsx10("div", { style: { display: "flex", flexDirection: "column", gap: 8 }, children: turns.map((t, idx) => {
@@ -5422,34 +6093,38 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
                   }
                 ),
                 /* @__PURE__ */ jsx10("span", { style: { fontSize: 12, fontWeight: 650, color: "var(--ui-text-primary)" }, children: sp }),
+                t.interrupt && !isListener ? /* @__PURE__ */ jsx10("span", { className: "sb-kind-tag", style: { color: "#10b981" }, children: "Live Q&A" }) : null,
                 isSpeaking ? /* @__PURE__ */ jsx10("span", { className: "sb-kind-tag", style: { color: accent }, children: "Speaking" }) : null
               ] }),
-              /* @__PURE__ */ jsx10("div", { style: { display: "flex", gap: 4 }, children: (t.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx10("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: cIdx + 1 }, cid)) })
+              /* @__PURE__ */ jsxs8("div", { style: { display: "flex", gap: 4, alignItems: "center" }, children: [
+                t.audio_file || t.interrupt && sp.toLowerCase() === "alex" && canBrowserSpeak ? /* @__PURE__ */ jsxs8(
+                  "button",
+                  {
+                    type: "button",
+                    className: "sb-btn sb-btn-ghost",
+                    style: { padding: "2px 6px", fontSize: 10.5 },
+                    onClick: () => replaySavedReply(t.audio_file, idx),
+                    title: "Play spoken host answer",
+                    children: [
+                      /* @__PURE__ */ jsx10(Icon, { name: "Volume2", size: 11 }),
+                      " Play"
+                    ]
+                  }
+                ) : null,
+                (t.cites || []).map((cid, cIdx) => /* @__PURE__ */ jsx10("button", { type: "button", className: "sb-cite", onClick: () => onOpenChunk?.(cid), title: `Inspect ${cid}`, children: cIdx + 1 }, cid))
+              ] })
             ] }),
             /* @__PURE__ */ jsx10("div", { style: { fontSize: 12.5, lineHeight: 1.58, color: "var(--ui-text-secondary)" }, children: t.text })
           ]
         },
         t.id || idx
       );
-    }) }),
-    /* @__PURE__ */ jsxs8("form", { onSubmit: askHosts, style: { display: "flex", gap: 6, marginTop: 4 }, children: [
-      /* @__PURE__ */ jsx10(
-        "input",
-        {
-          className: "sb-input",
-          value: question,
-          onChange: (e) => setQuestion(e.target.value),
-          placeholder: "Interrupt & ask the hosts a follow-up question...",
-          disabled: asking
-        }
-      ),
-      /* @__PURE__ */ jsx10("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: asking || !question.trim(), children: asking ? "Asking..." : "Ask Hosts" })
-    ] })
+    }) })
   ] });
 }
 
 // desktop-src/components/renderers/FlashcardsView.jsx
-import { useEffect as useEffect6, useState as useState6 } from "react";
+import { useEffect as useEffect7, useState as useState6 } from "react";
 import { Fragment as Fragment5, jsx as jsx11, jsxs as jsxs9 } from "react/jsx-runtime";
 function nextSm2(prev, quality) {
   const ease = Math.max(1.3, (prev?.ease ?? 2.5) + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
@@ -5486,7 +6161,7 @@ function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStat
   const [viewMode, setViewMode] = useState6("deck");
   const [sessionReviewed, setSessionReviewed] = useState6(0);
   const [sm2, setSm2] = useState6(() => artifact?.state?.sm2 || {});
-  useEffect6(() => {
+  useEffect7(() => {
     setOrder(cards.map((_, i) => i));
     setCursor(0);
     setFlipped(false);
@@ -5813,7 +6488,7 @@ function FlashcardsView({ nbId, artifact, onOpenChunk, onArtifactUpdated, onStat
 }
 
 // desktop-src/components/renderers/QuizView.jsx
-import { useEffect as useEffect7, useState as useState7 } from "react";
+import { useEffect as useEffect8, useState as useState7 } from "react";
 import { Fragment as Fragment6, jsx as jsx12, jsxs as jsxs10 } from "react/jsx-runtime";
 function isCorrectChoice(q, chosen) {
   if (chosen === void 0 || chosen === null) return false;
@@ -5837,7 +6512,7 @@ function QuizView({ artifact, onOpenChunk }) {
   const [viewMode, setViewMode] = useState7("focus");
   const [retryMissedOnly, setRetryMissedOnly] = useState7(false);
   const [shortDraft, setShortDraft] = useState7("");
-  useEffect7(() => {
+  useEffect8(() => {
     setAnswers({});
     setCursor(0);
     setViewMode("focus");
@@ -8216,8 +8891,9 @@ function DataTableView({ artifact, onOpenChunk }) {
 }
 
 // desktop-src/components/renderers/SlideDeckView.jsx
-import { useEffect as useEffect8, useState as useState11 } from "react";
+import { useEffect as useEffect9, useRef as useRef8, useState as useState11 } from "react";
 import { Fragment as Fragment10, jsx as jsx16, jsxs as jsxs14 } from "react/jsx-runtime";
+var EDITABLE_LAYOUTS = ["title", "stat", "bento", "comparison", "timeline", "two-col", "bullets", "quote", "image-left", "image-full", "section", "closing"];
 var SLIDE_THEMES = {
   editorial: {
     label: "Editorial",
@@ -8291,11 +8967,14 @@ function normalizeThemeKey(t) {
   return "editorial";
 }
 function SlideDeckView({
+  ctx,
   nbId,
   artifact,
+  capabilities,
   autoPresent = false,
   onClearAutoPresent,
   onOpenChunk,
+  onArtifactUpdated,
   onRequestRevise,
   onRequestRename,
   onRequestInspect,
@@ -8312,10 +8991,27 @@ function SlideDeckView({
   const [moreOpen, setMoreOpen] = useState11(false);
   const [showArtOverlay, setShowArtOverlay] = useState11(false);
   const [mediaUrls, setMediaUrls] = useState11({});
-  useEffect8(() => {
+  const [editing, setEditing] = useState11(false);
+  const [savingSlide, setSavingSlide] = useState11(false);
+  const [regenBusy, setRegenBusy] = useState11(false);
+  const [regenStage, setRegenStage] = useState11("");
+  const [editTitle, setEditTitle] = useState11("");
+  const [editLayout, setEditLayout] = useState11("two-col");
+  const [editBody, setEditBody] = useState11("");
+  const [editBullets, setEditBullets] = useState11("");
+  const [editNotes, setEditNotes] = useState11("");
+  const [editImgPrompt, setEditImgPrompt] = useState11("");
+  const [editImgMode, setEditImgMode] = useState11("full_slide");
+  const cancelRegenRef = useRef8(null);
+  const mediaSignature = slides.map((s) => s?.image_file || "").join("|");
+  useEffect9(() => {
+    return () => cancelRegenRef.current?.();
+  }, []);
+  useEffect9(() => {
     setIdx(0);
     setViewMode("stage");
     setMoreOpen(false);
+    setEditing(false);
     setThemeKey(normalizeThemeKey(artifact?.spec?.theme || artifact?.params?.theme));
     if (autoPresent) {
       setPresenting(true);
@@ -8324,7 +9020,18 @@ function SlideDeckView({
       setPresenting(false);
     }
   }, [artifact?.id, autoPresent]);
-  useEffect8(() => {
+  useEffect9(() => {
+    const cur = slides[idx];
+    if (!cur) return;
+    setEditTitle(cur.title || "");
+    setEditLayout(cur.layout || "two-col");
+    setEditBody(cur.body || "");
+    setEditBullets((cur.bullets || []).join("\n"));
+    setEditNotes(cur.notes || "");
+    setEditImgPrompt(cur.image_prompt || "");
+    setEditImgMode(cur.image_mode || (cur.image_file || cur.image_url ? "full_slide" : "full_slide"));
+  }, [idx, artifact?.id, artifact?.updated]);
+  useEffect9(() => {
     if (!nbId || !artifact?.id || !slides.length) return void 0;
     let alive = true;
     const files = slides.map((s) => s.image_file).filter(Boolean);
@@ -8344,20 +9051,20 @@ function SlideDeckView({
       entries.forEach(([k, v]) => {
         if (v) next[k] = v;
       });
-      setMediaUrls(next);
+      setMediaUrls((prev) => ({ ...prev, ...next }));
     });
     return () => {
       alive = false;
     };
-  }, [nbId, artifact?.id, slides.length]);
-  useEffect8(() => {
+  }, [nbId, artifact?.id, mediaSignature]);
+  useEffect9(() => {
     if (!presenting) {
       setElapsedSec(0);
       return void 0;
     }
-    const ctx = getContext();
-    if (ctx && typeof ctx.setInterval === "function") {
-      return ctx.setInterval(() => setElapsedSec((s) => s + 1), 1e3);
+    const ctx2 = getContext();
+    if (ctx2 && typeof ctx2.setInterval === "function") {
+      return ctx2.setInterval(() => setElapsedSec((s) => s + 1), 1e3);
     }
     return void 0;
   }, [presenting]);
@@ -8427,6 +9134,97 @@ ${s.notes}
       }
     } catch (err) {
       sdk.host?.notify?.({ kind: "error", title: "SourceBook", message: err.message || "Could not export HTML deck." });
+    }
+  }
+  async function saveSlideEdit(extraPatch = {}) {
+    if (!nbId || !artifact?.id || savingSlide) return;
+    setSavingSlide(true);
+    try {
+      const payload = {
+        action: "edit",
+        title: editTitle.trim() || sl.title || "Untitled slide",
+        layout: editLayout,
+        body: editBody.trim(),
+        bullets: editBullets.split("\n").map((s) => s.trim()).filter(Boolean),
+        notes: editNotes.trim(),
+        image_prompt: editImgPrompt.trim(),
+        image_mode: editImgMode,
+        ...extraPatch
+      };
+      const res = await api(
+        `/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(artifact.id)}/slides/${idx}`,
+        { method: "PATCH", body: payload }
+      );
+      if (res?.artifact) {
+        onArtifactUpdated?.(res.artifact);
+        if (typeof res.active_index === "number") setIdx(res.active_index);
+      }
+      sdk.host?.notify?.({ kind: "success", title: "SourceBook", message: `Saved Slide ${idx + 1}.` });
+    } catch (err) {
+      sdk.host?.notify?.({ kind: "error", title: "SourceBook", message: err.message || "Could not update slide." });
+    } finally {
+      setSavingSlide(false);
+    }
+  }
+  async function mutateSlideStructure(action, extra = {}) {
+    if (!nbId || !artifact?.id || savingSlide) return;
+    setSavingSlide(true);
+    try {
+      const res = await api(
+        `/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(artifact.id)}/slides/${idx}`,
+        { method: "PATCH", body: { action, ...extra } }
+      );
+      if (res?.artifact) {
+        onArtifactUpdated?.(res.artifact);
+        if (typeof res.active_index === "number") setIdx(res.active_index);
+      }
+    } catch (err) {
+      sdk.host?.notify?.({ kind: "error", title: "SourceBook", message: err.message || `Slide ${action} failed.` });
+    } finally {
+      setSavingSlide(false);
+    }
+  }
+  async function regenerateCurrentSlideVisual(overrideMode) {
+    if (!nbId || !artifact?.id || regenBusy) return;
+    setRegenBusy(true);
+    const providerTxt = [capabilities?.image_gen_provider, capabilities?.image_gen_model].filter(Boolean).join(" \xB7 ") || "Hermes ImageGen";
+    setRegenStage(`Regenerating Slide ${idx + 1} visual via ${providerTxt}...`);
+    try {
+      const targetMode = overrideMode || (editImgMode === "none" ? "full_slide" : editImgMode) || "full_slide";
+      const { job } = await api(
+        `/notebooks/${encodeURIComponent(nbId)}/artifacts/${encodeURIComponent(artifact.id)}/slides/${idx}/regenerate-visual`,
+        {
+          method: "POST",
+          body: {
+            prompt: editImgPrompt.trim() || void 0,
+            image_mode: targetMode
+          }
+        }
+      );
+      const pollCtx = ctx || getContext();
+      cancelRegenRef.current?.();
+      cancelRegenRef.current = pollJob(
+        pollCtx,
+        job,
+        (j) => setRegenStage(j.stage || `Rendering Slide ${idx + 1}...`),
+        (result) => {
+          setRegenBusy(false);
+          setRegenStage("");
+          if (result?.artifact) {
+            onArtifactUpdated?.(result.artifact);
+          }
+          sdk.host?.notify?.({ kind: "success", title: "SourceBook", message: `Regenerated artwork for Slide ${idx + 1}.` });
+        },
+        (err) => {
+          setRegenBusy(false);
+          setRegenStage("");
+          sdk.host?.notify?.({ kind: "error", title: "SourceBook", message: err.message || "Could not regenerate slide visual." });
+        }
+      );
+    } catch (err) {
+      setRegenBusy(false);
+      setRegenStage("");
+      sdk.host?.notify?.({ kind: "error", title: "SourceBook", message: err.message || "Could not start visual regeneration." });
     }
   }
   function renderSlideBody(slide, large) {
@@ -8872,9 +9670,38 @@ ${s.notes}
                 ]
               }
             ),
-            onRequestRevise ? /* @__PURE__ */ jsxs14("button", { type: "button", className: "sb-btn", onClick: () => onRequestRevise(artifact), title: "Revise this slide deck with AI instructions", children: [
+            /* @__PURE__ */ jsxs14(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn",
+                "data-active": editing,
+                onClick: () => setEditing((v) => !v),
+                title: "Edit this slide's title, layout, bullets, notes, or visual prompt inline",
+                children: [
+                  /* @__PURE__ */ jsx16(Icon, { name: "Edit3", size: 12 }),
+                  " ",
+                  editing ? "Close Edit" : "Edit Slide"
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxs14(
+              "button",
+              {
+                type: "button",
+                className: "sb-btn",
+                disabled: regenBusy,
+                onClick: () => regenerateCurrentSlideVisual(),
+                title: capabilities?.image_generate ? `Regenerate artwork for Slide ${idx + 1} via ${[capabilities.image_gen_provider, capabilities.image_gen_model].filter(Boolean).join(" \xB7 ")}` : "Regenerate artwork for this slide using Hermes ImageGen",
+                children: [
+                  regenBusy ? /* @__PURE__ */ jsx16(HermesSpinner, { size: 12 }) : /* @__PURE__ */ jsx16(Icon, { name: "Wand2", size: 12 }),
+                  " Regen Visual"
+                ]
+              }
+            ),
+            onRequestRevise ? /* @__PURE__ */ jsxs14("button", { type: "button", className: "sb-btn", onClick: () => onRequestRevise(artifact), title: "Revise this entire slide deck with AI instructions", children: [
               /* @__PURE__ */ jsx16(Icon, { name: "Sparkles", size: 12 }),
-              " Revise"
+              " Revise Deck"
             ] }) : null,
             /* @__PURE__ */ jsx16(
               "button",
@@ -8967,6 +9794,18 @@ ${s.notes}
             ] }) : null
           ] })
         ] }),
+        regenBusy ? /* @__PURE__ */ jsxs14("div", { className: "sb-sl-regen-banner", children: [
+          /* @__PURE__ */ jsxs14("div", { style: { display: "flex", alignItems: "center", gap: 8 }, children: [
+            /* @__PURE__ */ jsx16(HermesSpinner, { size: 13 }),
+            /* @__PURE__ */ jsx16("span", { children: regenStage || `Regenerating Slide ${idx + 1} visual...` })
+          ] }),
+          /* @__PURE__ */ jsxs14("span", { className: "sb-mono", style: { fontSize: 10.5, color: "var(--ui-text-tertiary)" }, children: [
+            "Slide ",
+            idx + 1,
+            " / ",
+            slides.length
+          ] })
+        ] }) : null,
         artifact?.grounding?.image_notice ? /* @__PURE__ */ jsx16("div", { className: "sb-quote-box", style: { fontSize: 11.5 }, children: artifact.grounding.image_notice }) : null,
         viewMode === "grid" ? /* @__PURE__ */ jsx16("div", { className: "sb-sl-overview-grid", children: slides.map((s, sIdx) => {
           const lColor = LAYOUT_ACCENTS[s.layout] || "var(--ui-accent)";
@@ -9005,6 +9844,148 @@ ${s.notes}
           );
         }) }) : /* @__PURE__ */ jsxs14(Fragment10, { children: [
           renderSlideCard(sl, idx, false),
+          editing ? /* @__PURE__ */ jsxs14("div", { className: "sb-sl-editor", children: [
+            /* @__PURE__ */ jsxs14("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }, children: [
+              /* @__PURE__ */ jsxs14("div", { style: { display: "flex", alignItems: "center", gap: 7 }, children: [
+                /* @__PURE__ */ jsx16(Icon, { name: "Edit3", size: 13, style: { color: "var(--ui-accent)" } }),
+                /* @__PURE__ */ jsxs14("strong", { style: { fontSize: 12.5 }, children: [
+                  "Inline Slide Editor \xB7 Slide ",
+                  idx + 1
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxs14("div", { style: { display: "flex", gap: 4, flexWrap: "wrap" }, children: [
+                /* @__PURE__ */ jsxs14(
+                  "button",
+                  {
+                    type: "button",
+                    className: "sb-btn",
+                    disabled: savingSlide || idx === 0,
+                    onClick: () => mutateSlideStructure("move", { delta: -1 }),
+                    title: "Move slide left",
+                    children: [
+                      /* @__PURE__ */ jsx16(Icon, { name: "ChevronLeft", size: 12 }),
+                      " Move Left"
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxs14(
+                  "button",
+                  {
+                    type: "button",
+                    className: "sb-btn",
+                    disabled: savingSlide || idx >= slides.length - 1,
+                    onClick: () => mutateSlideStructure("move", { delta: 1 }),
+                    title: "Move slide right",
+                    children: [
+                      "Move Right ",
+                      /* @__PURE__ */ jsx16(Icon, { name: "ChevronRight", size: 12 })
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxs14(
+                  "button",
+                  {
+                    type: "button",
+                    className: "sb-btn",
+                    disabled: savingSlide,
+                    onClick: () => mutateSlideStructure("add"),
+                    title: "Insert new slide after this one",
+                    children: [
+                      /* @__PURE__ */ jsx16(Icon, { name: "Plus", size: 12 }),
+                      " Add Slide"
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsx16(
+                  "button",
+                  {
+                    type: "button",
+                    className: "sb-btn sb-btn-danger",
+                    disabled: savingSlide || slides.length <= 1,
+                    onClick: () => mutateSlideStructure("delete"),
+                    title: "Delete this slide",
+                    children: /* @__PURE__ */ jsx16(Icon, { name: "Trash2", size: 12 })
+                  }
+                )
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxs14("div", { className: "sb-sl-editor-grid", children: [
+              /* @__PURE__ */ jsxs14("label", { className: "sb-field", children: [
+                /* @__PURE__ */ jsx16("span", { className: "sb-label", children: "Action title" }),
+                /* @__PURE__ */ jsx16("input", { className: "sb-input", value: editTitle, onChange: (e) => setEditTitle(e.target.value) })
+              ] }),
+              /* @__PURE__ */ jsxs14("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }, children: [
+                /* @__PURE__ */ jsxs14("label", { className: "sb-field", children: [
+                  /* @__PURE__ */ jsx16("span", { className: "sb-label", children: "Layout" }),
+                  /* @__PURE__ */ jsx16("select", { className: "sb-select", value: editLayout, onChange: (e) => setEditLayout(e.target.value), children: EDITABLE_LAYOUTS.map((l) => /* @__PURE__ */ jsx16("option", { value: l, children: l }, l)) })
+                ] }),
+                /* @__PURE__ */ jsxs14("label", { className: "sb-field", children: [
+                  /* @__PURE__ */ jsx16("span", { className: "sb-label", children: "Visual mode" }),
+                  /* @__PURE__ */ jsxs14("select", { className: "sb-select", value: editImgMode, onChange: (e) => setEditImgMode(e.target.value), children: [
+                    /* @__PURE__ */ jsx16("option", { value: "full_slide", children: "Full-Slide Art" }),
+                    /* @__PURE__ */ jsx16("option", { value: "hybrid", children: "Hybrid (Text + Art)" }),
+                    /* @__PURE__ */ jsx16("option", { value: "none", children: "Native Vector Only" })
+                  ] })
+                ] })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxs14("div", { className: "sb-sl-editor-grid", children: [
+              /* @__PURE__ */ jsxs14("label", { className: "sb-field", children: [
+                /* @__PURE__ */ jsx16("span", { className: "sb-label", children: "Bullets (one per line)" }),
+                /* @__PURE__ */ jsx16("textarea", { className: "sb-textarea", rows: 3, value: editBullets, onChange: (e) => setEditBullets(e.target.value) })
+              ] }),
+              /* @__PURE__ */ jsxs14("label", { className: "sb-field", children: [
+                /* @__PURE__ */ jsx16("span", { className: "sb-label", children: "Speaker notes" }),
+                /* @__PURE__ */ jsx16("textarea", { className: "sb-textarea", rows: 3, value: editNotes, onChange: (e) => setEditNotes(e.target.value) })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxs14("label", { className: "sb-field", children: [
+              /* @__PURE__ */ jsxs14("span", { className: "sb-label", children: [
+                "Visual art direction prompt (used when clicking Regenerate Visual)",
+                capabilities?.image_generate ? /* @__PURE__ */ jsx16("span", { className: "sb-mono", style: { marginLeft: 8, fontSize: 10.5, color: "var(--ui-accent)" }, children: [capabilities.image_gen_provider, capabilities.image_gen_model].filter(Boolean).join(" \xB7 ") }) : null
+              ] }),
+              /* @__PURE__ */ jsx16(
+                "input",
+                {
+                  className: "sb-input",
+                  value: editImgPrompt,
+                  onChange: (e) => setEditImgPrompt(e.target.value),
+                  placeholder: 'Example: "Tactile Swiss cutaway technical plate on matte obsidian showing hybrid retrieval prisms..."'
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxs14("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }, children: [
+              /* @__PURE__ */ jsxs14("div", { style: { display: "flex", gap: 6 }, children: [
+                /* @__PURE__ */ jsxs14(
+                  "button",
+                  {
+                    type: "button",
+                    className: "sb-btn",
+                    disabled: regenBusy,
+                    onClick: () => regenerateCurrentSlideVisual(editImgMode === "none" ? "full_slide" : editImgMode),
+                    children: [
+                      regenBusy ? /* @__PURE__ */ jsx16(HermesSpinner, { size: 12 }) : /* @__PURE__ */ jsx16(Icon, { name: "Wand2", size: 12 }),
+                      " Regenerate This Slide's Visual"
+                    ]
+                  }
+                ),
+                sl.image_file || sl.image_url ? /* @__PURE__ */ jsx16(
+                  "button",
+                  {
+                    type: "button",
+                    className: "sb-btn sb-btn-ghost",
+                    disabled: savingSlide,
+                    onClick: () => saveSlideEdit({ clear_image: true, image_mode: "none" }),
+                    children: "Remove visual"
+                  }
+                ) : null
+              ] }),
+              /* @__PURE__ */ jsxs14("div", { style: { display: "flex", gap: 6 }, children: [
+                /* @__PURE__ */ jsx16("button", { type: "button", className: "sb-btn", onClick: () => setEditing(false), children: "Cancel" }),
+                /* @__PURE__ */ jsx16("button", { type: "button", className: "sb-btn sb-btn-primary", disabled: savingSlide, onClick: () => saveSlideEdit(), children: savingSlide ? "Saving..." : "Save Slide" })
+              ] })
+            ] })
+          ] }) : null,
           showNotes && sl.notes ? /* @__PURE__ */ jsxs14("div", { className: "sb-quote-box", children: [
             /* @__PURE__ */ jsx16("strong", { style: { display: "block", fontSize: 10.5, letterSpacing: "0.06em", color: "var(--ui-text-tertiary)", marginBottom: 3 }, children: "SPEAKER NOTES" }),
             sl.notes
@@ -9135,11 +10116,11 @@ function StudioPanel({
   const [renameTarget, setRenameTarget] = useState12(null);
   const [renameValue, setRenameValue] = useState12("");
   const [inspectTarget, setInspectTarget] = useState12(null);
-  const cancelPollRef = useRef8(null);
-  useEffect9(() => {
+  const cancelPollRef = useRef9(null);
+  useEffect10(() => {
     return () => cancelPollRef.current?.();
   }, []);
-  useEffect9(() => {
+  useEffect10(() => {
     if (!nbId || !selectedArtifactId) {
       setActiveArt(null);
       return;
@@ -9341,11 +10322,17 @@ function StudioPanel({
         return /* @__PURE__ */ jsx17(
           SlideDeckView,
           {
+            ctx,
             nbId,
             artifact: activeArt,
+            capabilities,
             autoPresent: autoPresentId === activeArt.id,
             onClearAutoPresent: () => setAutoPresentId(""),
             onOpenChunk,
+            onArtifactUpdated: (updated) => {
+              setActiveArt(updated);
+              onRefresh?.();
+            },
             onRequestRevise: (art) => openCustomizeSlides("revise", art),
             onRequestRename: (art) => {
               setRenameTarget(art);
@@ -9803,11 +10790,12 @@ function SourceBookWorkspace({ ctx, externalState }) {
   const [createOpen, setCreateOpen] = useState13(false);
   const [newTitle, setNewTitle] = useState13("");
   const [searchOpen, setSearchOpen] = useState13(false);
+  const [searchScope, setSearchScope] = useState13("all");
   const [searchQuery, setSearchQuery] = useState13("");
   const [searchHits, setSearchHits] = useState13([]);
   const [loading, setLoading] = useState13(true);
   const [error, setError] = useState13("");
-  const reqSeqRef = useRef9(0);
+  const reqSeqRef = useRef10(0);
   const storageKey = `activeNotebook::${connectionId || "local"}::${profile || "default"}`;
   const loadGatewayCatalog = useCallback(async () => {
     if (typeof sdk.host?.request !== "function") return;
@@ -9910,12 +10898,12 @@ function SourceBookWorkspace({ ctx, externalState }) {
       setLoading(false);
     }
   }, [ctx, storageKey, loadNotebookData, loadGatewayCatalog]);
-  useEffect10(() => {
+  useEffect11(() => {
     setSelectedArtifactId(null);
     setInspectorTarget(null);
     loadNotebooks();
   }, [profile, connectionId, epoch, loadNotebooks]);
-  useEffect10(() => {
+  useEffect11(() => {
     if (!ctx?.onEvent) return void 0;
     return ctx.onEvent("plugin.sourcebook.notebook.changed", (ev) => {
       const target = ev?.payload?.nb || ev?.nb;
@@ -9924,7 +10912,7 @@ function SourceBookWorkspace({ ctx, externalState }) {
       }
     });
   }, [ctx, nbId, loadNotebookData]);
-  useEffect10(() => {
+  useEffect11(() => {
     if (!ctx?.addEventListener) return void 0;
     return ctx.addEventListener(window, "keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
@@ -9939,7 +10927,7 @@ function SourceBookWorkspace({ ctx, externalState }) {
       }
     });
   }, [ctx]);
-  useEffect10(() => {
+  useEffect11(() => {
     const pending = externalState?.get?.()?.pendingJump;
     if (pending && pending.nb) {
       externalState.set({ ...externalState.get(), pendingJump: null });
@@ -9995,17 +10983,41 @@ function SourceBookWorkspace({ ctx, externalState }) {
       setError(err.message || "Could not delete notebook.");
     }
   }
-  async function runCrossSearch(q) {
+  async function runCrossSearch(q, scopeOverride) {
+    const scope = scopeOverride || searchScope;
     setSearchQuery(q);
     if (!q.trim()) {
       setSearchHits([]);
       return;
     }
     try {
-      const hits = await api(`/search?q=${encodeURIComponent(q.trim())}`);
+      const qs = new URLSearchParams({ q: q.trim() });
+      if (scope === "current" && nbId) qs.set("nb", nbId);
+      const hits = await api(`/search?${qs.toString()}`);
       setSearchHits(Array.isArray(hits) ? hits : []);
     } catch {
       setSearchHits([]);
+    }
+  }
+  async function handleSaveMemory({ title = "", content = "", citations = [], targetNb = nbId }) {
+    const destNb = targetNb || nbId;
+    if (!destNb || !String(content || "").trim()) return;
+    try {
+      const res = await api(`/notebooks/${encodeURIComponent(destNb)}/memory/save`, {
+        method: "POST",
+        body: { title, content, citations, target: "memory" }
+      });
+      sdk.host?.notify?.({
+        kind: "success",
+        title: "Hermes Memory",
+        message: res?.message || "Saved verified insight to Hermes Memory."
+      });
+    } catch (err) {
+      sdk.host?.notify?.({
+        kind: "error",
+        title: "Hermes Memory",
+        message: err.message || "Could not save insight to Hermes Memory."
+      });
     }
   }
   async function handlePromoteQuote(chunk, sourceTitle) {
@@ -10468,12 +11480,15 @@ Cited chunk: \`${chunk.id}\``,
           /* @__PURE__ */ jsx19(
             SidebarSources,
             {
+              ctx,
               nbId,
               sources,
               notes,
               coverage,
               selectedSourceId: inspectorTarget?.sourceId || null,
               onSelectSource: setInspectorTarget,
+              onOpenArtifact: (aid) => setSelectedArtifactId(aid),
+              onSaveMemory: handleSaveMemory,
               onRefresh: () => loadNotebookData(nbId),
               onError: setError
             }
@@ -10493,6 +11508,7 @@ Cited chunk: \`${chunk.id}\``,
               onPatchNotebook: patchNotebook,
               onOpenChunk: (cid) => setInspectorTarget({ sourceId: String(cid).split(":")[0], chunkId: cid }),
               onOpenSource: setInspectorTarget,
+              onSaveMemory: handleSaveMemory,
               onRefresh: () => loadNotebookData(nbId),
               onError: setError
             }
@@ -10524,7 +11540,8 @@ Cited chunk: \`${chunk.id}\``,
         nbId,
         target: inspectorTarget,
         onClose: () => setInspectorTarget(null),
-        onPromoteQuote: handlePromoteQuote
+        onPromoteQuote: handlePromoteQuote,
+        onSaveMemory: handleSaveMemory
       }
     ),
     createOpen ? /* @__PURE__ */ jsx19("div", { className: "sb-modal-backdrop", onClick: () => setCreateOpen(false), children: /* @__PURE__ */ jsxs17("form", { className: "sb-modal", onClick: (e) => e.stopPropagation(), onSubmit: handleCreateNotebook, children: [
@@ -10551,19 +11568,54 @@ Cited chunk: \`${chunk.id}\``,
         /* @__PURE__ */ jsx19("button", { type: "submit", className: "sb-btn sb-btn-primary", disabled: !newTitle.trim(), children: "Create" })
       ] })
     ] }) }) : null,
-    searchOpen ? /* @__PURE__ */ jsx19("div", { className: "sb-modal-backdrop", onClick: () => setSearchOpen(false), children: /* @__PURE__ */ jsxs17("div", { className: "sb-modal", onClick: (e) => e.stopPropagation(), children: [
+    searchOpen ? /* @__PURE__ */ jsx19("div", { className: "sb-modal-backdrop", onClick: () => setSearchOpen(false), children: /* @__PURE__ */ jsxs17("div", { className: "sb-modal", style: { width: "min(620px, 94vw)" }, onClick: (e) => e.stopPropagation(), children: [
       /* @__PURE__ */ jsxs17("div", { className: "sb-modal-head", children: [
-        /* @__PURE__ */ jsx19("span", { children: "Search across all notebooks" }),
+        /* @__PURE__ */ jsxs17("div", { style: { display: "flex", alignItems: "center", gap: 10 }, children: [
+          /* @__PURE__ */ jsx19("span", { children: "Cross-Notebook Search" }),
+          /* @__PURE__ */ jsxs17("div", { className: "sb-seg", children: [
+            /* @__PURE__ */ jsxs17(
+              "button",
+              {
+                type: "button",
+                className: "sb-seg-btn",
+                "data-active": searchScope === "all",
+                onClick: () => {
+                  setSearchScope("all");
+                  runCrossSearch(searchQuery, "all");
+                },
+                children: [
+                  "All Notebooks (",
+                  notebooks.length,
+                  ")"
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsx19(
+              "button",
+              {
+                type: "button",
+                className: "sb-seg-btn",
+                "data-active": searchScope === "current",
+                disabled: !nbId,
+                onClick: () => {
+                  setSearchScope("current");
+                  runCrossSearch(searchQuery, "current");
+                },
+                children: "This Notebook"
+              }
+            )
+          ] })
+        ] }),
         /* @__PURE__ */ jsx19("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setSearchOpen(false), children: /* @__PURE__ */ jsx19(Icon, { name: "X", size: 14 }) })
       ] }),
-      /* @__PURE__ */ jsxs17("div", { className: "sb-modal-body", children: [
+      /* @__PURE__ */ jsxs17("div", { className: "sb-modal-body sb-scroll", style: { maxHeight: "68vh" }, children: [
         /* @__PURE__ */ jsx19(
           "input",
           {
             className: "sb-input",
             value: searchQuery,
             onChange: (e) => runCrossSearch(e.target.value),
-            placeholder: "Hybrid semantic + keyword search across every notebook...",
+            placeholder: searchScope === "all" ? "Hybrid semantic + BM25 search across every notebook..." : "Search passages inside this notebook...",
             autoFocus: true
           }
         ),
@@ -10579,15 +11631,34 @@ Cited chunk: \`${chunk.id}\``,
               setInspectorTarget({ sourceId: hit.source_id, chunkId: hit.chunk_id, highlight: searchQuery.trim() });
             },
             children: [
-              /* @__PURE__ */ jsxs17("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 11.5 }, children: [
-                /* @__PURE__ */ jsxs17("strong", { children: [
-                  hit.notebook_title,
-                  " / ",
-                  hit.source_title
+              /* @__PURE__ */ jsxs17("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, fontSize: 11.5 }, children: [
+                /* @__PURE__ */ jsxs17("div", { style: { display: "flex", alignItems: "center", gap: 6, minWidth: 0 }, children: [
+                  /* @__PURE__ */ jsxs17("strong", { className: "sb-src-title", children: [
+                    hit.notebook_title,
+                    " / ",
+                    hit.source_title
+                  ] }),
+                  hit.source_kind ? /* @__PURE__ */ jsx19("span", { className: "sb-kind-tag", children: hit.source_kind }) : null,
+                  hit.page > 1 ? /* @__PURE__ */ jsxs17("span", { className: "sb-kind-tag", children: [
+                    "p.",
+                    hit.page
+                  ] }) : null
                 ] }),
-                /* @__PURE__ */ jsx19("span", { className: "sb-mono", style: { color: "var(--ui-accent)" }, children: hit.chunk_id })
+                /* @__PURE__ */ jsxs17("div", { style: { display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }, onClick: (e) => e.stopPropagation(), children: [
+                  /* @__PURE__ */ jsx19("span", { className: "sb-mono", style: { color: "var(--ui-accent)", fontSize: 10.5 }, children: hit.chunk_id }),
+                  /* @__PURE__ */ jsx19(
+                    "button",
+                    {
+                      type: "button",
+                      className: "sb-btn sb-btn-ghost sb-btn-icon",
+                      title: "Save this passage to Hermes persistent memory",
+                      onClick: () => handleSaveMemory({ title: hit.source_title, content: hit.snippet, citations: [hit.chunk_id], targetNb: hit.notebook_id }),
+                      children: /* @__PURE__ */ jsx19(Icon, { name: "Brain", size: 12 })
+                    }
+                  )
+                ] })
               ] }),
-              /* @__PURE__ */ jsx19("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: hit.snippet })
+              /* @__PURE__ */ jsx19("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", lineHeight: 1.48 }, children: hit.snippet })
             ]
           },
           `${hit.notebook_id}-${hit.chunk_id}`
@@ -10598,13 +11669,13 @@ Cited chunk: \`${chunk.id}\``,
 }
 
 // desktop-src/SettingsPage.jsx
-import { useEffect as useEffect11, useState as useState14 } from "react";
+import { useEffect as useEffect12, useState as useState14 } from "react";
 import { jsx as jsx20, jsxs as jsxs18 } from "react/jsx-runtime";
 function SettingsPage() {
   const [caps, setCaps] = useState14(null);
   const [modelsInfo, setModelsInfo] = useState14(null);
   const [err, setErr] = useState14("");
-  useEffect11(() => {
+  useEffect12(() => {
     let alive = true;
     Promise.all([api("/capabilities"), api("/models").catch(() => null)]).then(([c, m]) => {
       if (!alive) return;
@@ -10626,9 +11697,10 @@ function SettingsPage() {
     ["Audio Overview TTS", caps?.edge_tts ? "Edge Neural TTS active (2-host MP3)" : "Transcript-only (install edge-tts for MP3)"],
     ["YouTube transcripts", caps?.youtube_transcript ? "youtube-transcript-api active (timestamped)" : "Optional (install youtube-transcript-api)"],
     ["Web search & extraction", caps?.web_extract ? "Hermes web_extract active" : "Built-in readability + discovery fallback"],
-    ["PDF extractor", pdfStatus],
+    ["PDF extractor & previews", caps?.pymupdf ? "PyMuPDF active (OCR + visual page previews)" : pdfStatus],
     ["DOCX extractor", caps?.python_docx ? "python-docx active" : "Built-in stdlib XML extractor"],
-    ["Image generation", caps?.image_generate ? [caps.image_gen_provider, caps.image_gen_model].filter(Boolean).join(" \xB7 ") || "Available for Slides & Infographics" : "Not configured"]
+    ["Image generation", caps?.image_generate ? [caps.image_gen_provider, caps.image_gen_model].filter(Boolean).join(" \xB7 ") || "Available for Slides & Infographics" : "Not configured"],
+    ["Hermes Memory bridge", caps?.memory_tool ? "Native Hermes memory tool active" : "Direct profile MEMORY.md bridge active"]
   ];
   const setupCmd = (modelsInfo?.setup_commands || [
     "hermes config set plugins.entries.sourcebook.llm.allow_model_override true",
@@ -10708,7 +11780,9 @@ function SettingsPage() {
           /* @__PURE__ */ jsx20("br", {}),
           "/sourcebook ask <nb_id> <question>",
           /* @__PURE__ */ jsx20("br", {}),
-          "/sourcebook make <nb_id> <kind> [focus]"
+          "/sourcebook make <nb_id> <kind> [focus]",
+          /* @__PURE__ */ jsx20("br", {}),
+          "/sourcebook research <nb_id> <topic>"
         ] })
       ] })
     ] })

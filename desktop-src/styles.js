@@ -2181,6 +2181,102 @@ export const CSS = `
 .sb-sl-full-art-bar > * {
   pointer-events: auto;
 }
+/* Inline Slide Editor & Single-Slide Regenerate Visual */
+.sb-sl-editor {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--sb-accent-border);
+  background: var(--sb-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sb-sl-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.sb-sl-regen-banner {
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--sb-accent-border);
+  background: var(--sb-accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--ui-text-primary);
+}
+/* Visual PDF Page Preview inside Passage Inspector */
+.sb-pdf-preview-card {
+  border-radius: 10px;
+  border: 1px solid var(--ui-stroke-secondary);
+  background: var(--sb-surface);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.sb-pdf-preview-head {
+  padding: 7px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  border-bottom: 1px solid var(--ui-stroke-tertiary);
+  background: var(--sb-sidebar);
+  font-size: 11.5px;
+}
+.sb-pdf-preview-stage {
+  position: relative;
+  background: var(--sb-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  cursor: zoom-in;
+}
+.sb-pdf-preview-img {
+  width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid var(--ui-stroke-tertiary);
+  display: block;
+  background: #fff;
+}
+/* Spoken Host Reply Banner inside Audio Overview */
+.sb-audio-reply-bar {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, #10b981 42%, var(--ui-stroke-secondary));
+  background: color-mix(in srgb, #10b981 10%, var(--sb-surface));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+/* Deep Research Progress Card */
+.sb-dr-progress {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--sb-accent-border);
+  background: var(--sb-accent-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sb-dr-bar {
+  height: 5px;
+  border-radius: 99px;
+  background: var(--ui-stroke-tertiary);
+  overflow: hidden;
+}
+.sb-dr-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--ui-accent);
+  transition: width 260ms var(--sb-ease);
+}
 
 @media (max-width: 1040px) {
   .sb-workbench {

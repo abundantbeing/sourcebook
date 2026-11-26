@@ -49,6 +49,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
   const [createOpen, setCreateOpen] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
+  const [searchScope, setSearchScope] = useState('all') // 'all' | 'current'
   const [searchQuery, setSearchQuery] = useState('')
   const [searchHits, setSearchHits] = useState([])
   const [loading, setLoading] = useState(true)
@@ -265,17 +266,42 @@ export function SourceBookWorkspace({ ctx, externalState }) {
     }
   }
 
-  async function runCrossSearch(q) {
+  async function runCrossSearch(q, scopeOverride) {
+    const scope = scopeOverride || searchScope
     setSearchQuery(q)
     if (!q.trim()) {
       setSearchHits([])
       return
     }
     try {
-      const hits = await api(`/search?q=${encodeURIComponent(q.trim())}`)
+      const qs = new URLSearchParams({ q: q.trim() })
+      if (scope === 'current' && nbId) qs.set('nb', nbId)
+      const hits = await api(`/search?${qs.toString()}`)
       setSearchHits(Array.isArray(hits) ? hits : [])
     } catch {
       setSearchHits([])
+    }
+  }
+
+  async function handleSaveMemory({ title = '', content = '', citations = [], targetNb = nbId }) {
+    const destNb = targetNb || nbId
+    if (!destNb || !String(content || '').trim()) return
+    try {
+      const res = await api(`/notebooks/${encodeURIComponent(destNb)}/memory/save`, {
+        method: 'POST',
+        body: { title, content, citations, target: 'memory' }
+      })
+      sdk.host?.notify?.({
+        kind: 'success',
+        title: 'Hermes Memory',
+        message: res?.message || 'Saved verified insight to Hermes Memory.'
+      })
+    } catch (err) {
+      sdk.host?.notify?.({
+        kind: 'error',
+        title: 'Hermes Memory',
+        message: err.message || 'Could not save insight to Hermes Memory.'
+      })
     }
   }
 
@@ -745,12 +771,15 @@ export function SourceBookWorkspace({ ctx, externalState }) {
           data-studio-expanded={studioExpanded}
         >
           <SidebarSources
+            ctx={ctx}
             nbId={nbId}
             sources={sources}
             notes={notes}
             coverage={coverage}
             selectedSourceId={inspectorTarget?.sourceId || null}
             onSelectSource={setInspectorTarget}
+            onOpenArtifact={aid => setSelectedArtifactId(aid)}
+            onSaveMemory={handleSaveMemory}
             onRefresh={() => loadNotebookData(nbId)}
             onError={setError}
           />
@@ -768,6 +797,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
             onPatchNotebook={patchNotebook}
             onOpenChunk={cid => setInspectorTarget({ sourceId: String(cid).split(':')[0], chunkId: cid })}
             onOpenSource={setInspectorTarget}
+            onSaveMemory={handleSaveMemory}
             onRefresh={() => loadNotebookData(nbId)}
             onError={setError}
           />
@@ -795,6 +825,7 @@ export function SourceBookWorkspace({ ctx, externalState }) {
         target={inspectorTarget}
         onClose={() => setInspectorTarget(null)}
         onPromoteQuote={handlePromoteQuote}
+        onSaveMemory={handleSaveMemory}
       />
 
       {createOpen ? (
@@ -829,19 +860,50 @@ export function SourceBookWorkspace({ ctx, externalState }) {
 
       {searchOpen ? (
         <div className="sb-modal-backdrop" onClick={() => setSearchOpen(false)}>
-          <div className="sb-modal" onClick={e => e.stopPropagation()}>
+          <div className="sb-modal" style={{ width: 'min(620px, 94vw)' }} onClick={e => e.stopPropagation()}>
             <div className="sb-modal-head">
-              <span>Search across all notebooks</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span>Cross-Notebook Search</span>
+                <div className="sb-seg">
+                  <button
+                    type="button"
+                    className="sb-seg-btn"
+                    data-active={searchScope === 'all'}
+                    onClick={() => {
+                      setSearchScope('all')
+                      runCrossSearch(searchQuery, 'all')
+                    }}
+                  >
+                    All Notebooks ({notebooks.length})
+                  </button>
+                  <button
+                    type="button"
+                    className="sb-seg-btn"
+                    data-active={searchScope === 'current'}
+                    disabled={!nbId}
+                    onClick={() => {
+                      setSearchScope('current')
+                      runCrossSearch(searchQuery, 'current')
+                    }}
+                  >
+                    This Notebook
+                  </button>
+                </div>
+              </div>
               <button type="button" className="sb-btn sb-btn-ghost sb-btn-icon" onClick={() => setSearchOpen(false)}>
                 <Icon name="X" size={14} />
               </button>
             </div>
-            <div className="sb-modal-body">
+            <div className="sb-modal-body sb-scroll" style={{ maxHeight: '68vh' }}>
               <input
                 className="sb-input"
                 value={searchQuery}
                 onChange={e => runCrossSearch(e.target.value)}
-                placeholder="Hybrid semantic + keyword search across every notebook..."
+                placeholder={
+                  searchScope === 'all'
+                    ? 'Hybrid semantic + BM25 search across every notebook...'
+                    : 'Search passages inside this notebook...'
+                }
                 autoFocus
               />
               {searchHits.length === 0 && searchQuery.trim() ? (
@@ -858,11 +920,25 @@ export function SourceBookWorkspace({ ctx, externalState }) {
                     setInspectorTarget({ sourceId: hit.source_id, chunkId: hit.chunk_id, highlight: searchQuery.trim() })
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5 }}>
-                    <strong>{hit.notebook_title} / {hit.source_title}</strong>
-                    <span className="sb-mono" style={{ color: 'var(--ui-accent)' }}>{hit.chunk_id}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, fontSize: 11.5 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                      <strong className="sb-src-title">{hit.notebook_title} / {hit.source_title}</strong>
+                      {hit.source_kind ? <span className="sb-kind-tag">{hit.source_kind}</span> : null}
+                      {hit.page > 1 ? <span className="sb-kind-tag">p.{hit.page}</span> : null}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                      <span className="sb-mono" style={{ color: 'var(--ui-accent)', fontSize: 10.5 }}>{hit.chunk_id}</span>
+                      <button
+                        type="button"
+                        className="sb-btn sb-btn-ghost sb-btn-icon"
+                        title="Save this passage to Hermes persistent memory"
+                        onClick={() => handleSaveMemory({ title: hit.source_title, content: hit.snippet, citations: [hit.chunk_id], targetNb: hit.notebook_id })}
+                      >
+                        <Icon name="Brain" size={12} />
+                      </button>
+                    </div>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--ui-text-secondary)' }}>{hit.snippet}</div>
+                  <div style={{ fontSize: 12, color: 'var(--ui-text-secondary)', lineHeight: 1.48 }}>{hit.snippet}</div>
                 </div>
               ))}
             </div>

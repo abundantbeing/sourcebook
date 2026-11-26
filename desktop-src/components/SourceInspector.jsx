@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../sdk.js'
 import { api, copyText } from '../api.js'
+import { HermesSpinner } from './DitherSurface.jsx'
 
 function fmtTime(sec) {
   const s = Math.max(0, Number(sec) || 0)
@@ -21,13 +22,17 @@ function highlightMatch(text, term) {
   )
 }
 
-export function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
+export function SourceInspector({ nbId, target, onClose, onPromoteQuote, onSaveMemory }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [filter, setFilter] = useState('')
   const [error, setError] = useState('')
   const [analysis, setAnalysis] = useState(null)
   const [analyzing, setAnalyzing] = useState(false)
+  const [pdfPage, setPdfPage] = useState(1)
+  const [pdfPreview, setPdfPreview] = useState(null)
+  const [loadingPreview, setLoadingPreview] = useState(false)
+  const [zoomOpen, setZoomOpen] = useState(false)
   const hitRef = useRef(null)
 
   const sourceId = target?.sourceId || (target?.chunkId ? String(target.chunkId).split(':')[0] : null)
@@ -40,9 +45,15 @@ export function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
     setLoading(true)
     setError('')
     setAnalysis(null)
+    setPdfPreview(null)
+    setZoomOpen(false)
     api(`/notebooks/${encodeURIComponent(nbId)}/sources/${encodeURIComponent(sourceId)}/text`)
       .then(res => {
-        if (alive) setData(res)
+        if (!alive) return
+        setData(res)
+        const chunks = res?.chunks || []
+        const hit = focusChunkId ? chunks.find(c => c.id === focusChunkId) : chunks[0]
+        setPdfPage(Math.max(1, Number(hit?.page_start) || 1))
       })
       .catch(err => {
         if (alive) setError(err.message || 'Could not load source text.')
@@ -53,7 +64,44 @@ export function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
     return () => {
       alive = false
     }
-  }, [nbId, sourceId])
+  }, [nbId, sourceId, focusChunkId])
+
+  const srcMeta = data?.source || {}
+  const chunks = data?.chunks || []
+  const focusedChunk = focusChunkId ? chunks.find(c => c.id === focusChunkId) : chunks[0]
+
+  // Fetch rendered PDF page preview (with cited passage highlighting!) when source is a PDF with PyMuPDF available
+  useEffect(() => {
+    if (!nbId || !sourceId || !srcMeta.has_pdf_preview) {
+      setPdfPreview(null)
+      return undefined
+    }
+    let alive = true
+    setLoadingPreview(true)
+    const querySeed =
+      highlightText ||
+      (focusedChunk && Number(focusedChunk.page_start || 1) === pdfPage
+        ? String(focusedChunk.text || '').replace(/<!--\s*[pt]:\d+\s*-->\n?/g, '').slice(0, 260)
+        : '')
+    const qs = new URLSearchParams({ page: String(pdfPage), ...(querySeed ? { q: querySeed } : {}) })
+    api(`/notebooks/${encodeURIComponent(nbId)}/sources/${encodeURIComponent(sourceId)}/page-preview?${qs.toString()}`)
+      .then(res => {
+        if (alive && res?.available && res?.b64) {
+          setPdfPreview(res)
+        } else if (alive) {
+          setPdfPreview(null)
+        }
+      })
+      .catch(() => {
+        if (alive) setPdfPreview(null)
+      })
+      .finally(() => {
+        if (alive) setLoadingPreview(false)
+      })
+    return () => {
+      alive = false
+    }
+  }, [nbId, sourceId, srcMeta.has_pdf_preview, pdfPage, focusChunkId, highlightText])
 
   useEffect(() => {
     if (hitRef.current) {
@@ -63,7 +111,6 @@ export function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
 
   if (!target || !sourceId) return null
 
-  const srcMeta = data?.source || {}
   const isTabular = srcMeta.kind === 'csv' || srcMeta.kind === 'json' || (data?.text || '').includes('\n| ---')
   const ytId = srcMeta.youtube_id || ''
 
@@ -84,11 +131,12 @@ export function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
     }
   }
 
-  const chunks = data?.chunks || []
   const q = filter.trim().toLowerCase()
   const visible = q
     ? chunks.filter(c => (c.text || '').toLowerCase().includes(q) || (c.heading || '').toLowerCase().includes(q))
     : chunks
+  const previewSrc = pdfPreview?.b64 ? `data:${pdfPreview.mime || 'image/png'};base64,${pdfPreview.b64}` : ''
+  const totalPages = pdfPreview?.total_pages || srcMeta.pages || 1
 
   return (
     <section className="sb-inspector" aria-label="Passage Inspector">
@@ -131,6 +179,72 @@ export function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
       <div className="sb-scroll" style={{ flex: 1, padding: '10px 12px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {loading ? <div className="sb-empty">Loading passages...</div> : null}
         {error ? <div className="sb-error-bar" style={{ margin: 0 }}>{error}</div> : null}
+
+        {/* Visual PDF Page Preview with Cited Passage Highlight Boxes */}
+        {srcMeta.has_pdf_preview ? (
+          <div className="sb-pdf-preview-card">
+            <div className="sb-pdf-preview-head">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Icon name="FileText" size={12} style={{ color: 'var(--ui-accent)' }} />
+                <strong style={{ color: 'var(--ui-text-primary)' }}>PDF Page Preview</strong>
+                {pdfPreview?.highlighted ? (
+                  <span className="sb-verdict" data-v="supported" style={{ fontSize: 10, padding: '1px 5px' }}>
+                    Highlighted
+                  </span>
+                ) : null}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <button
+                  type="button"
+                  className="sb-btn sb-btn-ghost sb-btn-icon"
+                  disabled={pdfPage <= 1 || loadingPreview}
+                  onClick={() => setPdfPage(p => Math.max(1, p - 1))}
+                  title="Previous page"
+                >
+                  <Icon name="ChevronLeft" size={12} />
+                </button>
+                <span className="sb-mono" style={{ fontSize: 11, color: 'var(--ui-text-secondary)', padding: '0 3px' }}>
+                  {pdfPage} / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  className="sb-btn sb-btn-ghost sb-btn-icon"
+                  disabled={pdfPage >= totalPages || loadingPreview}
+                  onClick={() => setPdfPage(p => Math.min(totalPages, p + 1))}
+                  title="Next page"
+                >
+                  <Icon name="ChevronRight" size={12} />
+                </button>
+                {previewSrc ? (
+                  <button
+                    type="button"
+                    className="sb-btn sb-btn-ghost sb-btn-icon"
+                    onClick={() => setZoomOpen(true)}
+                    title="Expand full page preview"
+                  >
+                    <Icon name="ZoomIn" size={12} />
+                  </button>
+                ) : null}
+              </div>
+            </div>
+            <div
+              className="sb-pdf-preview-stage"
+              onClick={() => {
+                if (previewSrc) setZoomOpen(true)
+              }}
+            >
+              {loadingPreview && !previewSrc ? (
+                <div style={{ padding: 24, display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5, color: 'var(--ui-text-tertiary)' }}>
+                  <HermesSpinner size={12} /> Rendering page {pdfPage}...
+                </div>
+              ) : previewSrc ? (
+                <img src={previewSrc} alt={`${srcMeta.title} page ${pdfPage}`} className="sb-pdf-preview-img" />
+              ) : (
+                <div style={{ padding: 14, fontSize: 11.5, color: 'var(--ui-text-tertiary)' }}>Page preview unavailable.</div>
+              )}
+            </div>
+          </div>
+        ) : null}
 
         {analysis ? (
           <div className="sb-ledger-row" style={{ gap: 10, borderColor: 'var(--sb-accent-border)' }}>
@@ -206,7 +320,17 @@ export function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
                     {ch.id}
                   </span>
                   {ch.page_start > 1 || srcMeta.pages > 1 ? (
-                    <span className="sb-kind-tag">p.{ch.page_start}</span>
+                    <button
+                      type="button"
+                      className="sb-kind-tag"
+                      style={{ cursor: srcMeta.has_pdf_preview ? 'pointer' : 'default', border: '1px solid var(--ui-stroke-tertiary)' }}
+                      onClick={() => {
+                        if (srcMeta.has_pdf_preview) setPdfPage(Math.max(1, Number(ch.page_start) || 1))
+                      }}
+                      title={srcMeta.has_pdf_preview ? `Jump PDF preview to page ${ch.page_start}` : undefined}
+                    >
+                      p.{ch.page_start}
+                    </button>
                   ) : null}
                   {ytHref ? (
                     <a href={ytHref} target="_blank" rel="noopener noreferrer" className="sb-kind-tag sb-link" title="Open video at timestamp">
@@ -238,6 +362,16 @@ export function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
                       <Icon name="BookmarkPlus" size={12} />
                     </button>
                   ) : null}
+                  {onSaveMemory ? (
+                    <button
+                      type="button"
+                      className="sb-btn sb-btn-ghost sb-btn-icon"
+                      title="Save verified excerpt to Hermes persistent memory"
+                      onClick={() => onSaveMemory({ title: ch.heading || srcMeta.title || sourceId, content: cleanText.slice(0, 320), citations: [ch.id] })}
+                    >
+                      <Icon name="Brain" size={12} />
+                    </button>
+                  ) : null}
                 </div>
               </div>
               <div style={{ fontSize: 12.5, lineHeight: 1.55, whiteSpace: 'pre-wrap', color: 'var(--ui-text-primary)' }}>
@@ -247,6 +381,30 @@ export function SourceInspector({ nbId, target, onClose, onPromoteQuote }) {
           )
         })}
       </div>
+
+      {zoomOpen && previewSrc ? (
+        <div className="sb-modal-backdrop" style={{ zIndex: 90, padding: 20 }} onClick={() => setZoomOpen(false)}>
+          <div
+            className="sb-modal"
+            style={{ width: 'min(920px, 95vw)', maxHeight: '92vh' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="sb-modal-head">
+              <span>{srcMeta.title} · Page {pdfPage} / {totalPages}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <button type="button" className="sb-btn" disabled={pdfPage <= 1} onClick={() => setPdfPage(p => Math.max(1, p - 1))}>Prev</button>
+                <button type="button" className="sb-btn" disabled={pdfPage >= totalPages} onClick={() => setPdfPage(p => Math.min(totalPages, p + 1))}>Next</button>
+                <button type="button" className="sb-btn sb-btn-ghost sb-btn-icon" onClick={() => setZoomOpen(false)}>
+                  <Icon name="X" size={14} />
+                </button>
+              </div>
+            </div>
+            <div className="sb-modal-body sb-scroll" style={{ maxHeight: '80vh', alignItems: 'center' }}>
+              <img src={previewSrc} alt={`${srcMeta.title} page ${pdfPage}`} style={{ maxWidth: '100%', borderRadius: 8, background: '#fff' }} />
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }

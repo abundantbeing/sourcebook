@@ -44,9 +44,10 @@ export function SettingsPage() {
     ['Audio Overview TTS', caps?.edge_tts ? 'Edge Neural TTS active (2-host MP3)' : 'Transcript-only (install edge-tts for MP3)'],
     ['YouTube transcripts', caps?.youtube_transcript ? 'youtube-transcript-api active (timestamped)' : 'Optional (install youtube-transcript-api)'],
     ['Web search & extraction', caps?.web_extract ? 'Hermes web_extract active' : 'Built-in readability + discovery fallback'],
-    ['PDF extractor', pdfStatus],
+    ['PDF extractor & previews', caps?.pymupdf ? 'PyMuPDF active (OCR + visual page previews)' : pdfStatus],
     ['DOCX extractor', caps?.python_docx ? 'python-docx active' : 'Built-in stdlib XML extractor'],
-    ['Image generation', caps?.image_generate ? [caps.image_gen_provider, caps.image_gen_model].filter(Boolean).join(' · ') || 'Available for Slides & Infographics' : 'Not configured']
+    ['Image generation', caps?.image_generate ? [caps.image_gen_provider, caps.image_gen_model].filter(Boolean).join(' · ') || 'Available for Slides & Infographics' : 'Not configured'],
+    ['Hermes Memory bridge', caps?.memory_tool ? 'Native Hermes memory tool active' : 'Direct profile MEMORY.md bridge active']
   ]
 
   const setupCmd = (modelsInfo?.setup_commands || [
@@ -127,7 +128,8 @@ export function SettingsPage() {
             /sourcebook sync &lt;nb_id&gt; &lt;local_path&gt;<br />
             /sourcebook add &lt;nb_id&gt; &lt;url or text&gt;<br />
             /sourcebook ask &lt;nb_id&gt; &lt;question&gt;<br />
-            /sourcebook make &lt;nb_id&gt; &lt;kind&gt; [focus]
+            /sourcebook make &lt;nb_id&gt; &lt;kind&gt; [focus]<br />
+            /sourcebook research &lt;nb_id&gt; &lt;topic&gt;
           </div>
         </div>
       </div>

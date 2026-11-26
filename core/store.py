@@ -833,6 +833,30 @@ def get_source(nb: str, src: str) -> Optional[dict[str, Any]]:
     return _read_json(_confined(d, d / "sources" / src / "meta.json"))
 
 
+def get_source_pdf_path(nb: str, src: str) -> Optional[Path]:
+    """Return a local PDF file path for `src` (stored upload `original.pdf` or safe linked `origin_path`)."""
+    _validate_id(src, "s")
+    d = nb_dir(nb, must_exist=True)
+    sdir = _confined(d, d / "sources" / src)
+    orig = sdir / "original.pdf"
+    if orig.is_file():
+        return orig
+    meta = _read_json(sdir / "meta.json") or {}
+    origin_path = meta.get("origin_path")
+    if isinstance(origin_path, str) and origin_path.lower().endswith(".pdf"):
+        p = Path(origin_path)
+        if p.is_file():
+            try:
+                from agent.file_safety import get_read_block_error
+
+                if get_read_block_error(str(p)):
+                    return None
+            except ImportError:
+                pass
+            return p
+    return None
+
+
 def get_source_text(nb: str, src: str) -> dict[str, Any]:
     meta = get_source(nb, src)
     if not meta:
@@ -852,7 +876,17 @@ def get_source_text(nb: str, src: str) -> dict[str, Any]:
         m = _TIME_MARKER_RE.search(c.get("text") or "")
         if m:
             c["timestamp_sec"] = int(m.group(1))
-    return {"source": meta, "text": text, "chunks": chunks}
+    has_pdf = False
+    if meta.get("kind") == "pdf" or str(meta.get("origin") or "").lower().endswith(".pdf"):
+        if get_source_pdf_path(nb, src) is not None:
+            try:
+                import fitz  # noqa: F401
+
+                has_pdf = True
+            except ImportError:
+                has_pdf = False
+    meta_out = {**meta, "has_pdf_preview": has_pdf}
+    return {"source": meta_out, "text": text, "chunks": chunks}
 
 
 def add_source(
@@ -1122,27 +1156,38 @@ def search(
         return out
 
 
-def search_all_notebooks(query: str, limit: int = 20) -> list[dict[str, Any]]:
+def search_all_notebooks(
+    query: str,
+    limit: int = 24,
+    *,
+    nb_filter: Optional[str] = None,
+) -> list[dict[str, Any]]:
     if not (query or "").strip():
         return []
     hits: list[dict[str, Any]] = []
-    for nb_meta in list_notebooks():
+    nbs = [get_notebook(nb_filter)] if nb_filter else list_notebooks()
+    per_nb_k = limit if nb_filter else 6
+    for nb_meta in nbs:
         nb = nb_meta["id"]
-        titles = {s["id"]: s["title"] for s in list_sources(nb)}
-        matched = search(nb, query, k=5, per_source=3)
-        for idx, c in enumerate(matched):
+        src_map = {s["id"]: s for s in list_sources(nb)}
+        matched = search(nb, query, k=per_nb_k, per_source=3)
+        for c in matched:
             if not c.get("rrf_score"):
                 continue
+            src = src_map.get(c["source_id"], {})
+            clean_snip = re.sub(r"<!--\s*[pt]:\d+\s*-->\s*", "", c["text"]).strip()
             hits.append({
                 "notebook_id": nb,
                 "notebook_title": nb_meta["title"],
                 "notebook_icon": nb_meta.get("icon", "book-open"),
                 "source_id": c["source_id"],
-                "source_title": titles.get(c["source_id"], c["source_id"]),
+                "source_title": src.get("title", c["source_id"]),
+                "source_kind": src.get("kind", "text"),
                 "chunk_id": c["id"],
                 "heading": c["heading"],
                 "page": c["page_start"],
-                "snippet": c["text"][:220],
+                "snippet": clean_snip[:240],
+                "rrf_score": float(c.get("rrf_score", 0.0)),
                 "score": -float(c.get("rrf_score", 0.0)),
             })
     hits.sort(key=lambda h: h["score"])

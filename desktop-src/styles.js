@@ -784,7 +784,42 @@ export const CSS = `
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: nowrap;
   gap: 8px;
+  min-width: 0;
+}
+.sb-composer-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.sb-composer-count {
+  font-size: 11.5px;
+  color: var(--ui-text-tertiary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.sb-composer-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.sb-composer-lbl {
+  font-size: 11px;
+  color: var(--ui-text-tertiary);
+  white-space: nowrap;
+}
+.sb-composer-select {
+  min-width: 0;
+  max-width: 100%;
+}
+.sb-composer-ask {
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 /* Claim Ledger & Coverage Map */
@@ -2509,6 +2544,20 @@ export const CSS = `
   }
 }
 @container sb-center (max-width: 520px) {
+  .sb-composer-lbl,
+  .sb-composer-active-word {
+    display: none;
+  }
+  .sb-composer-bar {
+    gap: 6px;
+  }
+  .sb-composer-controls {
+    gap: 5px;
+  }
+  .sb-composer-select {
+    padding: 0 6px;
+    font-size: 11px;
+  }
   .sb-kpi-strip-4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

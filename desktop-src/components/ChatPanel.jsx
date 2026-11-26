@@ -425,36 +425,44 @@ export function ChatPanel({
                   }
                 }}
               />
-              <div className="sb-composer-bar" style={{ flexWrap: 'wrap', gap: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 11.5, color: 'var(--ui-text-tertiary)' }}>
-                    <span className="sb-num">{enabledSources.length}</span>/{sources.length} active
+              <div className="sb-composer-bar">
+                <div className="sb-composer-controls">
+                  <span className="sb-composer-count" title={`${enabledSources.length} of ${sources.length} active sources`}>
+                    <span className="sb-num">{enabledSources.length}</span>/{sources.length}
+                    <span className="sb-composer-active-word"> active</span>
                   </span>
                   {notebook ? (
                     <>
-                      <select
-                        className="sb-select"
-                        aria-label="Response persona"
-                        value={notebook.persona || 'default'}
-                        onChange={e => onPatchNotebook?.({ persona: e.target.value })}
-                      >
-                        {PERSONAS.map(p => <option key={p.id} value={p.id}>Persona: {p.label}</option>)}
-                      </select>
-                      <select
-                        className="sb-select"
-                        aria-label="Response length"
-                        value={notebook.length || 'standard'}
-                        onChange={e => onPatchNotebook?.({ length: e.target.value })}
-                      >
-                        {LENGTHS.map(l => <option key={l.id} value={l.id}>Length: {l.label}</option>)}
-                      </select>
+                      <label className="sb-composer-field">
+                        <span className="sb-composer-lbl">Persona</span>
+                        <select
+                          className="sb-select sb-composer-select"
+                          aria-label="Response persona"
+                          title="Response persona"
+                          value={notebook.persona || 'default'}
+                          onChange={e => onPatchNotebook?.({ persona: e.target.value })}
+                        >
+                          {PERSONAS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                        </select>
+                      </label>
+                      <label className="sb-composer-field">
+                        <span className="sb-composer-lbl">Length</span>
+                        <select
+                          className="sb-select sb-composer-select"
+                          aria-label="Response length"
+                          title="Response length"
+                          value={notebook.length || 'standard'}
+                          onChange={e => onPatchNotebook?.({ length: e.target.value })}
+                        >
+                          {LENGTHS.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
+                        </select>
+                      </label>
                     </>
                   ) : null}
                 </div>
                 <button
                   type="button"
-                  className="sb-btn sb-btn-primary"
-                  style={{ marginLeft: 'auto' }}
+                  className="sb-btn sb-btn-primary sb-composer-ask"
                   disabled={asking || !input.trim() || enabledSources.length === 0}
                   onClick={() => sendQuestion()}
                 >

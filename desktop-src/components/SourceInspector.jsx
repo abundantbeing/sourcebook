@@ -183,8 +183,8 @@ export function SourceInspector({ nbId, target, onClose, onPromoteQuote, onSaveM
         {/* Visual PDF Page Preview with Cited Passage Highlight Boxes */}
         {srcMeta.has_pdf_preview ? (
           <div className="sb-pdf-preview-card">
-            <div className="sb-pdf-preview-head">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div className="sb-pdf-preview-head" style={{ flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
                 <Icon name="FileText" size={12} style={{ color: 'var(--ui-accent)' }} />
                 <strong style={{ color: 'var(--ui-text-primary)' }}>PDF Page Preview</strong>
                 {pdfPreview?.highlighted ? (
@@ -270,7 +270,7 @@ export function SourceInspector({ nbId, target, onClose, onPromoteQuote, onSaveM
                 {analysis.chart.series.slice(0, 10).map((pt, idx) => {
                   const pct = Math.max(4, Math.round((Math.abs(pt.value) / (analysis.chart.max_value || 1)) * 100))
                   return (
-                    <div key={idx} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 56px', alignItems: 'center', gap: 8, fontSize: 11.5 }}>
+                    <div key={idx} style={{ display: 'grid', gridTemplateColumns: 'minmax(72px, 0.38fr) 1fr auto', alignItems: 'center', gap: 8, fontSize: 11.5 }}>
                       <span className="sb-src-title" title={pt.label}>{pt.label}</span>
                       <div className="sb-src-bar" style={{ height: 8, marginTop: 0 }}>
                         <div className="sb-src-bar-fill" style={{ width: `${pct}%` }} />
@@ -282,7 +282,7 @@ export function SourceInspector({ nbId, target, onClose, onPromoteQuote, onSaveM
               </div>
             ) : null}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 6 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(128px, 1fr))', gap: 6 }}>
               {(analysis.profiles || []).filter(p => p.type === 'number').slice(0, 4).map(p => (
                 <div key={p.column} className="sb-kpi" style={{ padding: '7px 9px' }}>
                   <div className="sb-kpi-label">{p.column}</div>

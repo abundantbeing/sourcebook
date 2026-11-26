@@ -477,9 +477,9 @@ export function SlideDeckModal({
                 </div>
 
                 {useImageGen ? (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingTop: 8, borderTop: '1px solid var(--ui-stroke-tertiary)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, paddingTop: 8, borderTop: '1px solid var(--ui-stroke-tertiary)' }}>
                     <span style={{ fontSize: 11.5, color: 'var(--ui-text-secondary)' }}>Visual rendering mode</span>
-                    <div className="sb-seg">
+                    <div className="sb-seg" style={{ flexWrap: 'wrap' }}>
                       <button
                         type="button"
                         className="sb-seg-btn"

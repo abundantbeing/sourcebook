@@ -369,7 +369,7 @@ export function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdat
           </div>
         ) : null}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, paddingTop: 4, borderTop: '1px solid var(--ui-stroke-tertiary)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6, paddingTop: 4, borderTop: '1px solid var(--ui-stroke-tertiary)' }}>
           <span style={{ fontSize: 11, color: 'var(--ui-text-tertiary)' }}>Playback speed</span>
           <div className="sb-seg">
             {[0.75, 1, 1.25, 1.5, 2].map(v => (
@@ -388,12 +388,13 @@ export function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdat
       </div>
 
       {/* Join the Podcast / Interrupt Input right below Stage for immediate live Q&A */}
-      <form onSubmit={askHosts} style={{ display: 'flex', gap: 6 }}>
+      <form onSubmit={askHosts} style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         <input
           className="sb-input"
+          style={{ flex: '1 1 180px', minWidth: 0 }}
           value={question}
           onChange={e => setQuestion(e.target.value)}
-          placeholder="Join the podcast — interrupt Alex & Maya with a question..."
+          placeholder="Join the podcast - interrupt Alex & Maya with a question..."
           disabled={asking}
         />
         <button type="submit" className="sb-btn sb-btn-primary" disabled={asking || !question.trim()}>

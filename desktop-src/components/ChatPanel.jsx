@@ -237,8 +237,9 @@ export function ChatPanel({
       {centerTab === 'chat' ? (
         <>
           <div className="sb-chat-stream sb-scroll">
-            {sources.length > 0 ? (
-              <section className="sb-briefing" style={{ margin: 0, position: 'relative', overflow: 'hidden' }}>
+            <div className="sb-chat-track">
+              {sources.length > 0 ? (
+                <section className="sb-briefing" style={{ position: 'relative', overflow: 'hidden' }}>
                 <DitherCanvas
                   variant="aurora"
                   animated={briefingBusy}
@@ -397,7 +398,8 @@ export function ChatPanel({
                 </div>
               </div>
             ) : null}
-            <div ref={endRef} />
+              <div ref={endRef} />
+            </div>
           </div>
 
           <div className="sb-composer-wrap">
@@ -452,6 +454,7 @@ export function ChatPanel({
                 <button
                   type="button"
                   className="sb-btn sb-btn-primary"
+                  style={{ marginLeft: 'auto' }}
                   disabled={asking || !input.trim() || enabledSources.length === 0}
                   onClick={() => sendQuestion()}
                 >
@@ -465,7 +468,8 @@ export function ChatPanel({
 
       {centerTab === 'claims' ? (
         <div className="sb-panel-pad sb-scroll" style={{ flex: 1 }}>
-          <div className="sb-kpi-strip" style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' }}>
+          <div className="sb-panel-track">
+            <div className="sb-kpi-strip sb-kpi-strip-4">
             <div className="sb-kpi">
               <div className="sb-kpi-label">Verified</div>
               <div className="sb-kpi-val" style={{ color: 'var(--sb-ok)' }}>{supportedCount}</div>
@@ -490,7 +494,7 @@ export function ChatPanel({
 
           {conflicts.length > 0 ? (
             <section style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
                 <span className="sb-pane-title">Cross-Source Contradictions ({conflicts.length})</span>
                 <span style={{ fontSize: 11, color: 'var(--ui-text-tertiary)' }}>
                   Detected automatically across active sources
@@ -498,12 +502,12 @@ export function ChatPanel({
               </div>
               {conflicts.map(cf => (
                 <article key={cf.id} className="sb-conflict-card">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                     <strong style={{ fontSize: 12.5 }}>{cf.topic}</strong>
                     <span className="sb-verdict" data-v="partial">{cf.kind} conflict</span>
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--ui-text-secondary)' }}>{cf.summary}</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <div className="sb-conflict-sides">
                     {[cf.side_a, cf.side_b].map((side, idx) => (
                       <div key={idx} className="sb-quote-box" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
@@ -539,8 +543,8 @@ export function ChatPanel({
             </div>
           ) : null}
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <div className="sb-seg">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+            <div className="sb-seg" style={{ flexWrap: 'wrap' }}>
               {['all', 'supported', 'partial', 'unsupported'].map(f => (
                 <button
                   key={f}
@@ -567,8 +571,8 @@ export function ChatPanel({
           ) : (
             filteredClaims.map(cl => (
               <article key={cl.id} className="sb-ledger-row">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                     <span className="sb-verdict" data-v={cl.verdict}>
                       {cl.verdict} {typeof cl.overlap === 'number' ? `(${Math.round(cl.overlap * 100)}%)` : ''}
                     </span>
@@ -576,7 +580,7 @@ export function ChatPanel({
                       <span className="sb-verdict" data-v="unsupported">number mismatch</span>
                     ) : null}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
                     {cl.source_title ? (
                       <span style={{ fontSize: 11.5, color: 'var(--ui-text-tertiary)' }}>{cl.source_title}</span>
                     ) : null}
@@ -607,12 +611,14 @@ export function ChatPanel({
               </article>
             ))
           )}
+          </div>
         </div>
       ) : null}
 
       {centerTab === 'coverage' ? (
         <div className="sb-panel-pad sb-scroll" style={{ flex: 1 }}>
-          <div className="sb-kpi-strip">
+          <div className="sb-panel-track">
+            <div className="sb-kpi-strip">
             <div className="sb-kpi">
               <div className="sb-kpi-label">Corpus coverage</div>
               <div className="sb-kpi-val">
@@ -640,14 +646,14 @@ export function ChatPanel({
               const pct = item.total_chunks > 0 ? Math.round((item.touched_chunks / item.total_chunks) * 100) : 0
               return (
                 <article key={item.source_id} className="sb-ledger-row">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-                    <div style={{ minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+                    <div style={{ minWidth: 0, flex: '1 1 160px' }}>
                       <div className="sb-src-title">{item.title}</div>
                       <div style={{ fontSize: 11.5, color: 'var(--ui-text-tertiary)' }}>
                         <span className="sb-num">{item.touched_chunks}</span> of <span className="sb-num">{item.total_chunks}</span> passages cited
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                       <span className="sb-mono" style={{ fontSize: 12, fontWeight: 600 }}>{pct}%</span>
                       <button
                         type="button"
@@ -674,6 +680,7 @@ export function ChatPanel({
               )
             })
           )}
+          </div>
         </div>
       ) : null}
     </main>

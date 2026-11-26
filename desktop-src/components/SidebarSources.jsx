@@ -803,8 +803,8 @@ export function SidebarSources({
       {modal === 'discover' ? (
         <div className="sb-modal-backdrop" onClick={() => { if (!deepRunning) setModal(null) }}>
           <div className="sb-modal" style={{ width: 'min(580px, 94vw)' }} onClick={e => e.stopPropagation()}>
-            <div className="sb-modal-head">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="sb-modal-head" style={{ flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>
                 <span>Discover &amp; Deep Research</span>
                 <div className="sb-seg">
                   <button

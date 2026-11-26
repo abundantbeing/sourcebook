@@ -58,20 +58,20 @@ export function SettingsPage() {
   return (
     <div className="sb-root" style={{ height: 'auto', overflow: 'visible', background: 'transparent' }}>
       <Styles />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 680 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span className="sb-brand-mark" style={{ width: 32, height: 32, borderRadius: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 760, width: '100%' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: '1 1 240px' }}>
+            <span className="sb-brand-mark" style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0 }}>
               <BrandMark size={20} />
             </span>
-            <div>
+            <div style={{ minWidth: 0 }}>
               <div style={{ fontWeight: 650, fontSize: 14 }}>SourceBook Research Notebooks</div>
               <div style={{ fontSize: 12, color: 'var(--ui-text-secondary)', marginTop: 2 }}>
                 Universal Hermes model routing, hybrid search, Claim Ledger contradictions, and 8 Studio formats including Audio Overviews.
               </div>
             </div>
           </div>
-          <button type="button" className="sb-btn sb-btn-primary" onClick={() => sdk.host?.navigate?.('/sourcebook')}>
+          <button type="button" className="sb-btn sb-btn-primary" style={{ flexShrink: 0 }} onClick={() => sdk.host?.navigate?.('/sourcebook')}>
             <BrandMark size={13} accent="rgba(255,255,255,0.72)" /> Open SourceBook
           </button>
         </div>
@@ -89,8 +89,8 @@ export function SettingsPage() {
             <tbody>
               {rows.map(([label, status]) => (
                 <tr key={label}>
-                  <td style={{ fontWeight: 550 }}>{label}</td>
-                  <td style={{ color: 'var(--ui-text-secondary)' }}>{caps ? status : 'Checking...'}</td>
+                  <td style={{ fontWeight: 550, minWidth: 130 }}>{label}</td>
+                  <td style={{ color: 'var(--ui-text-secondary)', overflowWrap: 'anywhere' }}>{caps ? status : 'Checking...'}</td>
                 </tr>
               ))}
             </tbody>
@@ -98,7 +98,7 @@ export function SettingsPage() {
         </div>
 
         <div className="sb-ledger-row">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <strong style={{ fontSize: 12 }}>Use any Hermes model per notebook</strong>
             <button
               type="button"
@@ -114,14 +114,14 @@ export function SettingsPage() {
           <div style={{ fontSize: 12, color: 'var(--ui-text-secondary)' }}>
             SourceBook automatically works with your active Hermes model or auxiliary task slots (<span className="sb-mono">sourcebook_chat</span>, <span className="sb-mono">sourcebook_studio</span>, <span className="sb-mono">sourcebook_audio</span>, <span className="sb-mono">sourcebook_ingest</span>). To pick any provider or model per notebook directly inside SourceBook, run:
           </div>
-          <pre className="sb-mono sb-code-pre" style={{ borderRadius: 7, border: '1px solid var(--ui-stroke-tertiary)' }}>
+          <pre className="sb-mono sb-code-pre" style={{ borderRadius: 7, border: '1px solid var(--ui-stroke-tertiary)', maxWidth: '100%' }}>
             {setupCmd}
           </pre>
         </div>
 
         <div className="sb-ledger-row">
           <strong style={{ fontSize: 12 }}>Slash commands</strong>
-          <div className="sb-mono" style={{ fontSize: 11.5, color: 'var(--ui-text-secondary)', lineHeight: 1.7 }}>
+          <div className="sb-mono" style={{ fontSize: 11.5, color: 'var(--ui-text-secondary)', lineHeight: 1.7, overflowWrap: 'anywhere' }}>
             /sourcebook list<br />
             /sourcebook use &lt;nb_id&gt;<br />
             /sourcebook model &lt;nb_id&gt; &lt;provider/model|auto&gt;<br />

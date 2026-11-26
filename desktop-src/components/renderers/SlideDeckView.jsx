@@ -396,12 +396,12 @@ export function SlideDeckView({
                 <span className="sb-dt-dot" style={{ background: theme.accent }} />
                 <span>{layout === 'title' ? 'SOURCEBOOK PRESENTATION' : 'SECTION BREAK'}</span>
               </div>
-              <h2 style={{ margin: 0, fontSize: large ? 34 : 26, fontWeight: 780, lineHeight: 1.15, letterSpacing: '-0.025em', color: theme.fg }}>
+              <h2 style={{ margin: 0, fontSize: large ? 'clamp(22px, 3vw, 34px)' : 'clamp(16px, 3.6cqi, 26px)', fontWeight: 780, lineHeight: 1.16, letterSpacing: '-0.025em', color: theme.fg }}>
                 {slide.title}
               </h2>
               <div style={{ width: 64, height: 3, borderRadius: 99, background: `linear-gradient(90deg, ${theme.accent}, ${theme.secondary})` }} />
               {slide.body ? (
-                <p style={{ margin: 0, fontSize: large ? 15.5 : 13.5, color: theme.muted, lineHeight: 1.5 }}>{slide.body}</p>
+                <p style={{ margin: 0, fontSize: large ? 'clamp(13px, 1.5vw, 15.5px)' : 'clamp(12px, 2cqi, 13.5px)', color: theme.muted, lineHeight: 1.5 }}>{slide.body}</p>
               ) : null}
             </div>
             <div className="sb-sl-hybrid-art" style={{ borderColor: theme.border }}>
@@ -422,9 +422,9 @@ export function SlideDeckView({
           <h2
             style={{
               margin: 0,
-              fontSize: large ? 40 : 30,
+              fontSize: large ? 'clamp(24px, 3.6vw, 40px)' : 'clamp(17px, 4.2cqi, 30px)',
               fontWeight: 780,
-              lineHeight: 1.14,
+              lineHeight: 1.15,
               letterSpacing: '-0.025em',
               color: theme.fg,
               maxWidth: '24ch'
@@ -441,7 +441,7 @@ export function SlideDeckView({
             }}
           />
           {slide.body ? (
-            <p style={{ margin: 0, fontSize: large ? 17 : 14.5, color: theme.muted, maxWidth: '52ch', lineHeight: 1.55 }}>
+            <p style={{ margin: 0, fontSize: large ? 'clamp(13.5px, 1.6vw, 17px)' : 'clamp(12px, 2.2cqi, 14.5px)', color: theme.muted, maxWidth: '52ch', lineHeight: 1.55 }}>
               {slide.body}
             </p>
           ) : null}
@@ -734,12 +734,12 @@ export function SlideDeckView({
     const isHero = layout === 'title' || layout === 'closing' || layout === 'section'
     return (
       <section
-        className="sb-slide-stage sb-slide-stage-rich"
+        className={`sb-slide-stage sb-slide-stage-rich${isFullArt ? ' sb-slide-stage-art' : ''}`}
         style={{
           background: theme.bg,
           borderColor: theme.border,
           color: theme.fg,
-          ...(isFullArt ? { padding: 0, gap: 0 } : large ? { maxWidth: 1020, width: '100%', padding: '36px 44px' } : {})
+          ...(isFullArt ? { padding: 0, gap: 0 } : large ? { maxWidth: 1040, width: '100%', padding: 'clamp(16px, 3.2vw, 40px)' } : {})
         }}
       >
         {!isFullArt ? (
@@ -1206,16 +1206,16 @@ export function SlideDeckView({
 
       {presenting ? (
         <div
-          className="sb-modal-backdrop"
-          style={{ flexDirection: 'column', gap: 14, padding: 24, zIndex: 80 }}
+          className="sb-modal-backdrop sb-slideshow-backdrop"
+          style={{ flexDirection: 'column', gap: 14, zIndex: 80 }}
           onClick={() => setPresenting(false)}
         >
           <div
-            style={{ width: 'min(1040px, 95vw)', display: 'flex', flexDirection: 'column', gap: 12 }}
+            className="sb-slideshow-shell"
             onClick={e => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span className="sb-kind-tag">Slideshow</span>
                 <span className="sb-mono" style={{ fontSize: 12.5, color: 'var(--ui-text-secondary)' }}>{mins}:{secs}</span>
                 <span className="sb-mono" style={{ fontSize: 11.5, color: 'var(--ui-text-tertiary)' }}>
@@ -1231,7 +1231,7 @@ export function SlideDeckView({
               </div>
             </div>
             {renderSlideCard(sl, idx, true)}
-            <div style={{ display: 'grid', gridTemplateColumns: nextSl ? '1.6fr 1fr' : '1fr', gap: 10 }}>
+            <div className={`sb-slideshow-foot${nextSl ? ' sb-slideshow-foot-split' : ''}`}>
               {sl.notes ? (
                 <div className="sb-quote-box" style={{ background: 'var(--sb-surface)' }}>
                   <strong style={{ display: 'block', fontSize: 10.5, letterSpacing: '0.06em', color: 'var(--ui-text-tertiary)', marginBottom: 3 }}>SPEAKER NOTES</strong>

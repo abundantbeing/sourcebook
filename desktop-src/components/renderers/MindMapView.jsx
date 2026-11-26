@@ -153,7 +153,7 @@ export function MindMapView({ artifact, onOpenChunk }) {
 
       <div
         className="sb-svg-stage"
-        style={{ height: 420, cursor: dragging ? 'grabbing' : 'grab', userSelect: 'none' }}
+        style={{ height: 'clamp(240px, 46vh, 480px)', cursor: dragging ? 'grabbing' : 'grab', userSelect: 'none' }}
         onPointerDown={e => {
           if (e.target.closest('g[data-node]')) return
           setDragging({ sx: e.clientX, sy: e.clientY, ox: pan.x, oy: pan.y })

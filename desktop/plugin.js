@@ -23,6 +23,10 @@ var LOCAL_GLYPHS = {
     /* @__PURE__ */ jsx("rect", { width: "18", height: "18", x: "3", y: "3", rx: "2" }),
     /* @__PURE__ */ jsx("path", { d: "M9 3v18" })
   ] }),
+  PanelRight: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("rect", { width: "18", height: "18", x: "3", y: "3", rx: "2" }),
+    /* @__PURE__ */ jsx("path", { d: "M15 3v18" })
+  ] }),
   MessageSquare: /* @__PURE__ */ jsx("path", { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" }),
   ShieldCheck: /* @__PURE__ */ jsxs(Fragment, { children: [
     /* @__PURE__ */ jsx("path", { d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" }),
@@ -185,6 +189,122 @@ var LOCAL_GLYPHS = {
     /* @__PURE__ */ jsx("path", { d: "M14 2v4a2 2 0 0 0 2 2h4" }),
     /* @__PURE__ */ jsx("path", { d: "M10 12a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1 1 1 0 0 1 1 1v1a1 1 0 0 0 1 1" }),
     /* @__PURE__ */ jsx("path", { d: "M14 18a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1 1 1 0 0 1-1-1v-1a1 1 0 0 0-1-1" })
+  ] }),
+  Plus: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "M5 12h14" }),
+    /* @__PURE__ */ jsx("path", { d: "M12 5v14" })
+  ] }),
+  Cpu: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("rect", { width: "16", height: "16", x: "4", y: "4", rx: "2" }),
+    /* @__PURE__ */ jsx("rect", { width: "6", height: "6", x: "9", y: "9", rx: "1" }),
+    /* @__PURE__ */ jsx("path", { d: "M15 2v2" }),
+    /* @__PURE__ */ jsx("path", { d: "M15 20v2" }),
+    /* @__PURE__ */ jsx("path", { d: "M2 15h2" }),
+    /* @__PURE__ */ jsx("path", { d: "M2 9h2" }),
+    /* @__PURE__ */ jsx("path", { d: "M20 15h2" }),
+    /* @__PURE__ */ jsx("path", { d: "M20 9h2" }),
+    /* @__PURE__ */ jsx("path", { d: "M9 2v2" }),
+    /* @__PURE__ */ jsx("path", { d: "M9 20v2" })
+  ] }),
+  Lock: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2" }),
+    /* @__PURE__ */ jsx("path", { d: "M7 11V7a5 5 0 0 1 10 0v4" })
+  ] }),
+  Search: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("circle", { cx: "11", cy: "11", r: "8" }),
+    /* @__PURE__ */ jsx("path", { d: "m21 21-4.3-4.3" })
+  ] }),
+  ChevronLeft: /* @__PURE__ */ jsx("path", { d: "m15 18-6-6 6-6" }),
+  ArrowLeft: /* @__PURE__ */ jsx("path", { d: "m15 18-6-6 6-6" }),
+  RefreshCw: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" }),
+    /* @__PURE__ */ jsx("path", { d: "M21 3v5h-5" }),
+    /* @__PURE__ */ jsx("path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" }),
+    /* @__PURE__ */ jsx("path", { d: "M8 16H3v5" })
+  ] }),
+  Trash2: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "M3 6h18" }),
+    /* @__PURE__ */ jsx("path", { d: "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" }),
+    /* @__PURE__ */ jsx("path", { d: "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" }),
+    /* @__PURE__ */ jsx("line", { x1: "10", x2: "10", y1: "11", y2: "17" }),
+    /* @__PURE__ */ jsx("line", { x1: "14", x2: "14", y1: "11", y2: "17" })
+  ] }),
+  Copy: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("rect", { width: "14", height: "14", x: "8", y: "8", rx: "2", ry: "2" }),
+    /* @__PURE__ */ jsx("path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" })
+  ] }),
+  Download: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }),
+    /* @__PURE__ */ jsx("polyline", { points: "7 10 12 15 17 10" }),
+    /* @__PURE__ */ jsx("line", { x1: "12", x2: "12", y1: "15", y2: "3" })
+  ] }),
+  Play: /* @__PURE__ */ jsx("polygon", { points: "6 3 20 12 6 21 6 3" }),
+  Upload: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }),
+    /* @__PURE__ */ jsx("polyline", { points: "17 8 12 3 7 8" }),
+    /* @__PURE__ */ jsx("line", { x1: "12", x2: "12", y1: "3", y2: "15" })
+  ] }),
+  Link: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" }),
+    /* @__PURE__ */ jsx("path", { d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" })
+  ] }),
+  FolderOpen: /* @__PURE__ */ jsx(Fragment, { children: /* @__PURE__ */ jsx("path", { d: "m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" }) }),
+  Globe: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("circle", { cx: "12", cy: "12", r: "10" }),
+    /* @__PURE__ */ jsx("path", { d: "M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" }),
+    /* @__PURE__ */ jsx("path", { d: "M2 12h20" })
+  ] }),
+  FileText: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" }),
+    /* @__PURE__ */ jsx("path", { d: "M14 2v4a2 2 0 0 0 2 2h4" }),
+    /* @__PURE__ */ jsx("path", { d: "M10 9H8" }),
+    /* @__PURE__ */ jsx("path", { d: "M16 13H8" }),
+    /* @__PURE__ */ jsx("path", { d: "M16 17H8" })
+  ] }),
+  SlidersHorizontal: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("line", { x1: "21", x2: "14", y1: "4", y2: "4" }),
+    /* @__PURE__ */ jsx("line", { x1: "10", x2: "3", y1: "4", y2: "4" }),
+    /* @__PURE__ */ jsx("line", { x1: "21", x2: "12", y1: "12", y2: "12" }),
+    /* @__PURE__ */ jsx("line", { x1: "8", x2: "3", y1: "12", y2: "12" }),
+    /* @__PURE__ */ jsx("line", { x1: "21", x2: "16", y1: "20", y2: "20" }),
+    /* @__PURE__ */ jsx("line", { x1: "12", x2: "3", y1: "20", y2: "20" }),
+    /* @__PURE__ */ jsx("line", { x1: "14", x2: "14", y1: "2", y2: "6" }),
+    /* @__PURE__ */ jsx("line", { x1: "8", x2: "8", y1: "10", y2: "14" }),
+    /* @__PURE__ */ jsx("line", { x1: "16", x2: "16", y1: "18", y2: "22" })
+  ] }),
+  BarChart3: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "M3 3v18h18" }),
+    /* @__PURE__ */ jsx("path", { d: "M18 17V9" }),
+    /* @__PURE__ */ jsx("path", { d: "M13 17V5" }),
+    /* @__PURE__ */ jsx("path", { d: "M8 17v-3" })
+  ] }),
+  ArrowUpRight: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "M7 7h10v10" }),
+    /* @__PURE__ */ jsx("path", { d: "M7 17 17 7" })
+  ] }),
+  Headphones: /* @__PURE__ */ jsx(Fragment, { children: /* @__PURE__ */ jsx("path", { d: "M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" }) }),
+  Presentation: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "M2 3h20" }),
+    /* @__PURE__ */ jsx("path", { d: "M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3" }),
+    /* @__PURE__ */ jsx("path", { d: "m7 21 5-5 5 5" })
+  ] }),
+  GitBranch: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("line", { x1: "6", x2: "6", y1: "3", y2: "15" }),
+    /* @__PURE__ */ jsx("circle", { cx: "18", cy: "6", r: "3" }),
+    /* @__PURE__ */ jsx("circle", { cx: "6", cy: "18", r: "3" }),
+    /* @__PURE__ */ jsx("path", { d: "M18 9a9 9 0 0 1-9 9" })
+  ] }),
+  Maximize2: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("polyline", { points: "15 3 21 3 21 9" }),
+    /* @__PURE__ */ jsx("polyline", { points: "9 21 3 21 3 15" }),
+    /* @__PURE__ */ jsx("line", { x1: "21", x2: "14", y1: "3", y2: "10" }),
+    /* @__PURE__ */ jsx("line", { x1: "3", x2: "10", y1: "21", y2: "14" })
+  ] }),
+  FileCode: /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" }),
+    /* @__PURE__ */ jsx("path", { d: "M14 2v4a2 2 0 0 0 2 2h4" }),
+    /* @__PURE__ */ jsx("path", { d: "m10 13-2 2 2 2" }),
+    /* @__PURE__ */ jsx("path", { d: "m14 17 2-2-2-2" })
   ] })
 };
 function Icon({ name, size = 15, strokeWidth = 1.75, className = "", style }) {
@@ -486,9 +606,13 @@ var CSS = `
 .sb-root {
   height: 100%;
   width: 100%;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  container-type: inline-size;
+  container-name: sb-root;
   --sb-bg: var(--ui-bg-chrome, var(--background));
   --sb-sidebar: var(--ui-bg-sidebar, var(--ui-bg-chrome));
   --sb-surface: var(--ui-bg-elevated, var(--ui-bg-editor));
@@ -598,6 +722,7 @@ var CSS = `
   font-size: 12.5px;
   font-weight: 550;
   cursor: pointer;
+  min-width: 0;
   max-width: 280px;
   transition: background-color 140ms var(--sb-ease), border-color 140ms var(--sb-ease), transform 120ms var(--sb-ease);
 }
@@ -748,21 +873,132 @@ var CSS = `
   transition: width 220ms var(--sb-ease);
 }
 
-/* Main 3-column workbench */
+/* Main adaptive 3-column workbench (scales seamlessly from 320px split panes to 2560px+ ultrawides) */
 .sb-workbench {
   flex: 1;
   min-height: 0;
+  min-width: 0;
+  position: relative;
   display: grid;
-  grid-template-columns: 272px minmax(0, 1fr) 348px;
+  grid-template-columns: clamp(228px, 21cqi, 280px) minmax(0, 1fr) clamp(296px, 28cqi, 372px);
 }
 .sb-workbench[data-left-collapsed="true"] {
-  grid-template-columns: 0px minmax(0, 1fr) 348px;
+  grid-template-columns: 0px minmax(0, 1fr) clamp(296px, 28cqi, 372px);
+}
+.sb-workbench[data-right-collapsed="true"] {
+  grid-template-columns: clamp(228px, 21cqi, 280px) minmax(0, 1fr) 0px;
+}
+.sb-workbench[data-left-collapsed="true"][data-right-collapsed="true"] {
+  grid-template-columns: 0px minmax(0, 1fr) 0px;
 }
 .sb-workbench[data-studio-expanded="true"] {
-  grid-template-columns: 256px 0px minmax(0, 1fr);
+  grid-template-columns: clamp(220px, 19cqi, 264px) 0px minmax(0, 1fr);
 }
 .sb-workbench[data-left-collapsed="true"][data-studio-expanded="true"] {
   grid-template-columns: 0px 0px minmax(0, 1fr);
+}
+.sb-workbench[data-left-collapsed="true"] > .sb-pane-left,
+.sb-workbench[data-right-collapsed="true"] > .sb-pane-right,
+.sb-workbench[data-studio-expanded="true"] > .sb-pane-center {
+  border: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* Wide & ultrawide desktop screens (>= 1600px container): generous rails */
+@container sb-root (min-width: 1600px) {
+  .sb-workbench {
+    grid-template-columns: clamp(280px, 18cqi, 344px) minmax(0, 1fr) clamp(372px, 26cqi, 468px);
+  }
+  .sb-workbench[data-left-collapsed="true"] {
+    grid-template-columns: 0px minmax(0, 1fr) clamp(372px, 26cqi, 468px);
+  }
+  .sb-workbench[data-right-collapsed="true"] {
+    grid-template-columns: clamp(280px, 18cqi, 344px) minmax(0, 1fr) 0px;
+  }
+  .sb-workbench[data-studio-expanded="true"] {
+    grid-template-columns: clamp(260px, 17cqi, 310px) 0px minmax(0, 1fr);
+  }
+}
+
+/* Split-screen / half-screen layout (740px - 1079px): 2-column Workspace + Studio, Sources becomes slide-over drawer */
+.sb-workbench[data-tier="split"] {
+  grid-template-columns: minmax(0, 1fr) clamp(276px, 38cqi, 344px);
+}
+.sb-workbench[data-tier="split"][data-right-collapsed="true"] {
+  grid-template-columns: minmax(0, 1fr) 0px;
+}
+.sb-workbench[data-tier="split"][data-studio-expanded="true"] {
+  grid-template-columns: 0px minmax(0, 1fr);
+}
+.sb-workbench[data-tier="split"] > .sb-pane-left {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(304px, 84cqi);
+  z-index: 22;
+  transform: translateX(-104%);
+  box-shadow: 12px 0 32px rgba(0, 0, 0, 0.32);
+  border-right: 1px solid var(--ui-stroke-secondary);
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 180ms var(--sb-ease), visibility 180ms var(--sb-ease);
+}
+.sb-workbench[data-tier="split"][data-left-drawer="true"] > .sb-pane-left {
+  transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
+}
+.sb-drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.36);
+  z-index: 20;
+}
+
+/* Compact / narrow split-pane / minimum window (< 740px): single-focus pane switcher bar, 100% width per pane */
+.sb-compact-bar {
+  display: none;
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--ui-stroke-tertiary);
+  background: var(--sb-sidebar);
+}
+.sb-root[data-layout="compact"] .sb-compact-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sb-compact-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  gap: 2px;
+}
+.sb-compact-tabs .sb-seg-btn {
+  justify-content: center;
+  width: 100%;
+  padding: 0 6px;
+  height: 26px;
+}
+.sb-workbench[data-tier="compact"] {
+  display: flex;
+  flex-direction: column;
+}
+.sb-workbench[data-tier="compact"] > .sb-pane {
+  flex: 1;
+  width: 100%;
+  border-left: 0;
+  border-right: 0;
+}
+.sb-workbench[data-tier="compact"][data-compact-pane="sources"] > .sb-pane-center,
+.sb-workbench[data-tier="compact"][data-compact-pane="sources"] > .sb-pane-right,
+.sb-workbench[data-tier="compact"][data-compact-pane="workspace"] > .sb-pane-left,
+.sb-workbench[data-tier="compact"][data-compact-pane="workspace"] > .sb-pane-right,
+.sb-workbench[data-tier="compact"][data-compact-pane="studio"] > .sb-pane-left,
+.sb-workbench[data-tier="compact"][data-compact-pane="studio"] > .sb-pane-center {
+  display: none;
 }
 
 .sb-pane {
@@ -775,13 +1011,19 @@ var CSS = `
 .sb-pane-left {
   border-right: 1px solid var(--ui-stroke-tertiary);
   background: var(--sb-sidebar);
+  container-type: inline-size;
+  container-name: sb-left;
 }
 .sb-pane-center {
   background: var(--sb-bg);
+  container-type: inline-size;
+  container-name: sb-center;
 }
 .sb-pane-right {
   border-left: 1px solid var(--ui-stroke-tertiary);
   background: var(--sb-sidebar);
+  container-type: inline-size;
+  container-name: sb-studio;
 }
 
 .sb-pane-head {
@@ -792,6 +1034,7 @@ var CSS = `
   gap: 8px;
   padding: 10px 12px;
   border-bottom: 1px solid var(--ui-stroke-tertiary);
+  min-width: 0;
 }
 
 .sb-pane-title {
@@ -820,7 +1063,7 @@ var CSS = `
 }
 .sb-dropzone-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(74px, 1fr));
   gap: 5px;
 }
 
@@ -1200,7 +1443,7 @@ var CSS = `
 /* Studio Rail & Artifact Renderers */
 .sb-studio-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(126px, 1fr));
   gap: 6px;
   padding: 10px 12px;
 }
@@ -1696,7 +1939,7 @@ var CSS = `
 }
 .sb-dt-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
   gap: 10px;
 }
 .sb-dt-card {
@@ -1789,9 +2032,10 @@ var CSS = `
   top: 48px;
   right: 0;
   bottom: 0;
-  width: min(460px, 46vw);
+  width: min(480px, 44cqi);
   background: var(--sb-sidebar);
   border-left: 1px solid var(--ui-stroke-secondary);
+  box-shadow: -10px 0 28px rgba(0, 0, 0, 0.24);
   display: flex;
   flex-direction: column;
   z-index: 25;
@@ -1910,7 +2154,9 @@ var CSS = `
   position: absolute;
   top: 34px;
   right: 0;
-  width: 300px;
+  width: min(320px, calc(100vw - 24px));
+  max-height: calc(100vh - 84px);
+  overflow-y: auto;
   border-radius: 10px;
   border: 1px solid var(--ui-stroke-secondary);
   background: var(--sb-surface);
@@ -2758,9 +3004,374 @@ var CSS = `
   transition: width 260ms var(--sb-ease);
 }
 
-@media (max-width: 1040px) {
-  .sb-workbench {
-    grid-template-columns: 236px minmax(0, 1fr) 300px;
+/* Responsive typography, measure & adaptive containers across ALL window sizes (320px - 2560px+) */
+.sb-model-trigger {
+  min-width: 0;
+}
+.sb-model-trigger-label {
+  max-width: 158px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sb-kpi-strip-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.sb-conflict-sides {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.sb-msg-body {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.sb-msg-body .sb-table-wrap,
+.sb-msg-body .sb-code-block {
+  max-width: 100%;
+}
+.sb-slideshow-backdrop {
+  padding: clamp(10px, 2.2vw, 24px);
+  overflow-y: auto;
+}
+.sb-slideshow-shell {
+  width: min(1040px, 96vw);
+  max-height: calc(100vh - 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sb-slideshow-foot {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.sb-slideshow-foot-split {
+  grid-template-columns: 1.6fr 1fr;
+}
+
+/* Prevent flex-column vertical squishing inside scrollable panes & center ultrawide measure cleanly */
+.sb-chat-track,
+.sb-panel-track {
+  width: 100%;
+  max-width: 920px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sb-chat-track > *,
+.sb-panel-track > *,
+.sb-briefing,
+.sb-msg,
+.sb-kpi-strip,
+.sb-ledger-row,
+.sb-conflict-card,
+.sb-src-row,
+.sb-art-item,
+.sb-chunk-card {
+  flex-shrink: 0;
+}
+.sb-msg {
+  max-width: 100%;
+}
+.sb-composer-wrap > .sb-composer {
+  width: 100%;
+  max-width: 920px;
+  margin-inline: auto;
+}
+
+/* Center pane compact adaptations (works in BOTH narrow windows AND wide windows with expanded sidebars!) */
+@container sb-center (max-width: 640px) {
+  .sb-center-tabs {
+    padding: 7px 12px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .sb-chat-stream {
+    padding: 12px 12px 18px;
+  }
+  .sb-chat-track,
+  .sb-panel-track {
+    gap: 11px;
+  }
+  .sb-composer-wrap {
+    padding: 8px 12px 10px;
+  }
+  .sb-panel-pad {
+    padding: 12px 12px 22px;
+  }
+  .sb-msg-user {
+    max-width: 92%;
+  }
+  .sb-msg-assistant {
+    padding: 11px 13px;
+  }
+}
+@container sb-center (max-width: 520px) {
+  .sb-kpi-strip-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sb-kpi-strip-4 .sb-kpi {
+    border-bottom: 1px solid var(--ui-stroke-tertiary);
+  }
+  .sb-kpi-strip-4 .sb-kpi:nth-child(2n) {
+    border-right: 0;
+  }
+  .sb-kpi-strip-4 .sb-kpi:nth-last-child(-n+2) {
+    border-bottom: 0;
+  }
+  .sb-conflict-sides {
+    grid-template-columns: 1fr;
+  }
+  .sb-center-tabs {
+    flex-wrap: nowrap;
+    padding: 6px 10px;
+  }
+  .sb-center-tabs .sb-seg {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .sb-center-tabs .sb-seg-btn {
+    padding: 0 6px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+}
+@container sb-center (max-width: 430px) {
+  .sb-center-tabs .sb-seg-btn svg {
+    display: none !important;
+  }
+  .sb-center-tabs .sb-seg-btn {
+    padding: 0 7px;
+    font-size: 11px;
+  }
+}
+@container sb-center (max-width: 310px) {
+  .sb-kpi-strip {
+    grid-template-columns: 1fr;
+  }
+  .sb-kpi {
+    border-right: 0;
+    border-bottom: 1px solid var(--ui-stroke-tertiary);
+  }
+  .sb-kpi:last-child {
+    border-bottom: 0;
+  }
+}
+
+/* Studio container queries (responds to Studio's OWN width: docked rail vs split vs full-width expanded!) */
+@container sb-studio (max-width: 560px) {
+  .sb-viewer-head {
+    padding: 8px 10px;
+  }
+  .sb-viewer-body {
+    padding: 12px 12px 18px;
+  }
+  .sb-slide-stage:not(.sb-slide-stage-art) {
+    aspect-ratio: auto;
+    min-height: 210px;
+    padding: 14px 16px;
+    gap: 10px;
+  }
+  .sb-sl-hybrid-split,
+  .sb-sl-stat-split,
+  .sb-sl-comparison,
+  .sb-sl-editor-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .sb-sl-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .sb-sl-overview-grid {
+    grid-template-columns: 1fr;
+  }
+  .sb-slide-thumb {
+    flex: 0 0 112px;
+  }
+  .sb-dt-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sb-dt-kpi {
+    border-bottom: 1px solid var(--ui-stroke-tertiary);
+  }
+  .sb-dt-kpi:nth-child(2n) {
+    border-right: 0;
+  }
+  .sb-dt-kpi:nth-last-child(-n+2) {
+    border-bottom: 0;
+  }
+  .sb-dt-detail-panel {
+    padding: 10px 12px 12px 16px;
+  }
+  .sb-dt-detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .sb-fc-card-rich {
+    min-height: 220px;
+    padding: 16px 18px;
+  }
+  .sb-fc-grade-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sb-qz-stage {
+    padding: 14px 15px;
+  }
+  .sb-qz-hero {
+    padding: 11px 12px;
+  }
+  .sb-art-menu {
+    min-width: 196px;
+    max-width: calc(100cqi - 16px);
+  }
+}
+@container sb-studio (min-width: 561px) and (max-width: 720px) {
+  .sb-dt-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Root container queries: Topbar & Inspector adaptation across ALL Hermes window & split-screen sizes */
+@container sb-root (max-width: 1120px) {
+  .sb-topbar {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .sb-topbar-left,
+  .sb-topbar-right {
+    gap: 6px;
+  }
+  .sb-nb-select {
+    max-width: 190px;
+  }
+  .sb-model-trigger-label {
+    max-width: 118px;
+  }
+  .sb-cov-label {
+    display: none;
+  }
+}
+
+@container sb-root (max-width: 960px) {
+  .sb-brand {
+    padding-right: 8px;
+  }
+  .sb-brand-text {
+    display: none;
+  }
+  .sb-nb-select {
+    max-width: 158px;
+  }
+  .sb-model-trigger-label {
+    max-width: 96px;
+  }
+  .sb-inspector {
+    width: min(440px, 66cqi);
+  }
+}
+
+@container sb-root (max-width: 739px) {
+  .sb-topbar {
+    padding: 0 10px;
+    gap: 6px;
+  }
+  .sb-topbar-left,
+  .sb-topbar-right {
+    gap: 5px;
+  }
+  .sb-brand {
+    border-right: 0;
+    padding-right: 2px;
+  }
+  .sb-hide-compact {
+    display: none;
+  }
+  .sb-top-label {
+    display: none;
+  }
+  .sb-top-new-btn,
+  .sb-top-strict-btn,
+  .sb-top-search-btn {
+    width: 28px;
+    padding: 0;
+  }
+  .sb-nb-select {
+    max-width: clamp(104px, 34cqi, 210px);
+    padding: 0 8px;
+  }
+  .sb-model-trigger {
+    padding: 0 7px;
+  }
+  .sb-model-trigger-label {
+    max-width: clamp(56px, 18cqi, 110px);
+  }
+  .sb-inspector {
+    top: 48px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    border-left: 0;
+  }
+}
+
+@container sb-root (max-width: 440px) {
+  .sb-model-trigger-label {
+    display: none;
+  }
+  .sb-compact-tabs .sb-seg-btn {
+    font-size: 11px;
+    gap: 4px;
+    padding: 0 4px;
+  }
+}
+
+/* Modal & full-window Slideshow responsiveness (fixed overlays respond to viewport) */
+@media (max-width: 680px) {
+  .sb-modal-backdrop {
+    padding: 10px;
+  }
+  .sb-modal,
+  .sb-modal-wide {
+    width: calc(100vw - 20px);
+    max-height: calc(100vh - 20px);
+  }
+  .sb-sd-format-grid,
+  .sb-sd-controls-row,
+  .sb-slideshow-foot-split {
+    grid-template-columns: 1fr;
+  }
+  .sb-modal-head,
+  .sb-modal-body,
+  .sb-modal-foot {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+/* Short viewport heights (e.g., top/bottom horizontal split screens like 1280x480) */
+@media (max-height: 620px) {
+  .sb-topbar {
+    flex: 0 0 42px;
+  }
+  .sb-inspector {
+    top: 42px;
+  }
+  .sb-textarea {
+    min-height: 30px;
+    max-height: 86px;
+  }
+  .sb-dt-table-stage {
+    min-height: 200px;
+    max-height: calc(100vh - 220px);
+  }
+  .sb-modal {
+    max-height: calc(100vh - 16px);
+  }
+  .sb-pdf-preview-img {
+    max-height: 190px;
   }
 }
 
@@ -3739,8 +4350,8 @@ function SidebarSources({
     modal === "discover" ? /* @__PURE__ */ jsx4("div", { className: "sb-modal-backdrop", onClick: () => {
       if (!deepRunning) setModal(null);
     }, children: /* @__PURE__ */ jsxs2("div", { className: "sb-modal", style: { width: "min(580px, 94vw)" }, onClick: (e) => e.stopPropagation(), children: [
-      /* @__PURE__ */ jsxs2("div", { className: "sb-modal-head", children: [
-        /* @__PURE__ */ jsxs2("div", { style: { display: "flex", alignItems: "center", gap: 10 }, children: [
+      /* @__PURE__ */ jsxs2("div", { className: "sb-modal-head", style: { flexWrap: "wrap", gap: 8 }, children: [
+        /* @__PURE__ */ jsxs2("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", minWidth: 0 }, children: [
           /* @__PURE__ */ jsx4("span", { children: "Discover & Deep Research" }),
           /* @__PURE__ */ jsxs2("div", { className: "sb-seg", children: [
             /* @__PURE__ */ jsx4(
@@ -4120,8 +4731,8 @@ function SourceInspector({ nbId, target, onClose, onPromoteQuote, onSaveMemory }
       loading ? /* @__PURE__ */ jsx5("div", { className: "sb-empty", children: "Loading passages..." }) : null,
       error ? /* @__PURE__ */ jsx5("div", { className: "sb-error-bar", style: { margin: 0 }, children: error }) : null,
       srcMeta.has_pdf_preview ? /* @__PURE__ */ jsxs3("div", { className: "sb-pdf-preview-card", children: [
-        /* @__PURE__ */ jsxs3("div", { className: "sb-pdf-preview-head", children: [
-          /* @__PURE__ */ jsxs3("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
+        /* @__PURE__ */ jsxs3("div", { className: "sb-pdf-preview-head", style: { flexWrap: "wrap" }, children: [
+          /* @__PURE__ */ jsxs3("div", { style: { display: "flex", alignItems: "center", gap: 6, minWidth: 0 }, children: [
             /* @__PURE__ */ jsx5(Icon, { name: "FileText", size: 12, style: { color: "var(--ui-accent)" } }),
             /* @__PURE__ */ jsx5("strong", { style: { color: "var(--ui-text-primary)" }, children: "PDF Page Preview" }),
             pdfPreview?.highlighted ? /* @__PURE__ */ jsx5("span", { className: "sb-verdict", "data-v": "supported", style: { fontSize: 10, padding: "1px 5px" }, children: "Highlighted" }) : null
@@ -4206,14 +4817,14 @@ function SourceInspector({ nbId, target, onClose, onPromoteQuote, onSaveMemory }
           /* @__PURE__ */ jsx5("div", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: analysis.chart.title }),
           analysis.chart.series.slice(0, 10).map((pt, idx) => {
             const pct = Math.max(4, Math.round(Math.abs(pt.value) / (analysis.chart.max_value || 1) * 100));
-            return /* @__PURE__ */ jsxs3("div", { style: { display: "grid", gridTemplateColumns: "110px 1fr 56px", alignItems: "center", gap: 8, fontSize: 11.5 }, children: [
+            return /* @__PURE__ */ jsxs3("div", { style: { display: "grid", gridTemplateColumns: "minmax(72px, 0.38fr) 1fr auto", alignItems: "center", gap: 8, fontSize: 11.5 }, children: [
               /* @__PURE__ */ jsx5("span", { className: "sb-src-title", title: pt.label, children: pt.label }),
               /* @__PURE__ */ jsx5("div", { className: "sb-src-bar", style: { height: 8, marginTop: 0 }, children: /* @__PURE__ */ jsx5("div", { className: "sb-src-bar-fill", style: { width: `${pct}%` } }) }),
               /* @__PURE__ */ jsx5("span", { className: "sb-mono", style: { textAlign: "right", color: "var(--ui-text-secondary)" }, children: pt.value })
             ] }, idx);
           })
         ] }) : null,
-        /* @__PURE__ */ jsx5("div", { style: { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 6 }, children: (analysis.profiles || []).filter((p) => p.type === "number").slice(0, 4).map((p) => /* @__PURE__ */ jsxs3("div", { className: "sb-kpi", style: { padding: "7px 9px" }, children: [
+        /* @__PURE__ */ jsx5("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(128px, 1fr))", gap: 6 }, children: (analysis.profiles || []).filter((p) => p.type === "number").slice(0, 4).map((p) => /* @__PURE__ */ jsxs3("div", { className: "sb-kpi", style: { padding: "7px 9px" }, children: [
           /* @__PURE__ */ jsx5("div", { className: "sb-kpi-label", children: p.column }),
           /* @__PURE__ */ jsxs3("div", { className: "sb-mono", style: { fontSize: 11.5, color: "var(--ui-text-primary)", marginTop: 3 }, children: [
             "mean ",
@@ -4751,8 +5362,8 @@ function ChatPanel({
       /* @__PURE__ */ jsx7("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: centerTab === "chat" && messages.length > 0 ? /* @__PURE__ */ jsx7("button", { type: "button", className: "sb-btn sb-btn-ghost", onClick: clearChat, children: "Clear" }) : null })
     ] }),
     centerTab === "chat" ? /* @__PURE__ */ jsxs5(Fragment3, { children: [
-      /* @__PURE__ */ jsxs5("div", { className: "sb-chat-stream sb-scroll", children: [
-        sources.length > 0 ? /* @__PURE__ */ jsxs5("section", { className: "sb-briefing", style: { margin: 0, position: "relative", overflow: "hidden" }, children: [
+      /* @__PURE__ */ jsx7("div", { className: "sb-chat-stream sb-scroll", children: /* @__PURE__ */ jsxs5("div", { className: "sb-chat-track", children: [
+        sources.length > 0 ? /* @__PURE__ */ jsxs5("section", { className: "sb-briefing", style: { position: "relative", overflow: "hidden" }, children: [
           /* @__PURE__ */ jsx7(
             DitherCanvas,
             {
@@ -4892,7 +5503,7 @@ function ChatPanel({
           ] })
         ] }) : null,
         /* @__PURE__ */ jsx7("div", { ref: endRef })
-      ] }),
+      ] }) }),
       /* @__PURE__ */ jsx7("div", { className: "sb-composer-wrap", children: /* @__PURE__ */ jsxs5("div", { className: "sb-composer", children: [
         /* @__PURE__ */ jsx7(
           "textarea",
@@ -4954,6 +5565,7 @@ function ChatPanel({
             {
               type: "button",
               className: "sb-btn sb-btn-primary",
+              style: { marginLeft: "auto" },
               disabled: asking || !input.trim() || enabledSources.length === 0,
               onClick: () => sendQuestion(),
               children: [
@@ -4965,8 +5577,8 @@ function ChatPanel({
         ] })
       ] }) })
     ] }) : null,
-    centerTab === "claims" ? /* @__PURE__ */ jsxs5("div", { className: "sb-panel-pad sb-scroll", style: { flex: 1 }, children: [
-      /* @__PURE__ */ jsxs5("div", { className: "sb-kpi-strip", style: { gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }, children: [
+    centerTab === "claims" ? /* @__PURE__ */ jsx7("div", { className: "sb-panel-pad sb-scroll", style: { flex: 1 }, children: /* @__PURE__ */ jsxs5("div", { className: "sb-panel-track", children: [
+      /* @__PURE__ */ jsxs5("div", { className: "sb-kpi-strip sb-kpi-strip-4", children: [
         /* @__PURE__ */ jsxs5("div", { className: "sb-kpi", children: [
           /* @__PURE__ */ jsx7("div", { className: "sb-kpi-label", children: "Verified" }),
           /* @__PURE__ */ jsx7("div", { className: "sb-kpi-val", style: { color: "var(--sb-ok)" }, children: supportedCount })
@@ -4985,7 +5597,7 @@ function ChatPanel({
         ] })
       ] }),
       conflicts.length > 0 ? /* @__PURE__ */ jsxs5("section", { style: { display: "flex", flexDirection: "column", gap: 8 }, children: [
-        /* @__PURE__ */ jsxs5("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
+        /* @__PURE__ */ jsxs5("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6 }, children: [
           /* @__PURE__ */ jsxs5("span", { className: "sb-pane-title", children: [
             "Cross-Source Contradictions (",
             conflicts.length,
@@ -4994,7 +5606,7 @@ function ChatPanel({
           /* @__PURE__ */ jsx7("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Detected automatically across active sources" })
         ] }),
         conflicts.map((cf) => /* @__PURE__ */ jsxs5("article", { className: "sb-conflict-card", children: [
-          /* @__PURE__ */ jsxs5("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
+          /* @__PURE__ */ jsxs5("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }, children: [
             /* @__PURE__ */ jsx7("strong", { style: { fontSize: 12.5 }, children: cf.topic }),
             /* @__PURE__ */ jsxs5("span", { className: "sb-verdict", "data-v": "partial", children: [
               cf.kind,
@@ -5002,7 +5614,7 @@ function ChatPanel({
             ] })
           ] }),
           /* @__PURE__ */ jsx7("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)" }, children: cf.summary }),
-          /* @__PURE__ */ jsx7("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }, children: [cf.side_a, cf.side_b].map((side, idx) => /* @__PURE__ */ jsxs5("div", { className: "sb-quote-box", style: { display: "flex", flexDirection: "column", gap: 4 }, children: [
+          /* @__PURE__ */ jsx7("div", { className: "sb-conflict-sides", children: [cf.side_a, cf.side_b].map((side, idx) => /* @__PURE__ */ jsxs5("div", { className: "sb-quote-box", style: { display: "flex", flexDirection: "column", gap: 4 }, children: [
             /* @__PURE__ */ jsxs5("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }, children: [
               /* @__PURE__ */ jsx7("span", { className: "sb-src-title", style: { fontSize: 11.5 }, children: side.source_title }),
               /* @__PURE__ */ jsx7(
@@ -5034,8 +5646,8 @@ function ChatPanel({
           " sources)"
         ] }, idx))
       ] }) : null,
-      /* @__PURE__ */ jsxs5("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }, children: [
-        /* @__PURE__ */ jsx7("div", { className: "sb-seg", children: ["all", "supported", "partial", "unsupported"].map((f) => /* @__PURE__ */ jsx7(
+      /* @__PURE__ */ jsxs5("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }, children: [
+        /* @__PURE__ */ jsx7("div", { className: "sb-seg", style: { flexWrap: "wrap" }, children: ["all", "supported", "partial", "unsupported"].map((f) => /* @__PURE__ */ jsx7(
           "button",
           {
             type: "button",
@@ -5053,8 +5665,8 @@ function ChatPanel({
         /* @__PURE__ */ jsx7("div", { style: { fontWeight: 600, color: "var(--ui-text-secondary)" }, children: "No chat claims recorded yet" }),
         /* @__PURE__ */ jsx7("div", { style: { fontSize: 12 }, children: "Ask a grounded question to populate the Claim Ledger with verifiable evidence." })
       ] }) : filteredClaims.map((cl) => /* @__PURE__ */ jsxs5("article", { className: "sb-ledger-row", children: [
-        /* @__PURE__ */ jsxs5("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }, children: [
-          /* @__PURE__ */ jsxs5("div", { style: { display: "flex", gap: 6, alignItems: "center" }, children: [
+        /* @__PURE__ */ jsxs5("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }, children: [
+          /* @__PURE__ */ jsxs5("div", { style: { display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }, children: [
             /* @__PURE__ */ jsxs5("span", { className: "sb-verdict", "data-v": cl.verdict, children: [
               cl.verdict,
               " ",
@@ -5062,7 +5674,7 @@ function ChatPanel({
             ] }),
             cl.numeric_mismatch ? /* @__PURE__ */ jsx7("span", { className: "sb-verdict", "data-v": "unsupported", children: "number mismatch" }) : null
           ] }),
-          /* @__PURE__ */ jsxs5("div", { style: { display: "flex", alignItems: "center", gap: 4 }, children: [
+          /* @__PURE__ */ jsxs5("div", { style: { display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }, children: [
             cl.source_title ? /* @__PURE__ */ jsx7("span", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: cl.source_title }) : null,
             (cl.citations || []).map((cid) => /* @__PURE__ */ jsx7(
               "button",
@@ -5089,8 +5701,8 @@ function ChatPanel({
         /* @__PURE__ */ jsx7("div", { style: { fontSize: 12.5, color: "var(--ui-text-primary)" }, children: cl.text }),
         cl.quote ? /* @__PURE__ */ jsx7("div", { className: "sb-quote-box", children: cl.quote }) : null
       ] }, cl.id))
-    ] }) : null,
-    centerTab === "coverage" ? /* @__PURE__ */ jsxs5("div", { className: "sb-panel-pad sb-scroll", style: { flex: 1 }, children: [
+    ] }) }) : null,
+    centerTab === "coverage" ? /* @__PURE__ */ jsx7("div", { className: "sb-panel-pad sb-scroll", style: { flex: 1 }, children: /* @__PURE__ */ jsxs5("div", { className: "sb-panel-track", children: [
       /* @__PURE__ */ jsxs5("div", { className: "sb-kpi-strip", children: [
         /* @__PURE__ */ jsxs5("div", { className: "sb-kpi", children: [
           /* @__PURE__ */ jsx7("div", { className: "sb-kpi-label", children: "Corpus coverage" }),
@@ -5115,8 +5727,8 @@ function ChatPanel({
       (coverage?.sources || []).length === 0 ? /* @__PURE__ */ jsx7("div", { className: "sb-empty", children: "Add sources to measure how thoroughly you have explored your corpus." }) : (coverage?.sources || []).map((item) => {
         const pct = item.total_chunks > 0 ? Math.round(item.touched_chunks / item.total_chunks * 100) : 0;
         return /* @__PURE__ */ jsxs5("article", { className: "sb-ledger-row", children: [
-          /* @__PURE__ */ jsxs5("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }, children: [
-            /* @__PURE__ */ jsxs5("div", { style: { minWidth: 0 }, children: [
+          /* @__PURE__ */ jsxs5("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }, children: [
+            /* @__PURE__ */ jsxs5("div", { style: { minWidth: 0, flex: "1 1 160px" }, children: [
               /* @__PURE__ */ jsx7("div", { className: "sb-src-title", children: item.title }),
               /* @__PURE__ */ jsxs5("div", { style: { fontSize: 11.5, color: "var(--ui-text-tertiary)" }, children: [
                 /* @__PURE__ */ jsx7("span", { className: "sb-num", children: item.touched_chunks }),
@@ -5125,7 +5737,7 @@ function ChatPanel({
                 " passages cited"
               ] })
             ] }),
-            /* @__PURE__ */ jsxs5("div", { style: { display: "flex", alignItems: "center", gap: 8 }, children: [
+            /* @__PURE__ */ jsxs5("div", { style: { display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }, children: [
               /* @__PURE__ */ jsxs5("span", { className: "sb-mono", style: { fontSize: 12, fontWeight: 600 }, children: [
                 pct,
                 "%"
@@ -5153,7 +5765,7 @@ function ChatPanel({
           /* @__PURE__ */ jsx7("div", { className: "sb-src-bar", style: { height: 5 }, children: /* @__PURE__ */ jsx7("div", { className: "sb-src-bar-fill", style: { width: `${pct}%` } }) })
         ] }, item.source_id);
       })
-    ] }) : null
+    ] }) }) : null
   ] });
 }
 
@@ -5572,9 +6184,9 @@ function SlideDeckModal({
               }
             )
           ] }),
-          useImageGen ? /* @__PURE__ */ jsxs6("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, paddingTop: 8, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
+          useImageGen ? /* @__PURE__ */ jsxs6("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, paddingTop: 8, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
             /* @__PURE__ */ jsx8("span", { style: { fontSize: 11.5, color: "var(--ui-text-secondary)" }, children: "Visual rendering mode" }),
-            /* @__PURE__ */ jsxs6("div", { className: "sb-seg", children: [
+            /* @__PURE__ */ jsxs6("div", { className: "sb-seg", style: { flexWrap: "wrap" }, children: [
               /* @__PURE__ */ jsx8(
                 "button",
                 {
@@ -6020,7 +6632,7 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
           }
         ) : null
       ] }) : null,
-      /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6, paddingTop: 4, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
+      /* @__PURE__ */ jsxs8("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6, paddingTop: 4, borderTop: "1px solid var(--ui-stroke-tertiary)" }, children: [
         /* @__PURE__ */ jsx10("span", { style: { fontSize: 11, color: "var(--ui-text-tertiary)" }, children: "Playback speed" }),
         /* @__PURE__ */ jsx10("div", { className: "sb-seg", children: [0.75, 1, 1.25, 1.5, 2].map((v) => /* @__PURE__ */ jsxs8(
           "button",
@@ -6038,14 +6650,15 @@ function AudioOverviewView({ nbId, artifact, onOpenChunk, onArtifactUpdated }) {
         )) })
       ] })
     ] }),
-    /* @__PURE__ */ jsxs8("form", { onSubmit: askHosts, style: { display: "flex", gap: 6 }, children: [
+    /* @__PURE__ */ jsxs8("form", { onSubmit: askHosts, style: { display: "flex", gap: 6, flexWrap: "wrap" }, children: [
       /* @__PURE__ */ jsx10(
         "input",
         {
           className: "sb-input",
+          style: { flex: "1 1 180px", minWidth: 0 },
           value: question,
           onChange: (e) => setQuestion(e.target.value),
-          placeholder: "Join the podcast \u2014 interrupt Alex & Maya with a question...",
+          placeholder: "Join the podcast - interrupt Alex & Maya with a question...",
           disabled: asking
         }
       ),
@@ -7040,7 +7653,7 @@ function MindMapView({ artifact, onOpenChunk }) {
       "div",
       {
         className: "sb-svg-stage",
-        style: { height: 420, cursor: dragging ? "grabbing" : "grab", userSelect: "none" },
+        style: { height: "clamp(240px, 46vh, 480px)", cursor: dragging ? "grabbing" : "grab", userSelect: "none" },
         onPointerDown: (e) => {
           if (e.target.closest("g[data-node]")) return;
           setDragging({ sx: e.clientX, sy: e.clientY, ox: pan.x, oy: pan.y });
@@ -9259,9 +9872,9 @@ ${s.notes}
               /* @__PURE__ */ jsx16("span", { className: "sb-dt-dot", style: { background: theme.accent } }),
               /* @__PURE__ */ jsx16("span", { children: layout === "title" ? "SOURCEBOOK PRESENTATION" : "SECTION BREAK" })
             ] }),
-            /* @__PURE__ */ jsx16("h2", { style: { margin: 0, fontSize: large ? 34 : 26, fontWeight: 780, lineHeight: 1.15, letterSpacing: "-0.025em", color: theme.fg }, children: slide.title }),
+            /* @__PURE__ */ jsx16("h2", { style: { margin: 0, fontSize: large ? "clamp(22px, 3vw, 34px)" : "clamp(16px, 3.6cqi, 26px)", fontWeight: 780, lineHeight: 1.16, letterSpacing: "-0.025em", color: theme.fg }, children: slide.title }),
             /* @__PURE__ */ jsx16("div", { style: { width: 64, height: 3, borderRadius: 99, background: `linear-gradient(90deg, ${theme.accent}, ${theme.secondary})` } }),
-            slide.body ? /* @__PURE__ */ jsx16("p", { style: { margin: 0, fontSize: large ? 15.5 : 13.5, color: theme.muted, lineHeight: 1.5 }, children: slide.body }) : null
+            slide.body ? /* @__PURE__ */ jsx16("p", { style: { margin: 0, fontSize: large ? "clamp(13px, 1.5vw, 15.5px)" : "clamp(12px, 2cqi, 13.5px)", color: theme.muted, lineHeight: 1.5 }, children: slide.body }) : null
           ] }),
           /* @__PURE__ */ jsx16("div", { className: "sb-sl-hybrid-art", style: { borderColor: theme.border }, children: /* @__PURE__ */ jsx16("img", { src: imgSrc, alt: slide.title || "Slide artwork", style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } }) })
         ] });
@@ -9283,9 +9896,9 @@ ${s.notes}
           {
             style: {
               margin: 0,
-              fontSize: large ? 40 : 30,
+              fontSize: large ? "clamp(24px, 3.6vw, 40px)" : "clamp(17px, 4.2cqi, 30px)",
               fontWeight: 780,
-              lineHeight: 1.14,
+              lineHeight: 1.15,
               letterSpacing: "-0.025em",
               color: theme.fg,
               maxWidth: "24ch"
@@ -9304,7 +9917,7 @@ ${s.notes}
             }
           }
         ),
-        slide.body ? /* @__PURE__ */ jsx16("p", { style: { margin: 0, fontSize: large ? 17 : 14.5, color: theme.muted, maxWidth: "52ch", lineHeight: 1.55 }, children: slide.body }) : null
+        slide.body ? /* @__PURE__ */ jsx16("p", { style: { margin: 0, fontSize: large ? "clamp(13.5px, 1.6vw, 17px)" : "clamp(12px, 2.2cqi, 14.5px)", color: theme.muted, maxWidth: "52ch", lineHeight: 1.55 }, children: slide.body }) : null
       ] });
     }
     if (layout === "stat" && statVal) {
@@ -9539,12 +10152,12 @@ ${s.notes}
     return /* @__PURE__ */ jsxs14(
       "section",
       {
-        className: "sb-slide-stage sb-slide-stage-rich",
+        className: `sb-slide-stage sb-slide-stage-rich${isFullArt ? " sb-slide-stage-art" : ""}`,
         style: {
           background: theme.bg,
           borderColor: theme.border,
           color: theme.fg,
-          ...isFullArt ? { padding: 0, gap: 0 } : large ? { maxWidth: 1020, width: "100%", padding: "36px 44px" } : {}
+          ...isFullArt ? { padding: 0, gap: 0 } : large ? { maxWidth: 1040, width: "100%", padding: "clamp(16px, 3.2vw, 40px)" } : {}
         },
         children: [
           !isFullArt ? /* @__PURE__ */ jsxs14(Fragment10, { children: [
@@ -10015,17 +10628,17 @@ ${s.notes}
         presenting ? /* @__PURE__ */ jsx16(
           "div",
           {
-            className: "sb-modal-backdrop",
-            style: { flexDirection: "column", gap: 14, padding: 24, zIndex: 80 },
+            className: "sb-modal-backdrop sb-slideshow-backdrop",
+            style: { flexDirection: "column", gap: 14, zIndex: 80 },
             onClick: () => setPresenting(false),
             children: /* @__PURE__ */ jsxs14(
               "div",
               {
-                style: { width: "min(1040px, 95vw)", display: "flex", flexDirection: "column", gap: 12 },
+                className: "sb-slideshow-shell",
                 onClick: (e) => e.stopPropagation(),
                 children: [
-                  /* @__PURE__ */ jsxs14("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
-                    /* @__PURE__ */ jsxs14("div", { style: { display: "flex", alignItems: "center", gap: 10 }, children: [
+                  /* @__PURE__ */ jsxs14("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }, children: [
+                    /* @__PURE__ */ jsxs14("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }, children: [
                       /* @__PURE__ */ jsx16("span", { className: "sb-kind-tag", children: "Slideshow" }),
                       /* @__PURE__ */ jsxs14("span", { className: "sb-mono", style: { fontSize: 12.5, color: "var(--ui-text-secondary)" }, children: [
                         mins,
@@ -10049,7 +10662,7 @@ ${s.notes}
                     ] })
                   ] }),
                   renderSlideCard(sl, idx, true),
-                  /* @__PURE__ */ jsxs14("div", { style: { display: "grid", gridTemplateColumns: nextSl ? "1.6fr 1fr" : "1fr", gap: 10 }, children: [
+                  /* @__PURE__ */ jsxs14("div", { className: `sb-slideshow-foot${nextSl ? " sb-slideshow-foot-split" : ""}`, children: [
                     sl.notes ? /* @__PURE__ */ jsxs14("div", { className: "sb-quote-box", style: { background: "var(--sb-surface)" }, children: [
                       /* @__PURE__ */ jsx16("strong", { style: { display: "block", fontSize: 10.5, letterSpacing: "0.06em", color: "var(--ui-text-tertiary)", marginBottom: 3 }, children: "SPEAKER NOTES" }),
                       sl.notes
@@ -10391,7 +11004,7 @@ function StudioPanel({
               ]
             }
           ) : null,
-          /* @__PURE__ */ jsx17(
+          onToggleExpand ? /* @__PURE__ */ jsx17(
             "button",
             {
               type: "button",
@@ -10400,7 +11013,7 @@ function StudioPanel({
               onClick: onToggleExpand,
               children: /* @__PURE__ */ jsx17(Icon, { name: expanded ? "Minimize2" : "Maximize2", size: 13 })
             }
-          )
+          ) : null
         ] })
       ] }),
       runningKind ? /* @__PURE__ */ jsxs15("div", { style: { padding: "7px 14px", fontSize: 11.5, color: "var(--ui-text-secondary)", display: "flex", alignItems: "center", gap: 7, borderBottom: "1px solid var(--ui-stroke-tertiary)" }, children: [
@@ -10780,7 +11393,10 @@ function SourceBookWorkspace({ ctx, externalState }) {
   const [selectedArtifactId, setSelectedArtifactId] = useState13(null);
   const [inspectorTarget, setInspectorTarget] = useState13(null);
   const [leftCollapsed, setLeftCollapsed] = useState13(false);
-  const [studioExpanded, setStudioExpanded] = useState13(false);
+  const [rightCollapsed, setRightCollapsed] = useState13(false);
+  const [leftDrawerOpen, setLeftDrawerOpen] = useState13(false);
+  const [compactPane, setCompactPane] = useState13("workspace");
+  const [layoutTier, setLayoutTier] = useState13("standard");
   const [nbMenuOpen, setNbMenuOpen] = useState13(false);
   const [modelMenuOpen, setModelMenuOpen] = useState13(false);
   const [modelSearch, setModelSearch] = useState13("");
@@ -10795,7 +11411,43 @@ function SourceBookWorkspace({ ctx, externalState }) {
   const [searchHits, setSearchHits] = useState13([]);
   const [loading, setLoading] = useState13(true);
   const [error, setError] = useState13("");
+  const [studioExpanded, setStudioExpanded] = useState13(false);
   const reqSeqRef = useRef10(0);
+  const rootRef = useRef10(null);
+  useEffect11(() => {
+    const el = rootRef.current;
+    if (!el) return void 0;
+    const resolveTier = (width) => {
+      if (width < 740) return "compact";
+      if (width < 1080) return "split";
+      if (width >= 1600) return "wide";
+      return "standard";
+    };
+    const update = (w) => {
+      if (!w || w <= 0) return;
+      const next = resolveTier(w);
+      setLayoutTier((prev) => {
+        if (prev !== next && next !== "split") {
+          setLeftDrawerOpen(false);
+        }
+        return next;
+      });
+    };
+    update(el.clientWidth || (typeof window !== "undefined" ? window.innerWidth : 1280));
+    if (typeof ResizeObserver === "function") {
+      const ro = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          update(entry.contentRect?.width || el.clientWidth);
+        }
+      });
+      ro.observe(el);
+      return () => ro.disconnect();
+    }
+    if (ctx?.addEventListener) {
+      return ctx.addEventListener(window, "resize", () => update(el.clientWidth || window.innerWidth));
+    }
+    return void 0;
+  }, [ctx]);
   const storageKey = `activeNotebook::${connectionId || "local"}::${profile || "default"}`;
   const loadGatewayCatalog = useCallback(async () => {
     if (typeof sdk.host?.request !== "function") return;
@@ -10923,6 +11575,7 @@ function SourceBookWorkspace({ ctx, externalState }) {
         setCreateOpen(false);
         setNbMenuOpen(false);
         setModelMenuOpen(false);
+        setLeftDrawerOpen(false);
         setInspectorTarget(null);
       }
     });
@@ -11115,25 +11768,42 @@ Cited chunk: \`${chunk.id}\``,
   const hasActiveSources = sources.some((s) => s.enabled);
   const defaultModelName = modelsInfo?.active?.model || liveHostModel || "";
   const activeModelLabel = notebook?.model ? notebook.model : defaultModelName ? `Auto: ${defaultModelName}` : "Auto (Hermes)";
-  return /* @__PURE__ */ jsxs17("div", { className: "sb-root", style: { position: "relative" }, children: [
+  const isCompact = layoutTier === "compact";
+  const isSplit = layoutTier === "split";
+  function handleSelectArtifact(aid) {
+    setSelectedArtifactId(aid);
+    if (aid) {
+      if (isCompact) setCompactPane("studio");
+      else if (rightCollapsed) setRightCollapsed(false);
+    }
+  }
+  return /* @__PURE__ */ jsxs17("div", { ref: rootRef, className: "sb-root", "data-layout": layoutTier, style: { position: "relative" }, children: [
     /* @__PURE__ */ jsx19(Styles, {}),
     /* @__PURE__ */ jsxs17("header", { className: "sb-topbar", children: [
       /* @__PURE__ */ jsxs17("div", { className: "sb-topbar-left", children: [
         /* @__PURE__ */ jsxs17("div", { className: "sb-brand", children: [
           /* @__PURE__ */ jsx19("span", { className: "sb-brand-mark", children: /* @__PURE__ */ jsx19(BrandMark, { size: 15 }) }),
-          /* @__PURE__ */ jsx19("span", { children: "SourceBook" })
+          /* @__PURE__ */ jsx19("span", { className: "sb-brand-text", children: "SourceBook" })
         ] }),
-        /* @__PURE__ */ jsx19(
+        !isCompact ? /* @__PURE__ */ jsxs17(
           "button",
           {
             type: "button",
-            className: "sb-btn sb-btn-ghost sb-btn-icon",
-            title: leftCollapsed ? "Show Sources rail" : "Hide Sources rail",
-            onClick: () => setLeftCollapsed((v) => !v),
-            children: /* @__PURE__ */ jsx19(Icon, { name: "PanelLeft", size: 14 })
+            className: "sb-btn sb-btn-ghost",
+            style: isSplit ? { padding: "0 8px" } : { width: 28, padding: 0 },
+            "data-active": isSplit ? leftDrawerOpen : !leftCollapsed,
+            title: isSplit ? leftDrawerOpen ? "Hide Sources drawer" : "Show Sources drawer" : leftCollapsed ? "Show Sources rail" : "Hide Sources rail",
+            onClick: () => {
+              if (isSplit) setLeftDrawerOpen((v) => !v);
+              else setLeftCollapsed((v) => !v);
+            },
+            children: [
+              /* @__PURE__ */ jsx19(Icon, { name: "PanelLeft", size: 14 }),
+              isSplit ? /* @__PURE__ */ jsx19("span", { className: "sb-num", style: { fontSize: 11 }, children: sources.length }) : null
+            ]
           }
-        ),
-        /* @__PURE__ */ jsxs17("div", { style: { position: "relative" }, children: [
+        ) : null,
+        /* @__PURE__ */ jsxs17("div", { style: { position: "relative", minWidth: 0 }, children: [
           /* @__PURE__ */ jsxs17(
             "button",
             {
@@ -11150,7 +11820,7 @@ Cited chunk: \`${chunk.id}\``,
               ]
             }
           ),
-          nbMenuOpen ? /* @__PURE__ */ jsxs17("div", { className: "sb-model-menu", style: { left: 0, right: "auto", width: 280 }, children: [
+          nbMenuOpen ? /* @__PURE__ */ jsxs17("div", { className: "sb-model-menu", style: { left: 0, right: "auto" }, children: [
             notebooks.map((nb) => /* @__PURE__ */ jsxs17(
               "div",
               {
@@ -11210,9 +11880,10 @@ Cited chunk: \`${chunk.id}\``,
             ) })
           ] }) : null
         ] }),
-        /* @__PURE__ */ jsxs17("button", { type: "button", className: "sb-btn", onClick: () => setCreateOpen(true), children: [
+        /* @__PURE__ */ jsxs17("button", { type: "button", className: "sb-btn sb-top-new-btn", onClick: () => setCreateOpen(true), title: "Create new notebook", children: [
           /* @__PURE__ */ jsx19(Icon, { name: "Plus", size: 13 }),
-          " New"
+          " ",
+          /* @__PURE__ */ jsx19("span", { className: "sb-top-label", children: "New" })
         ] })
       ] }),
       /* @__PURE__ */ jsxs17("div", { className: "sb-topbar-right", children: [
@@ -11225,17 +11896,17 @@ Cited chunk: \`${chunk.id}\``,
               "button",
               {
                 type: "button",
-                className: "sb-btn",
+                className: "sb-btn sb-model-trigger",
                 "data-active": Boolean(notebook.model),
-                title: "Choose which Hermes model runs this notebook (supports every authenticated provider in your Hermes agent)",
+                title: `Model: ${activeModelLabel} (click to switch across authenticated Hermes providers)`,
                 children: [
                   /* @__PURE__ */ jsx19(Icon, { name: "Cpu", size: 12 }),
-                  /* @__PURE__ */ jsx19("span", { style: { maxWidth: 158, overflow: "hidden", textOverflow: "ellipsis" }, children: activeModelLabel }),
+                  /* @__PURE__ */ jsx19("span", { className: "sb-model-trigger-label", children: activeModelLabel }),
                   /* @__PURE__ */ jsx19(Icon, { name: "ChevronDown", size: 11 })
                 ]
               }
             ) }),
-            /* @__PURE__ */ jsxs17(NativeDropdownMenuContent, { align: "end", style: { width: 320, padding: 0 }, children: [
+            /* @__PURE__ */ jsxs17(NativeDropdownMenuContent, { align: "end", style: { width: "min(320px, calc(100vw - 24px))", padding: 0 }, children: [
               NativeDropdownMenuItem ? /* @__PURE__ */ jsx19("div", { style: { padding: "4px 4px 0" }, children: /* @__PURE__ */ jsx19(
                 NativeDropdownMenuItem,
                 {
@@ -11262,7 +11933,7 @@ Cited chunk: \`${chunk.id}\``,
               "button",
               {
                 type: "button",
-                className: "sb-btn",
+                className: "sb-btn sb-model-trigger",
                 "data-active": Boolean(notebook.model),
                 onClick: () => {
                   setNbMenuOpen(false);
@@ -11272,15 +11943,15 @@ Cited chunk: \`${chunk.id}\``,
                   if (!modelMenuOpen) loadGatewayCatalog();
                   setModelMenuOpen((v) => !v);
                 },
-                title: "Choose which Hermes model runs this notebook (supports every authenticated provider in your Hermes agent)",
+                title: `Model: ${activeModelLabel} (click to switch across authenticated Hermes providers)`,
                 children: [
                   /* @__PURE__ */ jsx19(Icon, { name: "Cpu", size: 12 }),
-                  /* @__PURE__ */ jsx19("span", { style: { maxWidth: 158, overflow: "hidden", textOverflow: "ellipsis" }, children: activeModelLabel }),
+                  /* @__PURE__ */ jsx19("span", { className: "sb-model-trigger-label", children: activeModelLabel }),
                   /* @__PURE__ */ jsx19(Icon, { name: "ChevronDown", size: 11 })
                 ]
               }
             ),
-            modelMenuOpen ? /* @__PURE__ */ jsxs17("div", { className: "sb-model-menu", style: { width: 324 }, children: [
+            modelMenuOpen ? /* @__PURE__ */ jsxs17("div", { className: "sb-model-menu", children: [
               /* @__PURE__ */ jsxs17("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 8px 2px" }, children: [
                 /* @__PURE__ */ jsx19("span", { style: { fontSize: 10.5, fontWeight: 650, color: "var(--ui-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em" }, children: "Hermes Model Picker" }),
                 modelsInfo?.override_ready ? /* @__PURE__ */ jsx19("span", { className: "sb-verdict", "data-v": "supported", style: { fontSize: 10, padding: "1px 6px" }, children: "Any model ready" }) : null
@@ -11313,7 +11984,7 @@ Cited chunk: \`${chunk.id}\``,
                     placeholder: `Search ${mergedCatalog.length} Hermes models...`
                   }
                 ),
-                /* @__PURE__ */ jsx19("div", { className: "sb-scroll", style: { maxHeight: 240, display: "flex", flexDirection: "column", gap: 6, paddingRight: 2 }, children: groupedCatalog.map((grp) => /* @__PURE__ */ jsxs17("div", { style: { display: "flex", flexDirection: "column", gap: 2 }, children: [
+                /* @__PURE__ */ jsx19("div", { className: "sb-scroll", style: { maxHeight: "min(240px, 42vh)", display: "flex", flexDirection: "column", gap: 6, paddingRight: 2 }, children: groupedCatalog.map((grp) => /* @__PURE__ */ jsxs17("div", { style: { display: "flex", flexDirection: "column", gap: 2 }, children: [
                   /* @__PURE__ */ jsxs17("div", { style: { fontSize: 10, fontWeight: 650, color: "var(--ui-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", padding: "2px 6px" }, children: [
                     grp.label,
                     " (",
@@ -11401,11 +12072,14 @@ Cited chunk: \`${chunk.id}\``,
             "button",
             {
               type: "button",
-              className: "sb-cov-meter",
+              className: "sb-cov-meter sb-hide-compact",
               title: "Open Coverage Map",
-              onClick: () => setCenterTab("coverage"),
+              onClick: () => {
+                setCenterTab("coverage");
+                if (isCompact) setCompactPane("workspace");
+              },
               children: [
-                /* @__PURE__ */ jsx19("span", { children: "Coverage" }),
+                /* @__PURE__ */ jsx19("span", { className: "sb-cov-label", children: "Coverage" }),
                 /* @__PURE__ */ jsx19("span", { className: "sb-cov-track", children: /* @__PURE__ */ jsx19("span", { className: "sb-cov-fill sb-dither-fill", style: { width: `${covPct}%` } }) }),
                 /* @__PURE__ */ jsxs17("span", { className: "sb-mono", style: { fontWeight: 600 }, children: [
                   covPct,
@@ -11418,14 +12092,14 @@ Cited chunk: \`${chunk.id}\``,
             "button",
             {
               type: "button",
-              className: "sb-btn",
+              className: "sb-btn sb-top-strict-btn",
               "data-active": Boolean(notebook.strict),
               onClick: () => patchNotebook({ strict: !notebook.strict }),
               title: "Strict grounding refuses any claim unsupported by active sources",
               children: [
                 /* @__PURE__ */ jsx19(Icon, { name: "Lock", size: 12 }),
                 " ",
-                notebook.strict ? "Strict" : "Grounded"
+                /* @__PURE__ */ jsx19("span", { className: "sb-top-label", children: notebook.strict ? "Strict" : "Grounded" })
               ]
             }
           )
@@ -11434,7 +12108,7 @@ Cited chunk: \`${chunk.id}\``,
           "button",
           {
             type: "button",
-            className: "sb-btn",
+            className: "sb-btn sb-top-search-btn",
             onClick: () => {
               setSearchQuery("");
               setSearchHits([]);
@@ -11443,12 +12117,76 @@ Cited chunk: \`${chunk.id}\``,
             title: "Search across all notebooks (Ctrl+K)",
             children: [
               /* @__PURE__ */ jsx19(Icon, { name: "Search", size: 12 }),
-              " Search"
+              " ",
+              /* @__PURE__ */ jsx19("span", { className: "sb-top-label", children: "Search" })
             ]
           }
-        )
+        ),
+        !isCompact && nbId ? /* @__PURE__ */ jsx19(
+          "button",
+          {
+            type: "button",
+            className: "sb-btn sb-btn-ghost sb-btn-icon",
+            "data-active": !rightCollapsed,
+            title: rightCollapsed ? "Show Studio rail" : "Hide Studio rail",
+            onClick: () => {
+              if (studioExpanded) setStudioExpanded(false);
+              setRightCollapsed((v) => !v);
+            },
+            children: /* @__PURE__ */ jsx19(Icon, { name: "PanelRight", size: 14 })
+          }
+        ) : null
       ] })
     ] }),
+    nbId && isCompact ? /* @__PURE__ */ jsx19("nav", { className: "sb-compact-bar", "aria-label": "Workspace panes", children: /* @__PURE__ */ jsxs17("div", { className: "sb-seg sb-compact-tabs", role: "tablist", children: [
+      /* @__PURE__ */ jsxs17(
+        "button",
+        {
+          type: "button",
+          role: "tab",
+          "aria-selected": compactPane === "sources",
+          className: "sb-seg-btn",
+          "data-active": compactPane === "sources",
+          onClick: () => setCompactPane("sources"),
+          children: [
+            /* @__PURE__ */ jsx19(Icon, { name: "Library", size: 12 }),
+            " Sources ",
+            /* @__PURE__ */ jsx19("span", { className: "sb-num", style: { opacity: 0.72 }, children: sources.length })
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxs17(
+        "button",
+        {
+          type: "button",
+          role: "tab",
+          "aria-selected": compactPane === "workspace",
+          className: "sb-seg-btn",
+          "data-active": compactPane === "workspace",
+          onClick: () => setCompactPane("workspace"),
+          children: [
+            /* @__PURE__ */ jsx19(Icon, { name: "MessageSquare", size: 12 }),
+            " Workspace"
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxs17(
+        "button",
+        {
+          type: "button",
+          role: "tab",
+          "aria-selected": compactPane === "studio",
+          className: "sb-seg-btn",
+          "data-active": compactPane === "studio",
+          onClick: () => setCompactPane("studio"),
+          children: [
+            /* @__PURE__ */ jsx19(Icon, { name: "Sparkles", size: 12 }),
+            " Studio ",
+            /* @__PURE__ */ jsx19("span", { className: "sb-num", style: { opacity: 0.72 }, children: artifacts.length })
+          ]
+        }
+      )
+    ] }) }) : null,
     error ? /* @__PURE__ */ jsxs17("div", { className: "sb-error-bar", role: "alert", children: [
       /* @__PURE__ */ jsx19("span", { children: error }),
       /* @__PURE__ */ jsx19("button", { type: "button", className: "sb-btn sb-btn-ghost sb-btn-icon", onClick: () => setError(""), children: /* @__PURE__ */ jsx19(Icon, { name: "X", size: 13 }) })
@@ -11474,9 +12212,14 @@ Cited chunk: \`${chunk.id}\``,
       "div",
       {
         className: "sb-workbench",
-        "data-left-collapsed": leftCollapsed,
-        "data-studio-expanded": studioExpanded,
+        "data-tier": layoutTier,
+        "data-left-collapsed": !isCompact && !isSplit && leftCollapsed,
+        "data-right-collapsed": !isCompact && rightCollapsed,
+        "data-left-drawer": isSplit && leftDrawerOpen,
+        "data-compact-pane": compactPane,
+        "data-studio-expanded": !isCompact && studioExpanded,
         children: [
+          isSplit && leftDrawerOpen ? /* @__PURE__ */ jsx19("div", { className: "sb-drawer-backdrop", onClick: () => setLeftDrawerOpen(false), "aria-hidden": "true" }) : null,
           /* @__PURE__ */ jsx19(
             SidebarSources,
             {
@@ -11486,8 +12229,11 @@ Cited chunk: \`${chunk.id}\``,
               notes,
               coverage,
               selectedSourceId: inspectorTarget?.sourceId || null,
-              onSelectSource: setInspectorTarget,
-              onOpenArtifact: (aid) => setSelectedArtifactId(aid),
+              onSelectSource: (target) => {
+                setInspectorTarget(target);
+                if (isSplit) setLeftDrawerOpen(false);
+              },
+              onOpenArtifact: handleSelectArtifact,
               onSaveMemory: handleSaveMemory,
               onRefresh: () => loadNotebookData(nbId),
               onError: setError
@@ -11523,9 +12269,9 @@ Cited chunk: \`${chunk.id}\``,
               capabilities,
               artifacts,
               selectedArtifactId,
-              expanded: studioExpanded,
-              onToggleExpand: () => setStudioExpanded((v) => !v),
-              onSelectArtifact: setSelectedArtifactId,
+              expanded: !isCompact && studioExpanded,
+              onToggleExpand: isCompact ? void 0 : () => setStudioExpanded((v) => !v),
+              onSelectArtifact: handleSelectArtifact,
               onOpenChunk: (cid) => setInspectorTarget({ sourceId: String(cid).split(":")[0], chunkId: cid }),
               onRefresh: () => loadNotebookData(nbId),
               onError: setError
@@ -11569,8 +12315,8 @@ Cited chunk: \`${chunk.id}\``,
       ] })
     ] }) }) : null,
     searchOpen ? /* @__PURE__ */ jsx19("div", { className: "sb-modal-backdrop", onClick: () => setSearchOpen(false), children: /* @__PURE__ */ jsxs17("div", { className: "sb-modal", style: { width: "min(620px, 94vw)" }, onClick: (e) => e.stopPropagation(), children: [
-      /* @__PURE__ */ jsxs17("div", { className: "sb-modal-head", children: [
-        /* @__PURE__ */ jsxs17("div", { style: { display: "flex", alignItems: "center", gap: 10 }, children: [
+      /* @__PURE__ */ jsxs17("div", { className: "sb-modal-head", style: { flexWrap: "wrap", gap: 8 }, children: [
+        /* @__PURE__ */ jsxs17("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", minWidth: 0 }, children: [
           /* @__PURE__ */ jsx19("span", { children: "Cross-Notebook Search" }),
           /* @__PURE__ */ jsxs17("div", { className: "sb-seg", children: [
             /* @__PURE__ */ jsxs17(
@@ -11584,7 +12330,7 @@ Cited chunk: \`${chunk.id}\``,
                   runCrossSearch(searchQuery, "all");
                 },
                 children: [
-                  "All Notebooks (",
+                  "All (",
                   notebooks.length,
                   ")"
                 ]
@@ -11601,7 +12347,7 @@ Cited chunk: \`${chunk.id}\``,
                   setSearchScope("current");
                   runCrossSearch(searchQuery, "current");
                 },
-                children: "This Notebook"
+                children: "Current"
               }
             )
           ] })
@@ -11708,16 +12454,16 @@ function SettingsPage() {
   ]).join("\n");
   return /* @__PURE__ */ jsxs18("div", { className: "sb-root", style: { height: "auto", overflow: "visible", background: "transparent" }, children: [
     /* @__PURE__ */ jsx20(Styles, {}),
-    /* @__PURE__ */ jsxs18("div", { style: { display: "flex", flexDirection: "column", gap: 14, maxWidth: 680 }, children: [
-      /* @__PURE__ */ jsxs18("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }, children: [
-        /* @__PURE__ */ jsxs18("div", { style: { display: "flex", alignItems: "center", gap: 10 }, children: [
-          /* @__PURE__ */ jsx20("span", { className: "sb-brand-mark", style: { width: 32, height: 32, borderRadius: 8 }, children: /* @__PURE__ */ jsx20(BrandMark, { size: 20 }) }),
-          /* @__PURE__ */ jsxs18("div", { children: [
+    /* @__PURE__ */ jsxs18("div", { style: { display: "flex", flexDirection: "column", gap: 14, maxWidth: 760, width: "100%" }, children: [
+      /* @__PURE__ */ jsxs18("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }, children: [
+        /* @__PURE__ */ jsxs18("div", { style: { display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: "1 1 240px" }, children: [
+          /* @__PURE__ */ jsx20("span", { className: "sb-brand-mark", style: { width: 32, height: 32, borderRadius: 8, flexShrink: 0 }, children: /* @__PURE__ */ jsx20(BrandMark, { size: 20 }) }),
+          /* @__PURE__ */ jsxs18("div", { style: { minWidth: 0 }, children: [
             /* @__PURE__ */ jsx20("div", { style: { fontWeight: 650, fontSize: 14 }, children: "SourceBook Research Notebooks" }),
             /* @__PURE__ */ jsx20("div", { style: { fontSize: 12, color: "var(--ui-text-secondary)", marginTop: 2 }, children: "Universal Hermes model routing, hybrid search, Claim Ledger contradictions, and 8 Studio formats including Audio Overviews." })
           ] })
         ] }),
-        /* @__PURE__ */ jsxs18("button", { type: "button", className: "sb-btn sb-btn-primary", onClick: () => sdk.host?.navigate?.("/sourcebook"), children: [
+        /* @__PURE__ */ jsxs18("button", { type: "button", className: "sb-btn sb-btn-primary", style: { flexShrink: 0 }, onClick: () => sdk.host?.navigate?.("/sourcebook"), children: [
           /* @__PURE__ */ jsx20(BrandMark, { size: 13, accent: "rgba(255,255,255,0.72)" }),
           " Open SourceBook"
         ] })
@@ -11729,12 +12475,12 @@ function SettingsPage() {
           /* @__PURE__ */ jsx20("th", { children: "Status" })
         ] }) }),
         /* @__PURE__ */ jsx20("tbody", { children: rows.map(([label, status]) => /* @__PURE__ */ jsxs18("tr", { children: [
-          /* @__PURE__ */ jsx20("td", { style: { fontWeight: 550 }, children: label }),
-          /* @__PURE__ */ jsx20("td", { style: { color: "var(--ui-text-secondary)" }, children: caps ? status : "Checking..." })
+          /* @__PURE__ */ jsx20("td", { style: { fontWeight: 550, minWidth: 130 }, children: label }),
+          /* @__PURE__ */ jsx20("td", { style: { color: "var(--ui-text-secondary)", overflowWrap: "anywhere" }, children: caps ? status : "Checking..." })
         ] }, label)) })
       ] }) }),
       /* @__PURE__ */ jsxs18("div", { className: "sb-ledger-row", children: [
-        /* @__PURE__ */ jsxs18("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
+        /* @__PURE__ */ jsxs18("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }, children: [
           /* @__PURE__ */ jsx20("strong", { style: { fontSize: 12 }, children: "Use any Hermes model per notebook" }),
           /* @__PURE__ */ jsxs18(
             "button",
@@ -11763,11 +12509,11 @@ function SettingsPage() {
           /* @__PURE__ */ jsx20("span", { className: "sb-mono", children: "sourcebook_ingest" }),
           "). To pick any provider or model per notebook directly inside SourceBook, run:"
         ] }),
-        /* @__PURE__ */ jsx20("pre", { className: "sb-mono sb-code-pre", style: { borderRadius: 7, border: "1px solid var(--ui-stroke-tertiary)" }, children: setupCmd })
+        /* @__PURE__ */ jsx20("pre", { className: "sb-mono sb-code-pre", style: { borderRadius: 7, border: "1px solid var(--ui-stroke-tertiary)", maxWidth: "100%" }, children: setupCmd })
       ] }),
       /* @__PURE__ */ jsxs18("div", { className: "sb-ledger-row", children: [
         /* @__PURE__ */ jsx20("strong", { style: { fontSize: 12 }, children: "Slash commands" }),
-        /* @__PURE__ */ jsxs18("div", { className: "sb-mono", style: { fontSize: 11.5, color: "var(--ui-text-secondary)", lineHeight: 1.7 }, children: [
+        /* @__PURE__ */ jsxs18("div", { className: "sb-mono", style: { fontSize: 11.5, color: "var(--ui-text-secondary)", lineHeight: 1.7, overflowWrap: "anywhere" }, children: [
           "/sourcebook list",
           /* @__PURE__ */ jsx20("br", {}),
           "/sourcebook use <nb_id>",

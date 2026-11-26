@@ -340,14 +340,16 @@ export function StudioPanel({
                   <Icon name="RefreshCw" size={12} /> Refresh
                 </button>
               ) : null}
-              <button
-                type="button"
-                className="sb-btn sb-btn-icon"
-                title={expanded ? 'Dock Studio rail' : 'Expand Studio canvas'}
-                onClick={onToggleExpand}
-              >
-                <Icon name={expanded ? 'Minimize2' : 'Maximize2'} size={13} />
-              </button>
+              {onToggleExpand ? (
+                <button
+                  type="button"
+                  className="sb-btn sb-btn-icon"
+                  title={expanded ? 'Dock Studio rail' : 'Expand Studio canvas'}
+                  onClick={onToggleExpand}
+                >
+                  <Icon name={expanded ? 'Minimize2' : 'Maximize2'} size={13} />
+                </button>
+              ) : null}
             </div>
           </div>
           {runningKind ? (

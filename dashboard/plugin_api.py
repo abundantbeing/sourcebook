@@ -91,8 +91,15 @@ async def studio_kinds() -> list[dict[str, Any]]:
 
 
 @router.get("/search")
-async def search_all(q: str = Query(..., min_length=1)) -> list[dict[str, Any]]:
-    return store.search_all_notebooks(q)
+async def search_all(
+    q: str = Query(..., min_length=1),
+    nb: Optional[str] = Query(None),
+    limit: int = Query(24, ge=1, le=50),
+) -> list[dict[str, Any]]:
+    try:
+        return store.search_all_notebooks(q, limit=limit, nb_filter=nb or None)
+    except Exception as exc:
+        raise _http_err(exc)
 
 
 class NewNotebookBody(BaseModel):
@@ -217,6 +224,69 @@ async def sync_local_path(nb: str, body: SyncPathBody) -> dict[str, Any]:
         res = ingest.ingest_local_path(nb, body.path, max_files=max(1, min(100, body.max_files)))
         runtime.broadcast_event("notebook.changed", {"nb": nb, "what": "sources"})
         return res
+    except Exception as exc:
+        raise _http_err(exc)
+
+
+class DeepResearchBody(BaseModel):
+    topic: str
+    depth: str = "standard"
+    auto_brief: bool = True
+    provider: Optional[str] = None
+    model: Optional[str] = None
+
+
+@router.post("/notebooks/{nb}/deep-research")
+async def deep_research_route(nb: str, body: DeepResearchBody) -> dict[str, Any]:
+    try:
+        store.get_notebook(nb)
+    except Exception as exc:
+        raise _http_err(exc)
+    return jobs.spawn(
+        lambda progress: sourcebook.deep_research(
+            nb,
+            body.topic,
+            depth=body.depth,
+            auto_brief=body.auto_brief,
+            provider=body.provider,
+            model=body.model,
+            progress=progress,
+        ),
+        nb=nb,
+        kind="deep_research",
+    )
+
+
+class SaveMemoryBody(BaseModel):
+    content: str
+    title: str = ""
+    citations: list[str] = Field(default_factory=list)
+    target: str = "memory"
+
+
+@router.post("/notebooks/{nb}/memory/save")
+async def save_memory_route(nb: str, body: SaveMemoryBody) -> dict[str, Any]:
+    try:
+        return sourcebook.save_to_memory(
+            nb,
+            body.content,
+            title=body.title,
+            citations=body.citations,
+            target=body.target,
+        )
+    except Exception as exc:
+        raise _http_err(exc)
+
+
+@router.get("/notebooks/{nb}/sources/{src}/page-preview")
+async def source_page_preview(
+    nb: str,
+    src: str,
+    page: int = Query(1, ge=1),
+    q: str = Query(""),
+) -> dict[str, Any]:
+    try:
+        return ingest.render_pdf_page_preview(nb, src, page_num=page, highlight_text=q)
     except Exception as exc:
         raise _http_err(exc)
 
@@ -543,12 +613,13 @@ async def get_artifact_audio_data(nb: str, aid: str) -> dict[str, Any]:
 
 class AudioFollowupBody(BaseModel):
     question: str
+    current_turn_idx: Optional[int] = None
 
 
 @router.post("/notebooks/{nb}/artifacts/{aid}/followup")
 async def audio_followup(nb: str, aid: str, body: AudioFollowupBody) -> dict[str, Any]:
     try:
-        return sourcebook.audio_followup(nb, aid, body.question)
+        return sourcebook.audio_followup(nb, aid, body.question, current_turn_idx=body.current_turn_idx)
     except Exception as exc:
         raise _http_err(exc)
 
@@ -620,12 +691,72 @@ async def get_artifact_media_data(nb: str, aid: str, fname: str) -> dict[str, An
     try:
         p = store.get_artifact_media_path(nb, aid, fname)
         if not p:
-            return {"available": False, "mime": "image/png", "b64": ""}
+            return {"available": False, "mime": "application/octet-stream", "b64": ""}
         raw = p.read_bytes()
-        mime = "image/jpeg" if raw.startswith(b"\xff\xd8\xff") else "image/png"
+        low = fname.lower()
+        if low.endswith(".mp3"):
+            mime = "audio/mpeg"
+        elif low.endswith(".wav"):
+            mime = "audio/wav"
+        elif raw.startswith(b"\xff\xd8\xff"):
+            mime = "image/jpeg"
+        else:
+            mime = "image/png"
         return {"available": True, "mime": mime, "bytes": len(raw), "b64": base64.b64encode(raw).decode("ascii")}
     except Exception as exc:
         raise _http_err(exc)
+
+
+class SlidePatchBody(BaseModel):
+    action: str = "edit"
+    delta: Optional[int] = None
+    title: Optional[str] = None
+    body: Optional[str] = None
+    bullets: Optional[list[str]] = None
+    notes: Optional[str] = None
+    layout: Optional[str] = None
+    stat: Optional[dict[str, Any]] = None
+    image_prompt: Optional[str] = None
+    image_mode: Optional[str] = None
+    clear_image: Optional[bool] = None
+
+
+@router.patch("/notebooks/{nb}/artifacts/{aid}/slides/{slide_index}")
+async def patch_slide_route(nb: str, aid: str, slide_index: int, body: SlidePatchBody) -> dict[str, Any]:
+    try:
+        patch = {k: v for k, v in body.model_dump().items() if v is not None}
+        return sourcebook.update_slide(nb, aid, slide_index, patch)
+    except Exception as exc:
+        raise _http_err(exc)
+
+
+class RegenSlideVisualBody(BaseModel):
+    prompt: Optional[str] = None
+    image_mode: Optional[str] = None
+
+
+@router.post("/notebooks/{nb}/artifacts/{aid}/slides/{slide_index}/regenerate-visual")
+async def regenerate_slide_visual_route(nb: str, aid: str, slide_index: int, body: RegenSlideVisualBody) -> dict[str, Any]:
+    try:
+        art = store.get_artifact(nb, aid)
+        if not art or art.get("kind") != "slides":
+            raise HTTPException(status_code=404, detail="slide deck not found")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise _http_err(exc)
+    return jobs.spawn(
+        lambda progress: sourcebook.regenerate_slide_visual(
+            nb,
+            aid,
+            slide_index,
+            prompt=body.prompt,
+            image_mode=body.image_mode,
+            progress=progress,
+        ),
+        nb=nb,
+        kind="slide_visual",
+    )
 
 
 class ReviseArtifactBody(BaseModel):

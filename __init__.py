@@ -14,6 +14,7 @@ from __future__ import annotations
 import contextvars
 import json
 import logging
+import re
 import threading
 import uuid
 from pathlib import Path
@@ -336,33 +337,348 @@ def revise_artifact(
     return updated
 
 
-def audio_followup(nb: str, aid: str, question: str, *, ctx: Any = None) -> dict[str, Any]:
-    """Interactive 'Ask the Hosts' interrupt on an Audio Overview: returns a cited 2-host exchange and persists it."""
+def update_slide(
+    nb: str,
+    aid: str,
+    slide_index: int,
+    patch: dict[str, Any],
+) -> dict[str, Any]:
+    """Inline edit, reorder, add, or delete an individual slide without regenerating the deck."""
+    existing = store.get_artifact(nb, aid)
+    if not existing or existing.get("kind") != "slides":
+        raise FileNotFoundError(f"slide deck {aid!r} not found")
+    spec = dict(existing.get("spec") or {})
+    slides = [dict(s) for s in (spec.get("slides") or [])]
+
+    action = str((patch or {}).get("action") or "edit").lower()
+    if action == "add":
+        insert_at = max(0, min(len(slides), int(slide_index) + 1))
+        new_slide = {
+            "id": f"sl_{uuid.uuid4().hex[:6]}",
+            "layout": str(patch.get("layout") or "two-col"),
+            "title": str(patch.get("title") or "New key takeaway from sources").strip()[:180],
+            "body": str(patch.get("body") or "").strip(),
+            "bullets": [str(b).strip() for b in (patch.get("bullets") or ["Supporting evidence point"]) if str(b).strip()][:6],
+            "notes": str(patch.get("notes") or "").strip(),
+            "cites": list(patch.get("cites") or []),
+            "image_mode": "none",
+        }
+        slides.insert(insert_at, new_slide)
+        spec["slides"] = slides
+        updated = store.update_artifact(nb, aid, spec=spec)
+        runtime.broadcast_event("notebook.changed", {"nb": nb, "what": "artifacts"})
+        return {"artifact": updated, "active_index": insert_at}
+
+    if slide_index < 0 or slide_index >= len(slides):
+        raise ValueError(f"Slide index {slide_index} out of range")
+
+    if action == "delete":
+        if len(slides) <= 1:
+            raise ValueError("Cannot delete the last remaining slide in a deck")
+        slides.pop(slide_index)
+        spec["slides"] = slides
+        updated = store.update_artifact(nb, aid, spec=spec)
+        runtime.broadcast_event("notebook.changed", {"nb": nb, "what": "artifacts"})
+        return {"artifact": updated, "active_index": max(0, min(len(slides) - 1, slide_index))}
+
+    if action == "move":
+        delta = -1 if int(patch.get("delta") or 0) < 0 else 1
+        target = slide_index + delta
+        if 0 <= target < len(slides):
+            slides[slide_index], slides[target] = slides[target], slides[slide_index]
+            spec["slides"] = slides
+            updated = store.update_artifact(nb, aid, spec=spec)
+            runtime.broadcast_event("notebook.changed", {"nb": nb, "what": "artifacts"})
+            return {"artifact": updated, "active_index": target}
+        return {"artifact": existing, "active_index": slide_index}
+
+    sl = slides[slide_index]
+    for field in ("title", "body", "notes", "layout", "image_prompt", "image_mode"):
+        if field in patch and patch[field] is not None:
+            sl[field] = str(patch[field]).strip()
+    if "bullets" in patch and isinstance(patch["bullets"], list):
+        sl["bullets"] = [str(b).strip() for b in patch["bullets"] if str(b).strip()][:8]
+    if "stat" in patch:
+        if patch["stat"] is None:
+            sl.pop("stat", None)
+        elif isinstance(patch["stat"], dict):
+            sl["stat"] = {
+                "value": str(patch["stat"].get("value") or "").strip()[:40],
+                "label": str(patch["stat"].get("label") or "").strip()[:120],
+            }
+    if patch.get("clear_image") or sl.get("image_mode") == "none":
+        sl.pop("image_file", None)
+        sl.pop("image_url", None)
+        if sl.get("layout") == "image-full":
+            sl["layout"] = "two-col"
+    elif sl.get("image_mode") == "hybrid" and sl.get("layout") == "image-full":
+        sl["layout"] = "two-col"
+    elif sl.get("image_mode") == "full_slide" and (sl.get("image_file") or sl.get("image_url")):
+        sl["layout"] = "image-full"
+
+    slides[slide_index] = sl
+    spec["slides"] = slides
+    updated = store.update_artifact(nb, aid, spec=spec)
+    runtime.broadcast_event("notebook.changed", {"nb": nb, "what": "artifacts"})
+    return {"artifact": updated, "active_index": slide_index}
+
+
+def regenerate_slide_visual(
+    nb: str,
+    aid: str,
+    slide_index: int,
+    *,
+    prompt: Optional[str] = None,
+    image_mode: Optional[str] = None,
+    ctx: Any = None,
+    progress: Any = None,
+) -> dict[str, Any]:
+    """Regenerate artwork for one individual slide via the user's configured Hermes ImageGen provider."""
+    existing = store.get_artifact(nb, aid)
+    if not existing or existing.get("kind") != "slides":
+        raise FileNotFoundError(f"slide deck {aid!r} not found")
+    spec = dict(existing.get("spec") or {})
+    new_spec, media_files = studio.generate_single_slide_visual(
+        spec,
+        slide_index,
+        prompt_override=prompt,
+        image_mode=image_mode,
+        ctx=ctx,
+        progress=progress,
+    )
+    grounding = dict(existing.get("grounding") or {})
+    grounding.pop("image_notice", None)
+    grounding["images_generated"] = sum(
+        1 for s in (new_spec.get("slides") or []) if s.get("image_file") or s.get("image_url")
+    )
+    updated = store.update_artifact(
+        nb,
+        aid,
+        spec=new_spec,
+        grounding=grounding,
+        media_files=media_files,
+    )
+    runtime.broadcast_event("notebook.changed", {"nb": nb, "what": "artifacts"})
+    return {"artifact": updated, "slide_index": slide_index}
+
+
+def audio_followup(
+    nb: str,
+    aid: str,
+    question: str,
+    *,
+    current_turn_idx: Optional[int] = None,
+    ctx: Any = None,
+) -> dict[str, Any]:
+    """Spoken 'Join the Podcast' interrupt on an Audio Overview: cited 2-host Alex & Maya exchange + synthesized audio clip."""
+    import base64
+
     art = store.get_artifact(nb, aid)
     if not art or art.get("kind") != "audio":
         raise FileNotFoundError(f"audio overview {aid!r} not found")
     q = (question or "").strip()
     if not q:
         raise ValueError("Follow-up question cannot be empty")
-    res = ask(nb, q, persona="default", length="short", persist=False, ctx=ctx)
-    clean_ans = ground.CITE_RE.sub("", res["answer"]).strip()
-    cites = res.get("citations") or []
 
+    nb_meta = store.get_notebook(nb)
     spec = dict(art.get("spec") or {})
     turns = list(spec.get("turns") or [])
+    language = str((art.get("params") or {}).get("language") or "English")
+
+    # Gather context around where the listener paused + grounded source passages
+    recent_slice = turns[max(0, (current_turn_idx or len(turns)) - 3) : (current_turn_idx + 1 if current_turn_idx is not None else len(turns))]
+    recent_context = "\n".join(f"{t.get('speaker', 'Host')}: {t.get('text', '')}" for t in recent_slice[-4:])
+
+    host_turns: list[dict[str, Any]] = []
+    cites: list[str] = []
+    if runtime.llm_available(ctx):
+        try:
+            packed, allowed, _, _, _ = context_for(nb, q, art.get("source_ids") or None)
+            schema = {
+                "type": "object",
+                "properties": {
+                    "alex": {"type": "string"},
+                    "maya": {"type": "string"},
+                    "cites": {"type": "array", "items": {"type": "string"}},
+                },
+                "required": ["alex", "maya", "cites"],
+            }
+            parsed, _ = runtime.complete_json(
+                instructions=(
+                    "You are Alex and Maya, two engaging podcast hosts recording a live Audio Overview. "
+                    "A listener just interrupted the episode to ask a question. "
+                    "Write a natural, concise spoken 2-turn exchange answering STRICTLY from the provided <sources>:\n"
+                    "- 'alex': 2 to 3 crisp spoken sentences answering the listener directly with concrete facts (no markdown, no stage directions).\n"
+                    "- 'maya': 1 to 2 warm spoken sentences adding a key nuance or practical takeaway and bridging back into the episode.\n"
+                    "- 'cites': exact valid chunk IDs from <sources> supporting the answer.\n"
+                    f"Language: {language}."
+                ),
+                input_blocks=[{
+                    "type": "text",
+                    "text": f"Recent episode dialogue:\n{recent_context or '(start of episode)'}\n\nListener question: {q}\n\n<sources>\n{packed}\n</sources>",
+                }],
+                json_schema=schema,
+                schema_name="sourcebook.audio_interrupt",
+                purpose="sourcebook.audio.interrupt",
+                task="sourcebook_audio",
+                provider=nb_meta.get("provider") or None,
+                model=nb_meta.get("model") or None,
+                temperature=0.3,
+                ctx=ctx,
+            )
+            alex_txt = ground.CITE_RE.sub("", str(parsed.get("alex") or "")).strip()
+            maya_txt = ground.CITE_RE.sub("", str(parsed.get("maya") or "")).strip()
+            valid_cites = [str(c).strip() for c in (parsed.get("cites") or []) if str(c).strip() in allowed]
+            if alex_txt:
+                cites = valid_cites[:5]
+                host_turns.append({"speaker": "Alex", "text": alex_txt[:420], "cites": cites[:3]})
+                if maya_txt:
+                    host_turns.append({"speaker": "Maya", "text": maya_txt[:320], "cites": cites[1:4] or cites[:2]})
+        except Exception as exc:
+            logger.debug("audio_followup LLM 2-host interrupt fallback: %s", exc)
+
+    if not host_turns:
+        res = ask(nb, q, persona="default", length="short", persist=False, ctx=ctx)
+        clean_ans = ground.CITE_RE.sub("", res["answer"]).strip()
+        cites = list(res.get("citations") or [])
+        sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", clean_ans) if s.strip()]
+        alex_part = " ".join(sentences[:2]) if sentences else clean_ans[:340]
+        maya_part = (
+            " ".join(sentences[2:4])
+            if len(sentences) > 2
+            else "That links directly back to the cited passages in your notebook — let's jump right back into the episode."
+        )
+        host_turns = [
+            {"speaker": "Alex", "text": f"Great question. {alex_part[:380]}", "cites": cites[:3]},
+            {"speaker": "Maya", "text": maya_part[:300], "cites": cites[1:4] or cites[:2]},
+        ]
+
+    # Synthesize real spoken reply MP3 via 3-tier TTS waterfall (Hermes TTS -> free Edge Neural TTS -> browser fallback)
+    reply_mp3, tts_engine = audio.synthesize_dialogue_with_engine(host_turns, language=language, ctx=ctx)
+    audio_fname = ""
+    audio_b64 = ""
+    media_files: Optional[dict[str, bytes]] = None
+    if reply_mp3:
+        audio_fname = f"followup_{uuid.uuid4().hex[:8]}.mp3"
+        media_files = {audio_fname: reply_mp3}
+        audio_b64 = base64.b64encode(reply_mp3).decode("ascii")
+
     base_idx = len(turns) + 1
-    new_turns = [
-        {"id": f"t_{base_idx}", "speaker": "Listener", "text": q, "cites": []},
-        {"id": f"t_{base_idx + 1}", "speaker": "Alex", "text": f"Great question. {clean_ans[:420]}", "cites": cites[:4]},
+    new_turns: list[dict[str, Any]] = [
+        {"id": f"t_{base_idx}", "speaker": "Listener", "text": q, "cites": [], "interrupt": True}
     ]
+    for offset, ht in enumerate(host_turns, start=1):
+        entry: dict[str, Any] = {
+            "id": f"t_{base_idx + offset}",
+            "speaker": ht["speaker"],
+            "text": ht["text"],
+            "cites": ht.get("cites") or [],
+            "interrupt": True,
+        }
+        if offset == 1 and audio_fname:
+            entry["audio_file"] = audio_fname
+        new_turns.append(entry)
+
     turns.extend(new_turns)
     spec["turns"] = turns
-    art["spec"] = spec
-
-    adir = store.artifact_dir(nb, aid)
-    store._write_json_atomic(adir / "artifact.json", art)
+    updated = store.update_artifact(nb, aid, spec=spec, media_files=media_files)
+    store.record_chunk_hits(nb, cites, surface="studio")
     runtime.broadcast_event("notebook.changed", {"nb": nb, "what": "artifacts"})
-    return {"artifact": store.get_artifact(nb, aid), "added_turns": new_turns}
+    return {
+        "artifact": updated,
+        "added_turns": new_turns,
+        "audio_file": audio_fname,
+        "audio_b64": audio_b64,
+        "audio_mime": "audio/mpeg" if audio_b64 else "",
+        "tts_engine": tts_engine,
+    }
+
+
+def deep_research(
+    nb: str,
+    topic: str,
+    *,
+    depth: str = "standard",
+    auto_brief: bool = True,
+    provider: Optional[str] = None,
+    model: Optional[str] = None,
+    ctx: Any = None,
+    progress: Any = None,
+) -> dict[str, Any]:
+    """Run multi-query Deep Research auto-ingest into a notebook, then optionally synthesize a cited Research Briefing."""
+    nb_meta = store.get_notebook(nb)
+    eff_provider = provider if provider is not None else (nb_meta.get("provider") or "")
+    eff_model = model if model is not None else (nb_meta.get("model") or "")
+    res = ingest.deep_research_ingest(
+        nb,
+        topic,
+        depth=depth,
+        provider=eff_provider or None,
+        model=eff_model or None,
+        ctx=ctx,
+        progress=progress,
+    )
+
+    artifact = None
+    if auto_brief and res["ingested"]:
+        if progress:
+            progress(f"Synthesizing cited Deep Research Briefing across {len(res['ingested'])} new sources...", 88)
+        try:
+            new_ids = [item["id"] for item in res["ingested"]]
+            artifact = make(
+                nb,
+                "report",
+                {"template": "briefing", "focus": f"Deep Research Briefing: {res['topic']}"},
+                source_ids=new_ids,
+                provider=eff_provider or None,
+                model=eff_model or None,
+                ctx=ctx,
+            )
+        except Exception as exc:
+            logger.debug("Deep Research auto-brief skipped: %s", exc)
+        try:
+            build_guide(nb, ctx=ctx)
+        except Exception:
+            pass
+
+    runtime.broadcast_event("notebook.changed", {"nb": nb, "what": "sources"})
+    return {**res, "artifact": artifact}
+
+
+def save_to_memory(
+    nb: str,
+    content: str,
+    *,
+    title: str = "",
+    citations: Optional[list[str]] = None,
+    target: str = "memory",
+    ctx: Any = None,
+) -> dict[str, Any]:
+    """Promote a verified SourceBook finding into Hermes's persistent curated memory with source attribution."""
+    nb_meta = store.get_notebook(nb)
+    clean_body = ground.CITE_RE.sub("", (content or "")).strip()
+    clean_body = " ".join(clean_body.split())
+    if not clean_body:
+        raise ValueError("Cannot save empty text to Hermes Memory")
+
+    src_titles: list[str] = []
+    if citations:
+        src_map = {s["id"]: s["title"] for s in store.list_sources(nb)}
+        for cid in citations:
+            sid = str(cid).split(":", 1)[0]
+            st = src_map.get(sid)
+            if st and st not in src_titles:
+                src_titles.append(st)
+
+    prefix = f"[SourceBook · {nb_meta['title']}] "
+    if title and title.strip() and not clean_body.lower().startswith(title.strip().lower()[:24]):
+        body = f"{title.strip()}: {clean_body}"
+    else:
+        body = clean_body
+    suffix = f" (Sources: {', '.join(src_titles[:3])})" if src_titles else ""
+    max_body = max(80, 400 - len(prefix) - len(suffix))
+    entry = f"{prefix}{body[:max_body]}{suffix}"
+    return runtime.save_to_hermes_memory(entry, target=target, ctx=ctx)
 
 
 def _extract_user_text(user_message: Any) -> str:
@@ -418,19 +734,21 @@ def register(ctx: Any) -> None:
         toolset="sourcebook",
         schema={
             "name": "sourcebook_search",
-            "description": "Hybrid semantic + BM25 search across a SourceBook notebook's enabled sources. Returns ranked chunks with IDs to cite using ::cite{nb=\"...\" chunk=\"...\"}.",
+            "description": "Hybrid semantic + BM25 search across a SourceBook notebook's enabled sources (or pass notebook='all' to search across EVERY notebook). Returns ranked chunks with IDs to cite using ::cite{nb=\"...\" chunk=\"...\"}.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "notebook": {"type": "string", "description": "Notebook ID (nb_...)"},
+                    "notebook": {"type": "string", "description": "Notebook ID (nb_...) or 'all' for cross-notebook search"},
                     "query": {"type": "string", "description": "Search query"},
-                    "k": {"type": "integer", "default": 8, "minimum": 1, "maximum": 20},
+                    "k": {"type": "integer", "default": 8, "minimum": 1, "maximum": 24},
                 },
                 "required": ["notebook", "query"],
             },
         },
         handler=lambda args, **kw: json.dumps(
-            store.search(args["notebook"], args["query"], k=int(args.get("k", 8))),
+            store.search_all_notebooks(args["query"], limit=int(args.get("k", 12)))
+            if str(args.get("notebook", "")).strip().lower() in ("all", "*", "")
+            else store.search(args["notebook"], args["query"], k=int(args.get("k", 8))),
             ensure_ascii=False,
         ),
     )
@@ -521,6 +839,35 @@ def register(ctx: Any) -> None:
                 args["source"],
                 metric_col=args.get("metric_col"),
                 label_col=args.get("label_col"),
+            ),
+            ensure_ascii=False,
+        ),
+    )
+
+    ctx.register_tool(
+        name="sourcebook_deep_research",
+        toolset="sourcebook",
+        schema={
+            "name": "sourcebook_deep_research",
+            "description": "Run multi-query Deep Research on a topic: expands complementary web queries, discovers and deduplicates sources, ingests them into a SourceBook notebook, and generates a cited Research Briefing.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "notebook": {"type": "string", "description": "Notebook ID (nb_...)"},
+                    "topic": {"type": "string", "description": "Research topic or question"},
+                    "depth": {"type": "string", "enum": ["quick", "standard", "deep"], "default": "standard"},
+                    "auto_brief": {"type": "boolean", "default": True},
+                },
+                "required": ["notebook", "topic"],
+            },
+        },
+        handler=lambda args, **kw: json.dumps(
+            deep_research(
+                args["notebook"],
+                args["topic"],
+                depth=str(args.get("depth") or "standard"),
+                auto_brief=bool(args.get("auto_brief", True)),
+                ctx=ctx,
             ),
             ensure_ascii=False,
         ),
@@ -625,6 +972,10 @@ def register(ctx: Any) -> None:
             focus = rest[1] if len(rest) > 1 else ""
             art = make(parts[1].strip(), kind, {"focus": focus} if focus else {}, ctx=ctx)
             return f"Created {kind} artifact `{art['id']}` ({art['title']}). Open SourceBook to view."
+        if sub == "research" and len(parts) >= 3:
+            res = deep_research(parts[1].strip(), parts[2].strip(), depth="standard", auto_brief=True, ctx=ctx)
+            brief_note = f" and synthesized briefing `{res['artifact']['id']}`" if res.get("artifact") else ""
+            return f"Deep Research ingested {len(res['ingested'])} source(s) across {len(res['queries'])} queries{brief_note}."
         return "Invalid usage. Run `/sourcebook` with no arguments for help."
 
     ctx.register_command(

@@ -19,6 +19,7 @@ provides_tools:
   - sourcebook_save_note
   - sourcebook_studio
   - sourcebook_analyze_data
+  - sourcebook_deep_research
 provides_hooks:
   - pre_llm_call
 capabilities:

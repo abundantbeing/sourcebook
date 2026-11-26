@@ -14,6 +14,7 @@ import json
 import logging
 import re
 import threading
+from pathlib import Path
 from typing import Any, Optional
 
 logger = logging.getLogger("sourcebook.runtime")
@@ -491,20 +492,32 @@ _TOOL_MODULES = {
     "web_extract": "tools.web_tools",
     "web_search": "tools.web_tools",
     "text_to_speech": "tools.tts_tool",
+    "memory": "tools.memory_tool",
+}
+
+_IMAGE_PROVIDER_LABELS = {
+    "openai-codex": "OpenAI (Codex auth)",
+    "openai": "OpenAI",
+    "fal": "FAL.ai",
+    "krea": "Krea",
+    "nous": "Nous",
+    "google": "Google",
+    "xai": "xAI",
 }
 
 
 def _ensure_tool_registered(tool_name: str) -> Any:
-    """Return the registry entry for `tool_name`, lazily importing its Hermes tool module when running in the web server."""
+    """Return the registry entry for `tool_name`, lazily loading its tool module via registry when absent."""
     try:
         from tools.registry import registry
 
         entry = registry.get_entry(tool_name)
         if entry is None and tool_name in _TOOL_MODULES:
+            mod_name = _TOOL_MODULES[tool_name]
             try:
-                __import__(_TOOL_MODULES[tool_name])
+                __import__(mod_name)
             except Exception as exc:
-                logger.debug("Lazy import of %s for tool %s failed: %s", _TOOL_MODULES[tool_name], tool_name, exc)
+                logger.debug("Lazy load of %s for tool %s failed: %s", mod_name, tool_name, exc)
             entry = registry.get_entry(tool_name)
         return entry
     except Exception:
@@ -570,21 +583,80 @@ def _probe_image_gen_info(cfg: dict[str, Any]) -> tuple[bool, str, str]:
     provider_id = str(ig_cfg.get("provider") or "").strip()
     nested = ig_cfg.get(provider_id) if provider_id and isinstance(ig_cfg.get(provider_id), dict) else {}
     model_id = str(ig_cfg.get("model") or nested.get("model") or "").strip()
-    provider_label = provider_id
-    if available:
-        try:
-            import tools.image_generation_tool as igt
-
-            info = igt._active_image_capabilities() or {}
-            if info.get("provider"):
-                provider_label = str(info["provider"]).strip()
-            if info.get("model"):
-                model_id = str(info["model"]).strip()
-        except Exception as exc:
-            logger.debug("Could not query active image capabilities: %s", exc)
+    provider_label = _IMAGE_PROVIDER_LABELS.get(provider_id.lower(), provider_id)
     if available and not provider_label:
-        provider_label = "fal"
+        provider_label = "FAL.ai"
     return available, provider_label, model_id
+
+
+def save_to_hermes_memory(
+    content: str,
+    *,
+    target: str = "memory",
+    ctx: Any = None,
+) -> dict[str, Any]:
+    """Promote a verified SourceBook insight into Hermes's persistent curated memory (`MEMORY.md` / `USER.md`)."""
+    clean = re.sub(r"\s+", " ", (content or "").strip())
+    if not clean:
+        raise ValueError("Memory content cannot be empty")
+    clean = redact(clean, force=True)[:420]
+    tgt = "user" if str(target or "").lower() == "user" else "memory"
+
+    # Tier 1: Native Hermes `memory` tool (honors write gates, char limits, and security scanning)
+    if _probe_tool("memory"):
+        try:
+            raw = dispatch_tool(
+                "memory",
+                {"target": tgt, "operations": [{"action": "add", "content": clean}]},
+                ctx=ctx,
+            )
+            data = json.loads(raw) if isinstance(raw, str) else raw
+            if isinstance(data, dict):
+                if data.get("success") or data.get("staged"):
+                    return {
+                        "saved": bool(data.get("success") and not data.get("staged")),
+                        "staged": bool(data.get("staged")),
+                        "target": tgt,
+                        "backend": "hermes_memory_tool",
+                        "message": str(
+                            data.get("message")
+                            or ("Staged for Hermes Memory approval." if data.get("staged") else "Saved verified insight to Hermes Memory.")
+                        ),
+                        "usage": data.get("usage"),
+                    }
+                if data.get("error"):
+                    raise ValueError(str(data["error"]))
+        except ValueError:
+            raise
+        except Exception as exc:
+            logger.debug("Hermes memory tool dispatch fallback: %s", exc)
+
+    # Tier 2: Direct profile-scoped `<HERMES_HOME>/memories/MEMORY.md` fallback when running outside agent runtime
+    try:
+        from hermes_constants import get_hermes_home
+
+        mem_dir = Path(get_hermes_home()) / "memories"
+    except Exception:
+        import os
+
+        mem_dir = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes")) / "memories"
+    mem_dir.mkdir(parents=True, exist_ok=True)
+    fname = "USER.md" if tgt == "user" else "MEMORY.md"
+    mpath = mem_dir / fname
+    existing = mpath.read_text(encoding="utf-8-sig") if mpath.is_file() else ""
+    delimiter = "\n§\n"
+    entries = [e.strip() for e in existing.split(delimiter) if e.strip()] if existing.strip() else []
+    if clean not in entries:
+        entries.append(clean)
+        mpath.write_text(delimiter.join(entries) + "\n", encoding="utf-8")
+    return {
+        "saved": True,
+        "staged": False,
+        "target": tgt,
+        "backend": "hermes_memories_file",
+        "path": str(mpath),
+        "message": f"Saved verified insight to Hermes {fname}.",
+    }
 
 
 def probe_capabilities(ctx: Any = None) -> dict[str, Any]:
@@ -599,14 +671,18 @@ def probe_capabilities(ctx: Any = None) -> dict[str, Any]:
         "provider_override_allowed": models_info["trust"]["allow_provider_override"],
         "web_extract": _probe_tool("web_extract"),
         "web_search": _probe_tool("web_search"),
+        "memory": True,
+        "memory_tool": _probe_tool("memory"),
         "image_generate": img_ok,
         "image_gen_provider": img_provider,
         "image_gen_model": img_model,
         "tts": _probe_tool("text_to_speech") or _probe_import("edge_tts"),
+        "hermes_tts": _probe_tool("text_to_speech"),
         "edge_tts": _probe_import("edge_tts"),
         "youtube_transcript": _probe_import("youtube_transcript_api"),
         "pypdf": _probe_import("pypdf"),
         "pymupdf": _probe_import("fitz"),
+        "pdf_preview": _probe_import("fitz"),
         "pdfplumber": _probe_import("pdfplumber"),
         "python_docx": _probe_import("docx"),
         "docx_stdlib": True,

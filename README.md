@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="docs/brand/cover.svg" width="900" alt="SourceBook: source-grounded research notebooks and 8-format interactive Studio for Hermes Desktop">
+  <img src="docs/catalog-cover.jpg" width="900" alt="SourceBook: source-grounded research notebooks and 8-format interactive Studio for Hermes Desktop">
 </h1>
 
 <p align="center">
@@ -29,12 +29,12 @@ All screenshots show SourceBook running inside Hermes Desktop. SourceBook adopts
 
 - **Works with any Hermes model.** Opens Hermes Desktop's native `ModelCatalogMenu` directly in the topbar so you can pick from every authenticated provider and model in your Hermes agent (OpenRouter, Anthropic, OpenAI/Codex, Claude Subscription, xAI, Qwen, Gemini, MiniMax, Ollama, LM Studio, custom endpoints) or stay on `Auto (Active Hermes)`. A 3-tier JSON compatibility ladder (`json_schema`, `json_mode`, and plain text JSON extraction) keeps structured Studio generation reliable across every provider.
 - **Hybrid semantic + BM25 retrieval.** Combines SQLite FTS5 BM25 keyword ranking with local semantic vectors via Reciprocal Rank Fusion (RRF), matching paraphrases and conceptual queries without requiring an external embedding service.
-- **Multi-format ingestion, YouTube, local folders, and Web Discovery.** Drag and drop PDF (with PyMuPDF/pdfplumber/pypdf and automatic vision OCR on scanned pages), DOCX (stdlib XML fallback included), Markdown, code, CSV/TSV, JSON, HTML, audio/video, images, or web and YouTube URLs (timestamped transcripts with video jump links). Sync local folders, Obsidian vaults, or Git repos directly from disk, refresh linked files or URLs in place, or use **Discover** to search the web and bulk-import candidate sources.
-- **Grounded chat with rich Markdown, personas, and marginalia citations.** Renders fenced code blocks with copy buttons, GFM tables, blockquotes, ordered lists, and numbered `[1]` `[2]` citation pills. Switch personas (`Default`, `Analyst`, `Critic`, `Tutor`, `Socratic`), answer length (`Short`, `Standard`, `Deep`), and `Grounded` vs `Strict` mode directly in the composer.
+- **Multi-format ingestion, YouTube, local folders, and Deep Research Auto-Ingest.** Drag and drop PDF (with PyMuPDF/pdfplumber/pypdf, automatic vision OCR on scanned pages, and **visual PDF page previews** with cited-sentence highlight boxes inside the Passage Inspector), DOCX (stdlib XML fallback included), Markdown, code, CSV/TSV, JSON, HTML, audio/video, images, or web and YouTube URLs (timestamped transcripts with video jump links). Sync local folders, Obsidian vaults, or Git repos directly from disk, refresh linked files or URLs in place, or open **Discover → Deep Research** to expand a topic into complementary web queries, deduplicate and auto-ingest 5–15 primary sources, and synthesize a cited Deep Research Briefing automatically.
+- **Grounded chat, Cross-Notebook Search, and Hermes Memory bridge.** Renders fenced code blocks with copy buttons, GFM tables, blockquotes, ordered lists, and numbered `[1]` `[2]` citation pills. Press `Ctrl+K` to search across **All Notebooks** or the current notebook, and click **Memory** on any cited answer, verified claim, note, or passage excerpt to promote verified source-attributed findings straight into Hermes's persistent curated memory (`MEMORY.md`).
 - **Claim Ledger & Cross-Source Contradictions.** Audits every assistant sentence with stemmed semantic + numeric alignment (explicitly flagging number mismatches) and scans active sources automatically to surface cross-source numeric and polarity contradictions side by side.
-- **Passage Inspector & Tabular Data Analyzer.** Click any citation pill to inspect highlighted evidence in context, jump straight to YouTube timestamps, or click **Analyze data** on CSV/JSON sources to compute exact column statistics (`min`, `max`, `mean`, `median`, `p95`, `sum`) and inline bar charts.
+- **Passage Inspector with Visual PDF Page Previews & Tabular Data Analyzer.** Click any citation pill to inspect highlighted evidence in context — including rendered PDF pages with cited text highlighted directly on the page and click-to-zoom lightbox — jump straight to YouTube timestamps, or click **Analyze data** on CSV/JSON sources to compute exact column statistics (`min`, `max`, `mean`, `median`, `p95`, `sum`) and inline bar charts.
 - **Coverage Map & Living Notes.** Tracks chunk hits across chat and Studio runs to highlight unread blind spots. Refreshing a linked file or URL automatically marks affected Living Notes and Studio Artifacts as `Stale` with one-click refresh.
-- **Eight interactive Studio formats with ordered Bayer dither craft.** Study Guides (6 templates), 2-Host Audio Overviews (3-tier TTS: Hermes TTS, Edge TTS, and instant dual-voice browser playback + dithered audio waveform + **Ask Hosts** follow-up), branch-colored Mind Maps, tactile SM-2 Flashcards, Focus-mode Mastery Quizzes, 5-layout Bento Infographics with radial gauges & metric charts, multi-view Data Tables (`Table | Cards | Chart`), and a full **Customize Slide Deck** studio (`Detailed Deck` vs `Presenter Slides`, source selector, custom style/audience prompting, interactive slide outline editor, one-click Revise, optional **Hermes ImageGen** in Full-Slide Art or Hybrid mode using whatever image generator is configured in Hermes, bundled `skills/slide-deck-craft/SKILL.md`, 10 layouts across 4 themes, Presenter Mode, and native `.pptx` PowerPoint + `.pdf` downloads). Subtle 4x4 Bayer ordered-dither textures run through Hermes's budgeted rAF loop (zero idle CPU, respects reduced motion).
+- **Eight interactive Studio formats with ordered Bayer dither craft.** Study Guides (6 templates), 2-Host Audio Overviews (3-tier TTS: Hermes TTS, free Edge Neural TTS, and instant dual-voice browser playback + dithered audio waveform + **Spoken "Join the Podcast" Interruption** where Alex & Maya pause the episode, answer your question aloud with citations, and let you resume right where you left off), branch-colored Mind Maps, tactile SM-2 Flashcards, Focus-mode Mastery Quizzes, 5-layout Bento Infographics with radial gauges & metric charts, multi-view Data Tables (`Table | Cards | Chart`), and a full **Slide Deck Studio** (`Detailed Deck` vs `Presenter Slides`, source selector, custom style/audience prompting, interactive outline editor, **inline single-slide editor & per-slide Regenerate Visual**, one-click Revise, **Hermes ImageGen** in Full-Slide Art or Hybrid mode using whatever provider is configured in Hermes including `openai-codex` / ChatGPT OAuth, `openai`, `fal`, or `krea`, bundled `skills/slide-deck-craft/SKILL.md`, 10 layouts across 4 themes, Presenter Mode, and native `.pptx` PowerPoint + `.pdf` downloads). Subtle 4x4 Bayer ordered-dither textures run through Hermes's budgeted rAF loop (zero idle CPU, respects reduced motion).
 - **Works in chat everywhere.** Bind any Hermes session with `/sourcebook use <nb_id>` across Desktop, CLI, Telegram, Discord, or Slack, pin models with `/sourcebook model`, or sync folders with `/sourcebook sync`.
 - **Local extractive fallback.** When no external model provider is configured, SourceBook still answers questions and generates all eight Studio formats locally from your indexed chunks, labeled clearly as `Local extractive`.
 
@@ -52,9 +52,9 @@ All screenshots show SourceBook running inside Hermes Desktop. SourceBook adopts
 | --- | --- |
 | [![Stat-grid Infographic generated from notebook sources with Copy SVG](docs/screenshots/studio-infographic.png)](docs/screenshots/studio-infographic.png) | [![Sortable Data Table with live filter, citation pills, and CSV export](docs/screenshots/studio-table.png)](docs/screenshots/studio-table.png) |
 
-| 16:9 Slide Deck & Presenter Mode | SM-2 Flashcards |
+| 16:9 AI-Illustrated Slide Deck Studio | SM-2 Flashcards |
 | --- | --- |
-| [![16:9 Slide Deck viewer with Presenter Mode, speaker notes, and HTML Deck export](docs/screenshots/studio-slides.png)](docs/screenshots/studio-slides.png) | [![SM-2 Flashcards docked beside grounded chat](docs/screenshots/studio-flashcards.png)](docs/screenshots/studio-flashcards.png) |
+| [![16:9 Slide Deck viewer with Hermes ImageGen artwork, Inline Slide Editor, Regenerate Visual, PPTX & PDF export](docs/screenshots/studio-slides.png)](docs/screenshots/studio-slides.png) | [![SM-2 Flashcards docked beside grounded chat](docs/screenshots/studio-flashcards.png)](docs/screenshots/studio-flashcards.png) |
 
 | Coverage Map | |
 | --- | --- |
@@ -67,13 +67,13 @@ Click any screenshot to inspect it at full size.
 | Format | Interactive viewer | Offline exports |
 | --- | --- | --- |
 | **Study Guide** | Rich Markdown view (code blocks, tables, blockquotes, `[n]` pills) across 6 templates | Markdown (`.md`) |
-| **Audio Overview** | 2-host podcast player (`0.75x`-`2x`) with dithered waveform, 3-tier TTS (Hermes TTS, Edge TTS, local voices), cited transcript, and **Ask Hosts** follow-up | MP3 audio (`.mp3`), Script (`.md`) |
+| **Audio Overview** | 2-host podcast player (`0.75x`-`2x`) with dithered waveform, 3-tier TTS (Hermes TTS, free Edge Neural TTS, local voices), cited transcript, and **Spoken "Join the Podcast" Interruption** (pause, ask Alex & Maya aloud, resume) | MP3 audio (`.mp3`), Script (`.md`) |
 | **Mind Map** | Branch-colored pan/zoom SVG canvas with dot grid, collapsible nodes, summary and citations | Standalone SVG (`.svg`), 2x PNG (`.png`), OPML (`.opml`), Markdown |
 | **Flashcards** | Layered card stack with 3-segment mastery bar, `Study Deck` / `Browse All` toggle, live SM-2 interval previews, hints, shuffle, and keyboard shortcuts | CSV (`.csv`), Anki TSV (`.tsv`), Markdown |
 | **Quiz** | Focus stage & All-Questions review, live SVG score ring, interactive stepper pills, keyboard shortcuts (`A`-`D`), cited explanations, and Missed-only retry | Answer Key (`.md`), JSON |
 | **Infographic** | Live 5-layout switcher (`Bento`, `Timeline`, `Compare`, `Hub`, `Pyramid`), radial ring gauge, horizontal metric comparison bars, 4 palettes, clickable citations | Standalone SVG (`.svg`), 2x PNG (`.png`), JSON |
 | **Data Table** | 4-KPI summary strip, `Table` / `Cards` / `Chart` views, faceted source filters, inline metric bars, expandable detail rows, column toggle, density toggle | CSV (`.csv`), JSON (`.json`), Markdown table |
-| **Slide Deck** | Customize modal (`Detailed Deck` / `Presenter Slides`, source picker, custom prompt, Outline Editor, Revise, optional **Hermes ImageGen** Full-Slide Art or Hybrid visual craft via `skills/slide-deck-craft/SKILL.md`), 10 layouts across 4 themes (`Editorial`, `Keynote`, `Midnight`, `Paper`), `⋯` Action Menu, Overview Grid, speaker notes, and Presenter Mode with Up Next | PowerPoint (`.pptx` with speaker notes), PDF Document (`.pdf`), Marp Markdown (`.marp.md`), Offline HTML Deck (`.deck.html`) |
+| **Slide Deck** | Customize modal (`Detailed Deck` / `Presenter Slides`, source picker, custom prompt, Outline Editor, **Inline Slide Editor & Per-Slide Regenerate Visual**, Revise, **Hermes ImageGen** Full-Slide Art or Hybrid visual craft via `skills/slide-deck-craft/SKILL.md`), 10 layouts across 4 themes (`Editorial`, `Keynote`, `Midnight`, `Paper`), `⋯` Action Menu, Overview Grid, speaker notes, and Presenter Mode with Up Next | PowerPoint (`.pptx` with speaker notes), PDF Document (`.pdf`), Marp Markdown (`.marp.md`), Offline HTML Deck (`.deck.html`) |
 
 Both Mind Map and Infographic resolve CSS theme variables (including `color-mix()`) to concrete sRGB colors before copying SVG or rendering 2x PNG exports, so exported visuals render identically outside Hermes Desktop.
 
@@ -112,16 +112,18 @@ Use SourceBook inside any Hermes chat (Desktop, CLI, Telegram, Discord, or Slack
 /sourcebook add <nb_id> <url or text>
 /sourcebook ask <nb_id> <question>
 /sourcebook make <nb_id> <kind> [focus]
+/sourcebook research <nb_id> <topic>
 /sourcebook unuse
 ```
 
 Registered Hermes agent tools:
 
 - `sourcebook_list_notebooks`: list notebooks, active models, and source counts
-- `sourcebook_search`: hybrid semantic + BM25 search returning ranked chunks and citation IDs
+- `sourcebook_search`: hybrid semantic + BM25 search across a notebook (or `notebook: "all"` for cross-notebook search) returning ranked chunks and citation IDs
 - `sourcebook_save_note`: save a cited Markdown note into a notebook
 - `sourcebook_studio`: generate any of the eight Studio formats (`report`, `audio`, `mindmap`, `flashcards`, `quiz`, `table`, `infographic`, `slides`)
 - `sourcebook_analyze_data`: compute exact column profiles and chart series for CSV, TSV, JSON, or Markdown tables
+- `sourcebook_deep_research`: run multi-query web discovery, deduplicated auto-ingestion, and cited Deep Research Briefing synthesis
 
 ## How it works
 
@@ -149,7 +151,6 @@ flowchart LR
 npm install
 npm run check
 pytest tests/test_sourcebook.py -v
-hermes plugins validate . --install-deps
 ```
 
 ## License

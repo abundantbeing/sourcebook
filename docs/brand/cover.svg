@@ -11,7 +11,7 @@
   <rect width="1200" height="420" rx="18" fill="url(#grid)" opacity="0.6"/>
   <rect x="1" y="1" width="1198" height="418" rx="17" fill="none" stroke="#222b3d" stroke-width="1.5"/>
 
-  <!-- Left official Citation Folio emblem tile -->
+  <!-- Left official SourceBook citation emblem tile -->
   <g transform="translate(68, 106)">
     <rect x="0" y="0" width="208" height="208" rx="44" fill="#101520" stroke="#253047" stroke-width="1.5"/>
     <!-- Hairline geometric alignment ticks -->
@@ -19,7 +19,7 @@
     <line x1="168" y1="104" x2="180" y2="104" stroke="#243046" stroke-width="1"/>
     <line x1="104" y1="22" x2="104" y2="32" stroke="#243046" stroke-width="1"/>
     <line x1="104" y1="176" x2="104" y2="186" stroke="#243046" stroke-width="1"/>
-    <!-- Citation Folio Mark -->
+    <!-- SourceBook Citation Emblem -->
     <g transform="translate(32, 32) scale(1.2)">
       <polygon points="59,10 74,10 74,34 66.5,26.5 59,34" fill="#3b82f6"/>
       <polygon points="79.5,10 100,10 100,37.5 79.5,48.5" fill="#f4f6fa"/>

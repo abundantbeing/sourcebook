@@ -85,26 +85,26 @@ async def _render_edge_async(turns: list[dict[str, Any]], language: str = "Engli
     return bytes(out)
 
 
-def synthesize_dialogue_mp3(
+def synthesize_dialogue_with_engine(
     turns: list[dict[str, Any]],
     *,
     language: str = "English",
     ctx: Any = None,
-) -> Optional[bytes]:
-    """Synthesize a 2-host podcast MP3 via Hermes's configured TTS tool or Edge TTS fallback."""
+) -> tuple[Optional[bytes], str]:
+    """Synthesize a 2-host dialogue MP3 and report which TTS tier succeeded (`hermes_tts`, `edge_tts`, or `browser`)."""
     if not turns:
-        return None
+        return None, "browser"
 
     # Tier 1: User's configured Hermes TTS provider (ElevenLabs, OpenAI, Gemini, Piper, etc.)
     hermes_mp3 = _synth_via_hermes_tts(turns, ctx=ctx)
     if hermes_mp3:
-        return hermes_mp3
+        return hermes_mp3, "hermes_tts"
 
-    # Tier 2: Edge neural TTS fallback
+    # Tier 2: Free Edge Neural TTS fallback (Andrew & Ava multilingual neural voices, zero API key required)
     try:
         import edge_tts  # noqa: F401
     except ImportError:
-        return None
+        return None, "browser"
 
     try:
         try:
@@ -119,7 +119,19 @@ def synthesize_dialogue_mp3(
                 data = pool.submit(asyncio.run, _render_edge_async(turns, language)).result(timeout=90)
         else:
             data = asyncio.run(_render_edge_async(turns, language))
-        return data if data and len(data) > 512 else None
+        if data and len(data) > 512:
+            return data, "edge_tts"
     except Exception as exc:
         logger.debug("Audio Overview Edge TTS synthesis skipped: %s", exc)
-        return None
+    return None, "browser"
+
+
+def synthesize_dialogue_mp3(
+    turns: list[dict[str, Any]],
+    *,
+    language: str = "English",
+    ctx: Any = None,
+) -> Optional[bytes]:
+    """Synthesize a 2-host podcast MP3 via Hermes's configured TTS tool or Edge TTS fallback."""
+    data, _ = synthesize_dialogue_with_engine(turns, language=language, ctx=ctx)
+    return data

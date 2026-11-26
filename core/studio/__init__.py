@@ -1118,6 +1118,89 @@ document.addEventListener('keydown',e=>{{if(e.key==='ArrowRight'||e.key===' ')sh
     return f"{slug}.deck.html", "text/html; charset=utf-8", doc
 
 
+def generate_single_slide_visual(
+    spec: dict[str, Any],
+    slide_index: int,
+    *,
+    prompt_override: Optional[str] = None,
+    image_mode: Optional[str] = None,
+    ctx: Any = None,
+    progress: Any = None,
+) -> tuple[dict[str, Any], dict[str, bytes]]:
+    """Regenerate artwork for ONE specific slide using the user's configured Hermes ImageGen provider."""
+    import time as _time
+
+    slides = list(spec.get("slides") or [])
+    if slide_index < 0 or slide_index >= len(slides):
+        raise ValueError(f"Slide index {slide_index} out of range (0..{max(0, len(slides) - 1)})")
+
+    caps = runtime.probe_capabilities(ctx)
+    if not caps.get("image_generate"):
+        raise ValueError(
+            "No Hermes image generation provider is currently configured or available. "
+            "Configure one via `hermes tools` -> Image Generation (e.g. openai-codex, openai, or fal)."
+        )
+
+    slide = dict(slides[slide_index])
+    visual_bible = str(
+        spec.get("visual_bible")
+        or "Tactile editorial presentation art direction, high-craft studio photography, clean negative space, zero generic SaaS cards"
+    )
+    eff_mode = str(image_mode or slide.get("image_mode") or "full_slide").lower()
+    if eff_mode not in ("full_slide", "hybrid"):
+        eff_mode = "full_slide"
+
+    user_prompt = (prompt_override or "").strip()
+    if user_prompt:
+        if eff_mode == "full_slide":
+            full_prompt = (
+                f"Widescreen 16:9 presentation slide design. Visual bible: {visual_bible}. "
+                f"Headline: \"{slide.get('title', '')}\". "
+                f"Art direction: {user_prompt}. "
+                "Ultra-crisp editorial composition, generous breathing room, zero watermarks."
+            )
+        else:
+            full_prompt = (
+                f"Tactile editorial visual illustration for slide \"{slide.get('title', '')}\". "
+                f"Visual bible: {visual_bible}. Art direction: {user_prompt}. "
+                "Clean ground, NO embedded text, NO letters, NO watermarks."
+            )
+        slide["image_prompt"] = user_prompt
+    else:
+        full_prompt = str(slide.get("image_prompt") or _compose_slide_image_prompt(slide, visual_bible, eff_mode))
+        slide["image_prompt"] = full_prompt
+
+    provider_lbl = " · ".join(x for x in (caps.get("image_gen_provider"), caps.get("image_gen_model")) if x) or "Hermes ImageGen"
+    if progress:
+        progress(f"Regenerating slide {slide_index + 1} visual via {provider_lbl}...", 45)
+
+    img_ref = runtime.generate_image(full_prompt, "landscape", ctx=ctx)
+    if not img_ref:
+        raise RuntimeError(f"{provider_lbl} did not return an image for slide {slide_index + 1}. Check Hermes logs or try a refined prompt.")
+
+    if progress:
+        progress("Caching artwork locally for stage, PPTX, and PDF export...", 82)
+    fetched = runtime.fetch_image_bytes(img_ref)
+    media_files: dict[str, bytes] = {}
+    if fetched:
+        raw, ext = fetched
+        rev = int(_time.time() * 1000) % 10_000_000
+        fname = f"slide_{slide_index + 1:02d}_r{rev}.{ext}"
+        media_files[fname] = raw
+        slide["image_file"] = fname
+    slide["image_url"] = img_ref
+    slide["image_mode"] = eff_mode
+    if eff_mode == "full_slide":
+        slide["layout"] = "image-full"
+    elif slide.get("layout") == "image-full":
+        slide["layout"] = "two-col"
+
+    new_spec = dict(spec)
+    slides[slide_index] = slide
+    new_spec["slides"] = slides
+    return new_spec, media_files
+
+
 def export_artifact_binary(
     artifact: dict[str, Any],
     fmt: str,
@@ -1156,6 +1239,7 @@ __all__ = [
     "get_generator",
     "run",
     "outline_slides",
+    "generate_single_slide_visual",
     "export_artifact",
     "export_artifact_binary",
 ]

@@ -492,6 +492,7 @@ def extract_url(url: str, *, ctx: Any = None) -> tuple[str, str, dict[str, Any]]
         body = resp.read(MAX_UPLOAD_BYTES)
     if "application/pdf" in ctype or clean_url.lower().endswith(".pdf"):
         text, meta = extract_pdf_bytes(body, filename=Path(urlparse(clean_url).path).name or "remote.pdf", ctx=ctx)
+        meta["_pdf_bytes"] = body
         return Path(urlparse(clean_url).path).name or clean_url, text, meta
     decoded = body.decode("utf-8", errors="replace")
     if "html" in ctype or "<html" in decoded[:512].lower():
@@ -581,13 +582,20 @@ def ingest_bytes(
 def ingest_url(nb: str, url: str, *, title: Optional[str] = None, ctx: Any = None) -> dict[str, Any]:
     chunk_chars = int(runtime.get_config("chunk_chars", 3200) or 3200)
     extracted_title, text, extra_meta = extract_url(url, ctx=ctx)
-    kind = "youtube" if extract_youtube_id(url) or any(h in url.lower() for h in ("youtube.com/", "youtu.be/")) else "url"
+    pdf_bytes = extra_meta.pop("_pdf_bytes", None)
+    kind = (
+        "pdf"
+        if pdf_bytes is not None
+        else ("youtube" if extract_youtube_id(url) or any(h in url.lower() for h in ("youtube.com/", "youtu.be/")) else "url")
+    )
     return store.add_source(
         nb,
         title=(title or extracted_title or url).strip(),
         text=text,
         kind=kind,
         origin=url.strip(),
+        raw_bytes=pdf_bytes,
+        raw_ext=".pdf" if pdf_bytes is not None else None,
         chunk_chars=chunk_chars,
         extra_meta=extra_meta,
     )
@@ -767,23 +775,329 @@ def discover_web_sources(query: str, *, limit: int = 8, ctx: Any = None) -> list
         pass
 
     # Clean zero-key DuckDuckGo HTML fallback
-    ddg_url = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote_plus(q)}"
-    req = urllib.request.Request(ddg_url, headers={"User-Agent": "Mozilla/5.0 (compatible; Hermes-SourceBook/0.1)"})
-    with urllib.request.urlopen(req, timeout=12) as resp:  # noqa: S310
-        body = resp.read(512 * 1024).decode("utf-8", errors="replace")
-    parser = _DDGResultParser()
-    parser.feed(body)
-    out = []
-    for r in parser.results:
-        u = (r.get("url") or "").strip()
-        if not u or not _is_url_safe(u):
+    try:
+        ddg_url = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote_plus(q)}"
+        req = urllib.request.Request(ddg_url, headers={"User-Agent": "Mozilla/5.0 (compatible; Hermes-SourceBook/0.1)"})
+        with urllib.request.urlopen(req, timeout=12) as resp:  # noqa: S310
+            body = resp.read(512 * 1024).decode("utf-8", errors="replace")
+        parser = _DDGResultParser()
+        parser.feed(body)
+        out = []
+        for r in parser.results:
+            u = (r.get("url") or "").strip()
+            if not u or not _is_url_safe(u):
+                continue
+            out.append({
+                "title": re.sub(r"\s+", " ", r.get("title", "")).strip()[:160],
+                "url": u,
+                "domain": (urlparse(u).hostname or "").replace("www.", ""),
+                "snippet": re.sub(r"\s+", " ", r.get("snippet", "")).strip()[:240],
+            })
+            if len(out) >= limit:
+                break
+        if out:
+            return out
+    except Exception:
+        pass
+
+    # Secondary zero-key Wikipedia REST fallback for research resilience
+    try:
+        wiki_url = f"https://en.wikipedia.org/w/rest.php/v1/search/page?q={urllib.parse.quote_plus(q)}&limit={limit}"
+        req = urllib.request.Request(wiki_url, headers={"User-Agent": "Hermes-SourceBook/0.1 (+https://github.com/abundantbeing/sourcebook)"})
+        with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
+            wdata = json.loads(resp.read(256 * 1024).decode("utf-8", errors="replace"))
+        out = []
+        for page in (wdata.get("pages") or [])[:limit]:
+            key = str(page.get("key") or "").strip()
+            if not key:
+                continue
+            url = f"https://en.wikipedia.org/wiki/{urllib.parse.quote(key, safe='/_()-')}"
+            if not _is_url_safe(url):
+                continue
+            excerpt = re.sub(r"<[^>]+>", "", str(page.get("excerpt") or page.get("description") or "")).strip()
+            out.append({
+                "title": str(page.get("title") or key)[:160],
+                "url": url,
+                "domain": "en.wikipedia.org",
+                "snippet": excerpt[:240],
+            })
+        return out
+    except Exception:
+        return []
+
+
+def render_pdf_page_preview(
+    nb: str,
+    src: str,
+    page_num: int = 1,
+    *,
+    highlight_text: str = "",
+    scale: float = 1.5,
+) -> dict[str, Any]:
+    """Render a PDF page to PNG (with optional amber/cobalt highlight rectangles over cited phrases) via PyMuPDF."""
+    import base64
+    import hashlib
+
+    pdf_path = store.get_source_pdf_path(nb, src)
+    if pdf_path is None:
+        return {"available": False, "reason": "No local PDF file stored for this source."}
+    try:
+        import fitz  # type: ignore
+    except ImportError:
+        return {"available": False, "reason": "Install `pymupdf` (`uv pip install pymupdf`) for visual PDF page previews."}
+
+    clean_hl = re.sub(r"<!--\s*[pt]:\d+\s*-->", "", (highlight_text or "")).strip()
+    clean_hl = re.sub(r"\s+", " ", clean_hl)[:360]
+    cache_key = hashlib.sha256(f"{pdf_path.stat().st_mtime}:{page_num}:{clean_hl}:{scale:.2f}".encode("utf-8")).hexdigest()[:12]
+    cache_dir = store.nb_dir(nb, must_exist=True) / "sources" / src / "previews"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_file = cache_dir / f"p{max(1, int(page_num))}_{cache_key}.png"
+
+    doc = fitz.open(str(pdf_path))
+    try:
+        total_pages = len(doc)
+        if total_pages <= 0:
+            return {"available": False, "reason": "PDF has zero pages."}
+        clamped = max(1, min(total_pages, int(page_num)))
+        if cache_file.is_file():
+            raw = cache_file.read_bytes()
+            return {
+                "available": True,
+                "page": clamped,
+                "total_pages": total_pages,
+                "highlighted": bool(clean_hl),
+                "mime": "image/png",
+                "bytes": len(raw),
+                "b64": base64.b64encode(raw).decode("ascii"),
+            }
+
+        page = doc[clamped - 1]
+        hit_count = 0
+        if clean_hl:
+            # Extract up to 4 crisp search needles (full sentence snippets + 4-6 word phrases) for reliable bbox hits
+            needles: list[str] = []
+            for seg in re.split(r"(?<=[.!?])\s+|\n+", clean_hl):
+                seg = seg.strip(" \"'()[]{}-•*")
+                if len(seg) >= 14:
+                    words = seg.split()
+                    if len(words) > 8:
+                        needles.append(" ".join(words[:7]))
+                        needles.append(" ".join(words[3:10]))
+                    else:
+                        needles.append(seg[:72])
+                if len(needles) >= 4:
+                    break
+            if not needles and len(clean_hl) >= 4:
+                needles.append(clean_hl[:64])
+
+            seen_rects: list[Any] = []
+            for needle in needles:
+                try:
+                    rects = page.search_for(needle)
+                except Exception:
+                    rects = []
+                for r in rects[:6]:
+                    seen_rects.append(r)
+                    if len(seen_rects) >= 12:
+                        break
+                if len(seen_rects) >= 12:
+                    break
+
+            if seen_rects:
+                shape = page.new_shape()
+                for r in seen_rects:
+                    padded = fitz.Rect(r.x0 - 2, r.y0 - 1.5, r.x1 + 2, r.y1 + 1.5)
+                    shape.draw_rect(padded)
+                shape.finish(color=(0.23, 0.51, 0.96), fill=(0.23, 0.51, 0.96), fill_opacity=0.24, width=1.1)
+                shape.commit()
+                hit_count = len(seen_rects)
+
+        mat = fitz.Matrix(max(1.0, min(2.2, scale)), max(1.0, min(2.2, scale)))
+        pix = page.get_pixmap(matrix=mat, alpha=False)
+        raw = pix.tobytes("png")
+        try:
+            cache_file.write_bytes(raw)
+        except OSError:
+            pass
+        return {
+            "available": True,
+            "page": clamped,
+            "total_pages": total_pages,
+            "highlighted": hit_count > 0,
+            "highlight_rects": hit_count,
+            "mime": "image/png",
+            "bytes": len(raw),
+            "b64": base64.b64encode(raw).decode("ascii"),
+        }
+    finally:
+        doc.close()
+
+
+def plan_research_queries(
+    topic: str,
+    *,
+    num_queries: int = 4,
+    provider: Optional[str] = None,
+    model: Optional[str] = None,
+    ctx: Any = None,
+) -> list[str]:
+    """Expand a research topic into complementary web-search queries using Hermes LLM (with deterministic fallback)."""
+    clean_topic = (topic or "").strip()
+    if not clean_topic:
+        raise ValueError("Research topic cannot be empty")
+    n = max(2, min(6, int(num_queries)))
+
+    fallback = [
+        clean_topic,
+        f"{clean_topic} architecture benchmarks empirical study",
+        f"{clean_topic} limitations tradeoffs comparison",
+        f"{clean_topic} documentation specification overview",
+    ][:n]
+
+    if not runtime.llm_available(ctx):
+        return fallback
+
+    schema = {
+        "type": "object",
+        "properties": {
+            "queries": {
+                "type": "array",
+                "items": {"type": "string"},
+                "minItems": 2,
+                "maxItems": 6,
+            }
+        },
+        "required": ["queries"],
+    }
+    try:
+        parsed, _ = runtime.complete_json(
+            instructions=(
+                f"Generate {n} distinct, high-signal web search queries to thoroughly research this topic from complementary angles "
+                "(primary documentation, quantitative benchmarks/studies, technical architecture, and critical tradeoffs/counterarguments). "
+                "Keep each query concise (4-10 words) and search-engine ready."
+            ),
+            input_blocks=[{"type": "text", "text": f"Research topic: {clean_topic}"}],
+            json_schema=schema,
+            schema_name="sourcebook.research_plan",
+            purpose="sourcebook.deep_research.plan",
+            task="sourcebook_ingest",
+            provider=provider,
+            model=model,
+            temperature=0.25,
+            ctx=ctx,
+        )
+        qs = [str(q).strip() for q in (parsed.get("queries") or []) if isinstance(q, str) and q.strip()]
+        deduped: list[str] = []
+        seen: set[str] = set()
+        for q in [clean_topic, *qs]:
+            low = q.lower()
+            if low not in seen:
+                seen.add(low)
+                deduped.append(q)
+            if len(deduped) >= n:
+                break
+        return deduped if len(deduped) >= 2 else fallback
+    except Exception:
+        return fallback
+
+
+def deep_research_ingest(
+    nb: str,
+    topic: str,
+    *,
+    depth: str = "standard",
+    provider: Optional[str] = None,
+    model: Optional[str] = None,
+    ctx: Any = None,
+    progress: Any = None,
+) -> dict[str, Any]:
+    """Multi-hop web discovery, URL deduplication, SSRF-checked extraction, and auto-ingestion into a notebook."""
+    store.get_notebook(nb)
+    clean_topic = (topic or "").strip()
+    if not clean_topic:
+        raise ValueError("Deep Research topic cannot be empty")
+
+    depth_key = (depth or "standard").strip().lower()
+    target_sources = {"quick": 5, "standard": 10, "deep": 15}.get(depth_key, 10)
+    num_queries = {"quick": 3, "standard": 4, "deep": 5}.get(depth_key, 4)
+
+    if progress:
+        progress(f"Planning {num_queries} complementary research queries...", 10)
+    queries = plan_research_queries(clean_topic, num_queries=num_queries, provider=provider, model=model, ctx=ctx)
+
+    # Multi-query discovery & deduplication with cross-query frequency boost + domain diversity
+    existing_origins = {str(s.get("origin") or "").strip().rstrip("/").lower() for s in store.list_sources(nb)}
+    candidates: dict[str, dict[str, Any]] = {}
+    for qi, q in enumerate(queries, start=1):
+        if progress:
+            pct = 14 + int(22 * (qi / max(1, len(queries))))
+            progress(f"Searching ({qi}/{len(queries)}): {q[:60]}...", pct)
+        try:
+            hits = discover_web_sources(q, limit=8, ctx=ctx)
+        except Exception:
+            hits = []
+        for rank, item in enumerate(hits):
+            url = (item.get("url") or "").strip()
+            canon = url.rstrip("/").lower()
+            if not url or not _is_url_safe(url) or canon in existing_origins:
+                continue
+            rec = candidates.get(canon)
+            if rec is None:
+                candidates[canon] = {
+                    **item,
+                    "hits": 1,
+                    "best_rank": rank,
+                    "queries": [q],
+                }
+            else:
+                rec["hits"] += 1
+                rec["best_rank"] = min(rec["best_rank"], rank)
+                if q not in rec["queries"]:
+                    rec["queries"].append(q)
+
+    # Rank candidates preferring multi-query corroboration + domain diversity
+    ranked = sorted(candidates.values(), key=lambda c: (-c["hits"], c["best_rank"]))
+    selected: list[dict[str, Any]] = []
+    domain_counts: dict[str, int] = {}
+    for cand in ranked:
+        dom = cand.get("domain") or ""
+        if domain_counts.get(dom, 0) >= 2 and len(ranked) > target_sources:
             continue
-        out.append({
-            "title": re.sub(r"\s+", " ", r.get("title", "")).strip()[:160],
-            "url": u,
-            "domain": (urlparse(u).hostname or "").replace("www.", ""),
-            "snippet": re.sub(r"\s+", " ", r.get("snippet", "")).strip()[:240],
-        })
-        if len(out) >= limit:
+        domain_counts[dom] = domain_counts.get(dom, 0) + 1
+        selected.append(cand)
+        if len(selected) >= target_sources + 4:  # small buffer in case a URL fails to extract
             break
-    return out
+
+    ingested: list[dict[str, Any]] = []
+    skipped: list[str] = []
+    errors: list[str] = []
+    for idx, item in enumerate(selected, start=1):
+        if len(ingested) >= target_sources:
+            break
+        if progress:
+            pct = 38 + int(44 * (len(ingested) / max(1, target_sources)))
+            progress(f"Ingesting source {len(ingested) + 1}/{target_sources}: {item.get('domain') or item['url'][:48]}...", pct)
+        try:
+            src = ingest_url(nb, item["url"], title=item.get("title") or None, ctx=ctx)
+            ingested.append({
+                "id": src["id"],
+                "title": src["title"],
+                "url": item["url"],
+                "domain": item.get("domain", ""),
+                "word_count": src.get("word_count", 0),
+                "chunk_count": src.get("chunk_count", 0),
+            })
+        except Exception as exc:
+            errors.append(f"{item.get('domain') or item['url']}: {str(exc)[:110]}")
+            skipped.append(item["url"])
+
+    return {
+        "topic": clean_topic,
+        "depth": depth_key,
+        "target_sources": target_sources,
+        "queries": queries,
+        "discovered_count": len(candidates),
+        "ingested": ingested,
+        "skipped": skipped,
+        "errors": errors[:8],
+    }

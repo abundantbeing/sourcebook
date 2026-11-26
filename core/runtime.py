@@ -486,8 +486,34 @@ def complete_json(
     raise ValueError(f"{schema_name}: model did not return a parseable JSON object")
 
 
+_TOOL_MODULES = {
+    "image_generate": "tools.image_generation_tool",
+    "web_extract": "tools.web_tools",
+    "web_search": "tools.web_tools",
+    "text_to_speech": "tools.tts_tool",
+}
+
+
+def _ensure_tool_registered(tool_name: str) -> Any:
+    """Return the registry entry for `tool_name`, lazily importing its Hermes tool module when running in the web server."""
+    try:
+        from tools.registry import registry
+
+        entry = registry.get_entry(tool_name)
+        if entry is None and tool_name in _TOOL_MODULES:
+            try:
+                __import__(_TOOL_MODULES[tool_name])
+            except Exception as exc:
+                logger.debug("Lazy import of %s for tool %s failed: %s", _TOOL_MODULES[tool_name], tool_name, exc)
+            entry = registry.get_entry(tool_name)
+        return entry
+    except Exception:
+        return None
+
+
 def dispatch_tool(tool_name: str, args: dict[str, Any], *, ctx: Any = None) -> str:
     """Dispatch a Hermes tool through `ctx.dispatch_tool` or the public `tools.registry`."""
+    _ensure_tool_registered(tool_name)
     target = ctx or get_live_context()
     if target is not None and hasattr(target, "dispatch_tool"):
         return target.dispatch_tool(tool_name, args)
@@ -520,9 +546,7 @@ def broadcast_event(event: str, payload: Optional[dict[str, Any]] = None) -> Non
 
 def _probe_tool(tool_name: str) -> bool:
     try:
-        from tools.registry import registry
-
-        entry = registry.get_entry(tool_name)
+        entry = _ensure_tool_registered(tool_name)
         if entry is None:
             return False
         check_fn = getattr(entry, "check_fn", None)
@@ -539,11 +563,35 @@ def _probe_import(module_name: str) -> bool:
         return False
 
 
+def _probe_image_gen_info(cfg: dict[str, Any]) -> tuple[bool, str, str]:
+    """Detect whether Hermes's configured image_gen backend (FAL, openai-codex, openai, krea, etc.) is ready."""
+    available = _probe_tool("image_generate")
+    ig_cfg = cfg.get("image_gen") if isinstance(cfg.get("image_gen"), dict) else {}
+    provider_id = str(ig_cfg.get("provider") or "").strip()
+    nested = ig_cfg.get(provider_id) if provider_id and isinstance(ig_cfg.get(provider_id), dict) else {}
+    model_id = str(ig_cfg.get("model") or nested.get("model") or "").strip()
+    provider_label = provider_id
+    if available:
+        try:
+            import tools.image_generation_tool as igt
+
+            info = igt._active_image_capabilities() or {}
+            if info.get("provider"):
+                provider_label = str(info["provider"]).strip()
+            if info.get("model"):
+                model_id = str(info["model"]).strip()
+        except Exception as exc:
+            logger.debug("Could not query active image capabilities: %s", exc)
+    if available and not provider_label:
+        provider_label = "fal"
+    return available, provider_label, model_id
+
+
 def probe_capabilities(ctx: Any = None) -> dict[str, Any]:
     """Feature-detect optional Hermes tools, Python extractors, TTS/STT, and model routing for the Desktop UI."""
     models_info = list_available_models()
     cfg = _load_hermes_config()
-    ig_cfg = cfg.get("image_gen") if isinstance(cfg.get("image_gen"), dict) else {}
+    img_ok, img_provider, img_model = _probe_image_gen_info(cfg)
     return {
         "llm": llm_available(ctx),
         "active_model": models_info["active"],
@@ -551,9 +599,9 @@ def probe_capabilities(ctx: Any = None) -> dict[str, Any]:
         "provider_override_allowed": models_info["trust"]["allow_provider_override"],
         "web_extract": _probe_tool("web_extract"),
         "web_search": _probe_tool("web_search"),
-        "image_generate": _probe_tool("image_generate"),
-        "image_gen_provider": str(ig_cfg.get("provider") or ("fal" if _probe_tool("image_generate") else "")),
-        "image_gen_model": str(ig_cfg.get("model") or ""),
+        "image_generate": img_ok,
+        "image_gen_provider": img_provider,
+        "image_gen_model": img_model,
         "tts": _probe_tool("text_to_speech") or _probe_import("edge_tts"),
         "edge_tts": _probe_import("edge_tts"),
         "youtube_transcript": _probe_import("youtube_transcript_api"),
@@ -586,13 +634,22 @@ def generate_image(
         raw = dispatch_tool("image_generate", args, ctx=ctx)
         data = json.loads(raw) if isinstance(raw, str) else raw
         if isinstance(data, dict) and data.get("success"):
-            for key in ("image", "image_url", "path", "file"):
+            for key in ("image", "image_url", "local_path", "file_path", "path", "file", "url"):
                 val = data.get(key)
                 if isinstance(val, str) and val.strip():
                     return val.strip()
             imgs = data.get("images")
-            if isinstance(imgs, list) and imgs and isinstance(imgs[0], str):
-                return imgs[0].strip()
+            if isinstance(imgs, list) and imgs:
+                first = imgs[0]
+                if isinstance(first, str) and first.strip():
+                    return first.strip()
+                if isinstance(first, dict):
+                    for key in ("url", "image", "path", "file"):
+                        val = first.get(key)
+                        if isinstance(val, str) and val.strip():
+                            return val.strip()
+        elif isinstance(data, dict) and data.get("error"):
+            logger.warning("SourceBook image_generate returned error: %s", data.get("error"))
     except Exception as exc:
         logger.warning("SourceBook image_generate failed: %s", exc)
     return None

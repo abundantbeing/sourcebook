@@ -10628,7 +10628,7 @@ function SettingsPage() {
     ["Web search & extraction", caps?.web_extract ? "Hermes web_extract active" : "Built-in readability + discovery fallback"],
     ["PDF extractor", pdfStatus],
     ["DOCX extractor", caps?.python_docx ? "python-docx active" : "Built-in stdlib XML extractor"],
-    ["Image generation", caps?.image_generate ? "Available for Slides & Infographics" : "Not configured"]
+    ["Image generation", caps?.image_generate ? [caps.image_gen_provider, caps.image_gen_model].filter(Boolean).join(" \xB7 ") || "Available for Slides & Infographics" : "Not configured"]
   ];
   const setupCmd = (modelsInfo?.setup_commands || [
     "hermes config set plugins.entries.sourcebook.llm.allow_model_override true",

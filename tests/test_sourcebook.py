@@ -309,10 +309,12 @@ def test_extractive_studio_all_eight_kinds_audio_followup_and_exports(isolated_d
     assert sourcebook.studio.export_artifact(arts["mindmap"], "opml")[0].endswith(".opml")
     assert sourcebook.studio.export_artifact(arts["slides"], "html")[0].endswith(".deck.html")
 
-    # Verify interactive Audio Overview "Ask the Hosts" follow-up appends turns cleanly
+    # Verify interactive Audio Overview "Join the Podcast" follow-up appends Listener + 2-host reply turns cleanly
     before_turns = len(arts["audio"]["spec"]["turns"])
     fu = sourcebook.audio_followup(nb["id"], arts["audio"]["id"], "What is the FTS5 latency?")
-    assert len(fu["artifact"]["spec"]["turns"]) == before_turns + 2
+    assert len(fu["artifact"]["spec"]["turns"]) == before_turns + 3
+    speakers = [t["speaker"] for t in fu["artifact"]["spec"]["turns"][-3:]]
+    assert speakers == ["Listener", "Alex", "Maya"]
 
 
 def test_register_matches_plugin_yaml_and_pre_llm_call(isolated_data_dir: Path) -> None:
@@ -508,6 +510,182 @@ def test_slide_deck_outline_revise_rename_and_pptx_pdf_exports(isolated_data_dir
     assert revised["id"] == art["id"]
     assert revised["params"]["revision_prompt"] == "Make it concise for executives"
     assert len(revised["spec"]["slides"]) >= 3
+
+
+def test_per_slide_inline_edit_and_single_slide_regenerate_visual(isolated_data_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import base64
+    import sourcebook
+
+    nb = sourcebook.store.create_notebook("Single Slide Studio")
+    sourcebook.store.add_source(
+        nb["id"],
+        "Overview.md",
+        "# Hybrid Architecture\n\nLocal SQLite WAL delivers 6 ms median latency across 10k indexed chunks.\n",
+        kind="markdown",
+    )
+    art = sourcebook.make(nb["id"], "slides", {"count": 4, "include_images": False})
+    orig_count = len(art["spec"]["slides"])
+
+    # 1. Inline edit slide 0 title, bullets, notes
+    res_edit = sourcebook.update_slide(
+        nb["id"],
+        art["id"],
+        0,
+        {"title": "Edited Inline Headline", "bullets": ["Point A", "Point B"], "notes": "Updated presenter cue"},
+    )
+    assert res_edit["artifact"]["spec"]["slides"][0]["title"] == "Edited Inline Headline"
+    assert res_edit["artifact"]["spec"]["slides"][0]["bullets"] == ["Point A", "Point B"]
+
+    # 2. Add, move, and delete a slide cleanly
+    res_add = sourcebook.update_slide(nb["id"], art["id"], 0, {"action": "add", "title": "Inserted Evidence Slide"})
+    assert len(res_add["artifact"]["spec"]["slides"]) == orig_count + 1
+    assert res_add["active_index"] == 1
+
+    res_move = sourcebook.update_slide(nb["id"], art["id"], 1, {"action": "move", "delta": 1})
+    assert res_move["active_index"] == 2
+    assert res_move["artifact"]["spec"]["slides"][2]["title"] == "Inserted Evidence Slide"
+
+    res_del = sourcebook.update_slide(nb["id"], art["id"], 2, {"action": "delete"})
+    assert len(res_del["artifact"]["spec"]["slides"]) == orig_count
+
+    # 3. Single-slide visual regeneration via mocked Hermes ImageGen provider (leaves sibling slides untouched!)
+    png_1x1 = base64.b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+    )
+    monkeypatch.setattr(
+        sourcebook.runtime,
+        "probe_capabilities",
+        lambda ctx=None: {"image_generate": True, "image_gen_provider": "OpenAI (Codex auth)", "image_gen_model": "gpt-image-2-high"},
+    )
+    monkeypatch.setattr(sourcebook.runtime, "generate_image", lambda prompt, aspect="landscape", **kw: "data:image/png;base64,fake")
+    monkeypatch.setattr(sourcebook.runtime, "fetch_image_bytes", lambda ref: (png_1x1, "png"))
+
+    regen = sourcebook.regenerate_slide_visual(
+        nb["id"],
+        art["id"],
+        1,
+        prompt="Swiss horology optical glass cutaway prism on matte obsidian",
+        image_mode="full_slide",
+    )
+    updated_slides = regen["artifact"]["spec"]["slides"]
+    assert updated_slides[1]["image_file"].startswith("slide_02_r")
+    assert updated_slides[1]["layout"] == "image-full"
+    assert not updated_slides[0].get("image_file")
+    assert sourcebook.store.get_artifact_media_path(nb["id"], art["id"], updated_slides[1]["image_file"]) is not None
+
+
+def test_spoken_podcast_interrupt_followup_audio(isolated_data_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import sourcebook
+
+    nb = sourcebook.store.create_notebook("Podcast Interrupt")
+    sourcebook.store.add_source(
+        nb["id"],
+        "Consensus.md",
+        "# Raft Consensus\n\nRaft guarantees leader election safety through randomized 150 ms election timeouts.\n",
+        kind="markdown",
+    )
+    art = sourcebook.make(nb["id"], "audio", {"count": 4, "skip_audio": True})
+    fake_mp3 = b"ID3" + (b"\x00" * 1024)
+    monkeypatch.setattr(sourcebook.audio, "synthesize_dialogue_with_engine", lambda turns, **kw: (fake_mp3, "edge_tts"))
+
+    res = sourcebook.audio_followup(nb["id"], art["id"], "How does Raft avoid split votes?", current_turn_idx=1)
+    assert res["tts_engine"] == "edge_tts"
+    assert res["audio_file"].startswith("followup_") and res["audio_file"].endswith(".mp3")
+    assert len(res["audio_b64"]) > 100
+    assert any(t["speaker"] == "Listener" for t in res["added_turns"])
+    assert any(t["speaker"] == "Alex" for t in res["added_turns"])
+    assert any(t["speaker"] == "Maya" for t in res["added_turns"])
+    assert sourcebook.store.get_artifact_media_path(nb["id"], art["id"], res["audio_file"]) is not None
+
+
+def test_deep_research_auto_ingest_and_briefing(isolated_data_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import sourcebook
+
+    nb = sourcebook.store.create_notebook("Deep Research Lab")
+    monkeypatch.setattr(
+        sourcebook.ingest,
+        "discover_web_sources",
+        lambda q, limit=8, ctx=None: [
+            {"title": f"Primary Study on {q[:20]}", "url": "https://example.org/study-a", "domain": "example.org", "snippet": "Benchmark results"},
+            {"title": "Architecture Paper", "url": "https://docs.example.net/arch", "domain": "docs.example.net", "snippet": "WAL & FTS5"},
+        ],
+    )
+    monkeypatch.setattr(
+        sourcebook.ingest,
+        "extract_url",
+        lambda url, ctx=None: (
+            f"Fetched {url}",
+            f"# Research Paper from {url}\n\nHybrid BM25 and vector retrieval improves recall by 31% while staying local.\n",
+            {},
+        ),
+    )
+
+    res = sourcebook.deep_research(nb["id"], "local-first hybrid RAG", depth="quick", auto_brief=True)
+    assert len(res["queries"]) >= 2
+    assert len(res["ingested"]) == 2
+    assert res["artifact"] is not None
+    assert res["artifact"]["kind"] == "report"
+    assert len(sourcebook.store.list_sources(nb["id"])) == 2
+
+
+def test_visual_pdf_page_preview_with_highlight(isolated_data_dir: Path) -> None:
+    import sourcebook
+
+    fitz = pytest.importorskip("fitz")
+    doc = fitz.open()
+    page = doc.new_page(width=595, height=842)
+    page.insert_text((72, 100), "SourceBook Visual Verification", fontsize=18)
+    page.insert_text((72, 140), "WAL checkpointing cuts crash recovery latency by 84% under concurrent reads.", fontsize=12)
+    pdf_bytes = doc.tobytes()
+    doc.close()
+
+    nb = sourcebook.store.create_notebook("PDF Preview Test")
+    src = sourcebook.ingest.ingest_bytes(nb["id"], "report.pdf", pdf_bytes, content_type="application/pdf")
+    detail = sourcebook.store.get_source_text(nb["id"], src["id"])
+    assert detail["source"]["has_pdf_preview"] is True
+
+    preview = sourcebook.ingest.render_pdf_page_preview(
+        nb["id"],
+        src["id"],
+        page_num=1,
+        highlight_text="WAL checkpointing cuts crash recovery latency by 84%",
+    )
+    assert preview["available"] is True
+    assert preview["page"] == 1
+    assert preview["total_pages"] == 1
+    assert preview["highlighted"] is True
+    assert preview["bytes"] > 1000
+
+
+def test_cross_notebook_search_and_hermes_memory_bridge(isolated_data_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import sourcebook
+
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes_home"))
+    monkeypatch.setattr(sourcebook.runtime, "_probe_tool", lambda name: False)
+
+    nb1 = sourcebook.store.create_notebook("Alpha Storage")
+    nb2 = sourcebook.store.create_notebook("Beta Security")
+    s1 = sourcebook.store.add_source(nb1["id"], "WAL.md", "Write-ahead logging enables concurrent snapshot isolation with 6 ms p95 latency.", kind="markdown")
+    sourcebook.store.add_source(nb2["id"], "Auth.md", "OAuth tokens are redacted before every outbound LLM request.", kind="markdown")
+
+    all_hits = sourcebook.store.search_all_notebooks("snapshot isolation latency")
+    assert any(h["notebook_id"] == nb1["id"] for h in all_hits)
+    scoped_hits = sourcebook.store.search_all_notebooks("OAuth tokens redacted", nb_filter=nb1["id"])
+    assert all(h["notebook_id"] == nb1["id"] for h in scoped_hits)
+
+    mem_res = sourcebook.save_to_memory(
+        nb1["id"],
+        "WAL snapshot isolation maintains 6 ms p95 latency under mixed workloads [[c:s_123456:0]].",
+        title="WAL Latency",
+        citations=[f"{s1['id']}:0"],
+    )
+    assert mem_res["saved"] is True
+    mem_file = tmp_path / "hermes_home" / "memories" / "MEMORY.md"
+    assert mem_file.is_file()
+    txt = mem_file.read_text(encoding="utf-8")
+    assert "[SourceBook · Alpha Storage]" in txt
+    assert "WAL.md" in txt
+    assert "[[c:" not in txt
 
 
 def test_desktop_bundle_passes_syntax_and_house_lint() -> None:

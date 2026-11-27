@@ -146,6 +146,13 @@ flowchart LR
 - **Safe outbound handling:** Every passage passed to a model runs through `agent.redact`, URL ingestion validates addresses against `tools.url_safety`, and local path syncing checks `agent.file_safety`.
 - **SDK boundary:** The Desktop bundle imports strictly `@hermes/plugin-sdk`, `react`, and `react/jsx-runtime`, using native Hermes theme variables (`--ui-bg-chrome`, `--ui-bg-sidebar`, `--ui-bg-elevated`, `--ui-accent`).
 
+## Privacy & disclosure
+
+- **Network:** No telemetry, analytics, or background polling to external hosts. Outbound HTTP requests happen only when you explicitly ingest a web or YouTube URL, run **Discover / Deep Research**, or generate 2-host Audio Overviews with optional `edge-tts` fallback; every user-supplied URL is validated through `tools.url_safety`. Model calls and Slide Deck image generation route strictly through your configured Hermes agent provider.
+- **Files & reads outside plugin data:** Writes notebook databases and generated media only under `<HERMES_HOME>/plugin-data/sourcebook/`. Reads files outside that folder only when you explicitly upload a file or choose a local folder via **Folder** / `/sourcebook sync` (validated with `agent.file_safety`). Clicking **Memory** writes a cited excerpt to your Hermes profile's curated `MEMORY.md` only on explicit user action.
+- **None of these:** Credentials or API key file reads, environment variable scraping, shell command execution, self-updating code, core Hermes monkey-patching, or required third-party Python dependencies (`python_dependencies: []`; `desktop/plugin.js` ships prebuilt).
+- **Platform notes:** Runtime-tested in Hermes Desktop on Windows 11. The Desktop bundle uses only the cross-platform Hermes Plugin SDK; macOS and Linux have not been runtime-verified yet.
+
 ## Development
 
 ```bash
